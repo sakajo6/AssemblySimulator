@@ -1,0 +1,3 @@
+    add a0, a1, a2
+    sub a0, a1, a2
+    lw a0, 100(a2)
