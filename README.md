@@ -3,6 +3,7 @@
 ## fibo_simu
 
 ### make
-    - command `make fibo_simu`
+    - command `make`
 ### execute
-    - command `./fibo_simu ./fibo_simu`
+    - command `./fibsim ./fibasm.txt`
+    - ファイルの末尾に改行入れないと動かない...

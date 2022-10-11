@@ -1,2 +1,2 @@
-default: fibo_simu.cpp
-	g++ -o fibo_simu fibo_simu.cpp
+fib: main.cpp fib_instruction.hpp fib_opecode.hpp fib_program.hpp
+	g++ -o fibsimu main.cpp 
