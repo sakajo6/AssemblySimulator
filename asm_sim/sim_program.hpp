@@ -12,8 +12,8 @@
 #include <string>
 #include <map>
 
-#include "fib_instruction.hpp"
-#include "fib_opecode.hpp"
+#include "sim_instruction.hpp"
+#include "sim_opecode.hpp"
 
 class Program {
     private:

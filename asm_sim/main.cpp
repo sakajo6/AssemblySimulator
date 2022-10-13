@@ -2,7 +2,7 @@
 #include <iostream>
 
 
-#include "fib_program.hpp"
+#include "sim_program.hpp"
 
 using namespace std;
 
