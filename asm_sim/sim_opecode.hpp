@@ -1,37 +1,41 @@
 #pragma once
 
 enum Opcode {
-    // 0
-    Add,    // 0
-    Sub,    // 1
-    Slt,    // 2
+    // 0 -> opcode r, r, r
+    Add,
+    Sub,
+    Slt,
 
-    // 1
-    Addi,   // 3
+    Mul,
+    Div,
 
-    // 2
-    Lw,     // 4
-    Sw,     // 5
-    Jalr,   // 6
+    Fadd_d,
+    Fsub_d,
+    Fmul_d,
+    Fdiv_d,
+    Feq_d,
+    Flt_d,
 
-    // 3
-    Beq,    // 7
-    Blt,    // 8
-    Bge,    // 9
 
-    // 4
-    Jal,    // 10
+    // 1 -> opcode r, r, imm
+    Addi,
+
+    // 2 -> opcode r, imm(r)
+    Lw,
+    Sw,
+    Jalr,
+    Fld,
+    Fsd,
+
+    // 3 -> opcode r, r, label
+    Beq,
+    Blt,
+    Bge,
+
+    // 4 -> opcode r, label
+    Jal,
+
+    // 5 -> opcode r, r
+    Fsqrt_d,
+
 };
-
-/*
-    0 -> opcode r, r, r
-        add, sub, slt, 
-    1 -> opcode r, r, imm
-        addi, 
-    2 -> opcode r, imm(r)
-        lw, sw, jalr
-    3 -> opcode r, r, label
-        beq, blt, bge
-    4 -> opcode r, label
-        jal
-*/
