@@ -14,6 +14,15 @@
 
 #include "sim_instruction.hpp"
 #include "sim_opecode.hpp"
+#include "sim_global.hpp"
+
+
+extern const int memory_size;
+extern int memory[memory_size];
+extern const int xregs_size;
+extern int xregs[xregs_size];
+extern const int fregs_size;
+extern float fregs[fregs_size];
 
 class Program {
     private:
@@ -24,14 +33,50 @@ class Program {
         std::map<std::string, int> labels;
         std::vector<int> labels_address;
 
-        int memory[1024];
-        int regis[32];
+        std::map<std::string, Opcode> string_to_opcode = {
+            // 0
+            {"add", Add},
+            {"sub", Sub},
+            {"slt", Slt},
+
+            {"mul", Mul},
+            {"div", Div},
+
+            {"fadd.s", Fadd_s},
+            {"fsub.s", Fsub_s},
+            {"fmul.s", Fmul_s},
+            {"fdiv.s", Fdiv_s},
+            {"feq.s", Feq_s},
+            {"flt.s", Flt_s},
+
+            // 1
+            {"addi", Addi},
+
+            // 2
+            {"lw", Lw},
+            {"sw", Sw},
+            {"jalr", Jalr},
+            {"flw", Flw},
+            {"fsw", Fsw},
+
+            // 3
+            {"beq", Beq},
+            {"blt", Blt},
+            {"bge", Bge},
+
+            // 4
+            {"jal", Jal},
+
+            // 5
+            {"fsqrt.s", Fsqrt_s},
+        };
 
         Instruction read_instruction_0(Opcode op, FILE *fp);
         Instruction read_instruction_1(Opcode op, FILE *fp);
         Instruction read_instruction_2(Opcode op, FILE *fp);
         Instruction read_instruction_3(Opcode op, FILE *fp);
         Instruction read_instruction_4(Opcode op, FILE *fp);
+        Instruction read_instruction_5(Opcode op, FILE *fp);
 
         Instruction read_instruction(FILE *fp);
 
@@ -47,13 +92,6 @@ class Program {
             label_cnt = 0;
             labels.clear();
             labels_address = {};
-
-            for(int i = 0; i < 1024; i++) {
-                memory[i] = 0;
-            }
-            for(int i = 0; i < 32; i++) {
-                regis[i] = 0;
-            }
         }
         void read_program(FILE *fp);
         void print_debug();
@@ -248,6 +286,37 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp) {
     return Instruction(op, operands[0], -1, -1, operands[1], -1);
 }
 
+inline Instruction Program::read_instruction_5(Opcode op, FILE *fp) {
+    int operands[2];
+    int operand_cnt = 0;
+
+    std::string operand = "";
+    while(feof(fp) == 0) {
+        char c = (char)fgetc(fp);
+        if ((int)c == -1) continue;
+        else if (c < ' ' || c == '#') {
+            // line ends;
+            DEBUG_PRINTF("%s;\n", operand.c_str());
+            operands[operand_cnt] = stoi(operand.substr(1));
+            getline(fp);
+            break;
+        }
+        switch(c) {
+            case ' ': break;
+            case ',':
+                DEBUG_PRINTF("%s, ", operand.c_str());
+                operands[operand_cnt] = stoi(operand.substr(1));
+                operand = "";
+                operand_cnt++;
+                break;
+            default:
+                operand += c;
+                break;
+        }
+    }
+    return Instruction(op, operands[0], -1, -1, operands[1], -1);
+}
+
 inline Instruction Program::read_instruction(FILE *fp) {
     for (int i = 0; i < 3; i++) int c = fgetc(fp);
     std::string opcode = "";
@@ -258,36 +327,23 @@ inline Instruction Program::read_instruction(FILE *fp) {
         opcode += c;
     }
 
-    Instruction inst(Add, -1, -1, -1, -1, -1);
+    Instruction inst;
 
     DEBUG_PRINTF("%s, ", opcode.c_str());
 
-    // pattern 0
-    if (opcode == "add") inst = read_instruction_0(Add, fp);
-    else if (opcode == "sub") inst = read_instruction_0(Sub, fp);
-    else if (opcode == "slt") inst = read_instruction_0(Slt, fp);
-
-    // pattern 1
-    else if (opcode == "addi") inst = read_instruction_1(Addi, fp);
-
-    // pattern 2
-    else if (opcode == "lw") inst = read_instruction_2(Lw, fp);
-    else if (opcode == "sw") inst = read_instruction_2(Sw, fp);
-    else if (opcode == "jalr") inst = read_instruction_2(Jalr, fp);
-
-    // pattern 3
-    else if (opcode == "beq") inst = read_instruction_3(Beq, fp);
-    else if (opcode == "blt") inst = read_instruction_3(Blt, fp);
-    else if (opcode == "bge") inst = read_instruction_3(Bge, fp);
-
-    // pattern 4
-    else if (opcode == "jal") inst = read_instruction_4(Jal, fp);
-
-    // others
-    else {
-        std::cerr << "error: opcode parse error; " << opcode << std::endl;
+    if (string_to_opcode.count(opcode) == 0) {
+        std::cerr << "error: invalid opcode." << std::endl;
         exit(1);
     }
+
+    Opcode op = string_to_opcode[opcode];
+
+    if (op < 100) inst = read_instruction_0(op, fp);
+    else if (op < 200) inst = read_instruction_1(op, fp);
+    else if (op < 300) inst = read_instruction_2(op, fp);
+    else if (op < 400) inst = read_instruction_3(op, fp);
+    else if (op < 500) inst = read_instruction_4(op, fp);
+    else inst = read_instruction_5(op, fp);
 
     pc++;
 
@@ -368,7 +424,7 @@ inline void Program::exec() {
     pc = 0;
     while(pc != instructions.size()) {
         // std::cout << pc << std::endl;
-        pc = instructions[pc].exec(pc, labels_address, memory, regis);
+        pc = instructions[pc].exec(pc, labels_address);
         // for(int i = 0; i < 10; i++) {
         //     std::cout << regis[i] << " ";
         // }

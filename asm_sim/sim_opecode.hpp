@@ -2,40 +2,40 @@
 
 enum Opcode {
     // 0 -> opcode r, r, r
-    Add,
+    Add = 0,
     Sub,
     Slt,
 
     Mul,
     Div,
 
-    Fadd_d,
-    Fsub_d,
-    Fmul_d,
-    Fdiv_d,
-    Feq_d,
-    Flt_d,
+    Fadd_s,
+    Fsub_s,
+    Fmul_s,
+    Fdiv_s,
+    Feq_s,
+    Flt_s,
 
 
     // 1 -> opcode r, r, imm
-    Addi,
+    Addi = 100,
 
     // 2 -> opcode r, imm(r)
-    Lw,
+    Lw = 200,
     Sw,
     Jalr,
-    Fld,
-    Fsd,
+    Flw,
+    Fsw,
 
     // 3 -> opcode r, r, label
-    Beq,
+    Beq = 300,
     Blt,
     Bge,
 
     // 4 -> opcode r, label
-    Jal,
+    Jal = 400,
 
     // 5 -> opcode r, r
-    Fsqrt_d,
+    Fsqrt_s = 500,
 
 };
