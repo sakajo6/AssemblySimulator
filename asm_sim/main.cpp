@@ -1,3 +1,10 @@
+/*
+    - pc -> +4
+    - labelをprogram二周して計算
+    - labelをoffsetに変換して保存しておく
+*/
+
+
 #include <stdio.h>
 #include <iostream>
 
