@@ -29,9 +29,7 @@ class Program {
         int pc;
         std::vector<Instruction> instructions;
 
-        int label_cnt;
         std::map<std::string, int> labels;
-        std::vector<int> labels_address;
 
         std::map<std::string, Opcode> string_to_opcode = {
             // 0
@@ -80,8 +78,6 @@ class Program {
 
         Instruction read_instruction(FILE *fp);
 
-        void read_label(char c, FILE *fp);
-
         void getline(FILE *fp);
 
     public:
@@ -89,11 +85,10 @@ class Program {
             pc = 0;
             instructions = {};
 
-            label_cnt = 0;
             labels.clear();
-            labels_address = {};
         }
         void read_program(FILE *fp);
+        void read_label(FILE *fp);
         void print_debug();
         void exec();
 };
@@ -112,7 +107,7 @@ inline Instruction Program::read_instruction_0(Opcode op, FILE *fp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(1));
-            getline(fp);
+            Program::getline(fp);
             break;
         }
         switch(c) {
@@ -146,7 +141,7 @@ inline Instruction Program::read_instruction_1(Opcode op, FILE *fp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(0));
-            getline(fp);
+            Program::getline(fp);
             break;
         }
         switch(c) {
@@ -217,15 +212,7 @@ inline Instruction Program::read_instruction_3(Opcode op, FILE *fp) {
         else if (c < ' ' || c == '#') {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
-            if (labels.count(operand) == 0) {
-                operands[operand_cnt] = label_cnt;
-                labels[operand] = label_cnt;
-                labels_address.push_back(-1);
-                label_cnt++;
-            } 
-            else {
-                operands[operand_cnt] = labels[operand];
-            }
+            operands[operand_cnt] = labels[operand] - pc;
             Program::getline(fp);
             break;
         }
@@ -258,15 +245,7 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp) {
         else if (c < ' ' || c == '#') {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
-            if (labels.count(operand) == 0) {
-                operands[operand_cnt] = label_cnt;
-                labels[operand] = label_cnt;
-                labels_address.push_back(-1);
-                label_cnt++;
-            } 
-            else {
-                operands[operand_cnt] = labels[operand];
-            }
+            operands[operand_cnt] = labels[operand] - pc;
             Program::getline(fp);
             break;
         }
@@ -283,6 +262,7 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp) {
                 break;
         }
     }
+
     return Instruction(op, operands[0], -1, -1, operands[1], -1);
 }
 
@@ -298,7 +278,7 @@ inline Instruction Program::read_instruction_5(Opcode op, FILE *fp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(1));
-            getline(fp);
+            Program::getline(fp);
             break;
         }
         switch(c) {
@@ -345,34 +325,9 @@ inline Instruction Program::read_instruction(FILE *fp) {
     else if (op < 500) inst = read_instruction_4(op, fp);
     else inst = read_instruction_5(op, fp);
 
-    pc++;
+    pc += 4;
 
     return inst;
-}
-
-
-inline void Program::read_label(char c, FILE *fp) {
-    std::string label = "";
-    label += c;
-    while(feof(fp) == 0) {
-        char c = (char)fgetc(fp);
-        if ((int)c == -1) continue;
-        else if (c == ':') {
-            Program::getline(fp);
-            break;
-        }
-        label += c;
-    }
-
-    if (labels.count(label) == 0) {
-        labels[label] = label_cnt;
-        labels_address.push_back(pc);
-        label_cnt++;
-    } else {
-        labels_address[labels[label]] = pc;
-    }
-
-    DEBUG_PRINTF("%s,\n", label.c_str());
 }
 
 inline void Program::getline(FILE *fp) {
@@ -383,7 +338,39 @@ inline void Program::getline(FILE *fp) {
     }
 }
 
+inline void Program::read_label(FILE *fp) {
+    pc = 0;
+    while(feof(fp) == 0) {
+        int c = fgetc(fp);
+        if (c == -1) {
+            continue;
+        }
+        else if ((char)c == ' ') {
+            Program::getline(fp);
+            pc += 4;
+        }   
+        else {
+            std::string label = "";
+            label += c;
+            while(feof(fp) == 0) {
+                char c = (char)fgetc(fp);
+                if ((int)c == -1) continue;
+                else if (c == ':') {
+                    Program::getline(fp);
+                    break;
+                }
+                label += c;
+            }
+
+            labels[label] = pc;
+
+            DEBUG_PRINTF("%s,\n", label.c_str());   
+        }
+    }
+}
+
 inline void Program::read_program(FILE *fp) {
+    pc = 0;
     while(feof(fp) == 0) {
         int c = fgetc(fp);
         if (c == -1) {
@@ -393,7 +380,7 @@ inline void Program::read_program(FILE *fp) {
             instructions.push_back(read_instruction(fp));
         }   
         else {
-            read_label(c, fp);
+            Program::getline(fp);
         }
     }    
 }
@@ -413,18 +400,14 @@ inline void Program::print_debug() {
 
     std::cout << std::endl;
 
-    for(int i = 0; i < labels_address.size(); i++) {
-        std::cout << labels_address[i] << std::endl;
-    }
-
     std::cout << instructions.size() << std::endl;
 }
 
 inline void Program::exec() {
     pc = 0;
-    while(pc != instructions.size()) {
+    while(pc != instructions.size()*4) {
         // std::cout << pc << std::endl;
-        pc = instructions[pc].exec(pc, labels_address);
+        pc = instructions[pc/4].exec(pc);
         // for(int i = 0; i < 10; i++) {
         //     std::cout << regis[i] << " ";
         // }

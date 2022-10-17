@@ -1,8 +1,4 @@
-/*
-    - pc -> +4
-    - labelをprogram二周して計算
-    - labelをoffsetに変換して保存しておく
-*/
+
 
 
 #include <stdio.h>
@@ -22,6 +18,14 @@ int main(int argc, char const *argv[]) {
     }
 
     Program program;
+    program.read_label(fp);
+
+    fp = fopen(argv[1], "r");
+    if (fp == NULL) {
+        fprintf(stderr, "error: an error occurred opening file.\n");
+        return 1;
+    }
+
     program.read_program(fp);
 
     // program.print_debug();
