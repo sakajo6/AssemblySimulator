@@ -49,6 +49,7 @@ class Program {
 
             // 1
             {"addi", Addi},
+            {"ori", Ori},
 
             // 2
             {"lw", Lw},
@@ -67,6 +68,9 @@ class Program {
 
             // 5
             {"fsqrt.s", Fsqrt_s},
+
+            // 6
+            {"lui", Lui},
         };
 
         Instruction read_instruction_0(Opcode op, FILE *fp);
@@ -75,6 +79,7 @@ class Program {
         Instruction read_instruction_3(Opcode op, FILE *fp);
         Instruction read_instruction_4(Opcode op, FILE *fp);
         Instruction read_instruction_5(Opcode op, FILE *fp);
+        Instruction read_instruction_6(Opcode op, FILE *fp);
 
         Instruction read_instruction(FILE *fp);
 
@@ -266,6 +271,7 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp) {
     return Instruction(op, operands[0], -1, -1, operands[1], -1);
 }
 
+// opcode r, r
 inline Instruction Program::read_instruction_5(Opcode op, FILE *fp) {
     int operands[2];
     int operand_cnt = 0;
@@ -294,7 +300,39 @@ inline Instruction Program::read_instruction_5(Opcode op, FILE *fp) {
                 break;
         }
     }
-    return Instruction(op, operands[0], -1, -1, operands[1], -1);
+    return Instruction(op, operands[0], operands[1], -1, -1, -1);
+}
+
+// opcode r, imm
+inline Instruction Program::read_instruction_6(Opcode op, FILE *fp) {
+    int operands[2];
+    int operand_cnt = 0;
+
+    std::string operand = "";
+    while(feof(fp) == 0) {
+        char c = (char)fgetc(fp);
+        if ((int)c == -1) continue;
+        else if (c < ' ' || c == '#') {
+            // line ends;
+            DEBUG_PRINTF("%s;\n", operand.c_str());
+            operands[operand_cnt] = stoi(operand.substr(0));
+            Program::getline(fp);
+            break;
+        }
+        switch(c) {
+            case ' ': break;
+            case ',':
+                DEBUG_PRINTF("%s, ", operand.c_str());
+                operands[operand_cnt] = stoi(operand.substr(1));
+                operand = "";
+                operand_cnt++;
+                break;
+            default:
+                operand += c;
+                break;
+        }
+    }
+    return Instruction(op, operands[0], -1, -1, -1, operands[1]);
 }
 
 inline Instruction Program::read_instruction(FILE *fp) {
@@ -323,7 +361,9 @@ inline Instruction Program::read_instruction(FILE *fp) {
     else if (op < 300) inst = read_instruction_2(op, fp);
     else if (op < 400) inst = read_instruction_3(op, fp);
     else if (op < 500) inst = read_instruction_4(op, fp);
-    else inst = read_instruction_5(op, fp);
+    else if (op < 600) inst = read_instruction_5(op, fp);
+    else if (op < 700) inst = read_instruction_6(op, fp);
+    else std::cerr << "error: unknown opcode." << std::endl;
 
     pc += 4;
 

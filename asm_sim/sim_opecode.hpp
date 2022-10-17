@@ -19,6 +19,7 @@ enum Opcode {
 
     // 1 -> opcode r, r, imm
     Addi = 100,
+    Ori,
 
     // 2 -> opcode r, imm(r)
     Lw = 200,
@@ -38,4 +39,6 @@ enum Opcode {
     // 5 -> opcode r, r
     Fsqrt_s = 500,
 
+    // 6 -> opcode, r, imm
+    Lui = 600,
 };

@@ -63,6 +63,7 @@ inline int Instruction::exec(int pc) {
 
         // pattern 1
         case Addi: xregs[oprand0] = xregs[oprand1] + imm; pc+=4; break;
+        case Ori: xregs[oprand0] = xregs[oprand1] | imm; pc+=4; break;
         
         // pattern 2
         case Lw: xregs[oprand0] = memory[xregs[oprand1] + imm]; pc+=4; break;
@@ -81,6 +82,9 @@ inline int Instruction::exec(int pc) {
 
         // pattern 5
         case Fsqrt_s: fregs[oprand0] = sqrt(fregs[oprand1]); pc+=4; break;
+
+        // pattern 6
+        case Lui: xregs[oprand0] = imm << 12; pc+=4; break;
 
         default: 
             std::cerr << "instruction-execution error" << std::endl;
