@@ -96,6 +96,7 @@ class Program {
         void read_label(FILE *fp);
         void print_debug();
         void exec();
+        void assembler(FILE *fp);
 };
 
 
@@ -381,11 +382,14 @@ inline void Program::getline(FILE *fp) {
 inline void Program::read_label(FILE *fp) {
     pc = 0;
     while(feof(fp) == 0) {
-        int c = fgetc(fp);
-        if (c == -1) {
+        char c = fgetc(fp);
+        if ((int)c == -1) {
             continue;
         }
-        else if ((char)c == ' ') {
+        else if (c == '.') {
+            Program::getline(fp);
+        }
+        else if (c == ' ') {
             Program::getline(fp);
             pc += 4;
         }   
@@ -454,4 +458,11 @@ inline void Program::exec() {
         // std::cout << std::endl;
     }
     std::cout << std::endl << "fib_ans: " << memory[100] << std::endl; 
+}
+
+inline void Program::assembler(FILE *fp) {
+    int n = instructions.size();
+    for (int i = 0; i < n; i++) {
+        instructions[i].assemble(fp);
+    }
 }

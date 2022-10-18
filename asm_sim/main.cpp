@@ -1,4 +1,14 @@
-
+/*
+    sw, beqなどoffsetで代入する位置が異なるので注意
+    即値をmachine codeに代入する際にunsigned intに変換して操作 <- 実装後、要確認
+    add
+    addi
+    sw
+    lw
+    addi
+    blt
+    jal
+*/
 
 
 #include <stdio.h>
@@ -19,6 +29,7 @@ int main(int argc, char const *argv[]) {
 
     Program program;
     program.read_label(fp);
+    fclose(fp);
 
     fp = fopen(argv[1], "r");
     if (fp == NULL) {
@@ -27,10 +38,20 @@ int main(int argc, char const *argv[]) {
     }
 
     program.read_program(fp);
+    fclose(fp);
 
-    // program.print_debug();
+    program.print_debug();
 
+    // exec assembly
     program.exec();
+
+    // assembler
+    fp = fopen("bin.txt", "w");
+    if (fp == NULL) {
+        fprintf(stderr, "error: an error occurred opening file.\n");
+    }
+    program.assembler(fp);
+    fclose(fp);
 
     return 0;
 }
