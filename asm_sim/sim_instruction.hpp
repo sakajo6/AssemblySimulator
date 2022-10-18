@@ -37,7 +37,7 @@ class Instruction {
         }
         void print_debug();
         int exec(int pc);
-        void assemble(FILE *fp);
+        void assemble(FILE *fp, int i);
 };
 
 inline void Instruction::print_debug() {
@@ -115,7 +115,13 @@ inline void Instruction::set_machine_code(char *mcode, int lidx, int ridx, int i
     }
 }
 
-inline void Instruction::assemble(FILE *fp) {
+inline void Instruction::assemble(FILE *fp, int i) {
+    char idxfirst[32] = "mem[13'd";
+    char idxsecond[32] = "] <= 32'b";
+    fwrite(idxfirst, sizeof(char), 8, fp);
+    fprintf(fp, "%d", i);
+    fwrite(idxsecond, sizeof(char), 9, fp);
+
     switch(opcode) {
         // pattern 0
         // op ope0, ope1, op2
@@ -168,10 +174,10 @@ inline void Instruction::assemble(FILE *fp) {
         // pattern 3
         case Beq: break;
         case Blt:
-            Instruction::set_machine_code(blt_machine, 0, 6, imm >> 6);
+            Instruction::set_machine_code(blt_machine, 0, 6, label >> 6);
             Instruction::set_machine_code(blt_machine, 7, 11, oprand1);
             Instruction::set_machine_code(blt_machine, 12, 16, oprand0);
-            Instruction::set_machine_code(blt_machine, 20, 24, imm >> 1);
+            Instruction::set_machine_code(blt_machine, 20, 24, label >> 1);
             fwrite(blt_machine, sizeof(char), 33, fp);    
         case Bge: break;
 

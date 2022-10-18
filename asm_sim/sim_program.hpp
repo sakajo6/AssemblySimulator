@@ -463,6 +463,6 @@ inline void Program::exec() {
 inline void Program::assembler(FILE *fp) {
     int n = instructions.size();
     for (int i = 0; i < n; i++) {
-        instructions[i].assemble(fp);
+        instructions[i].assemble(fp, i);
     }
 }
