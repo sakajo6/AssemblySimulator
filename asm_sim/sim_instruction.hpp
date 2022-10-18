@@ -129,7 +129,7 @@ inline void Instruction::assemble(FILE *fp, int i) {
             Instruction::set_machine_code(add_machine, 7, 11, oprand2);
             Instruction::set_machine_code(add_machine, 12, 16, oprand1);
             Instruction::set_machine_code(add_machine, 20, 24, oprand0);
-            fwrite(add_machine, sizeof(char), 33, fp);
+            fwrite(add_machine, sizeof(char), 32, fp);
             break;
         case Sub: break;
         case Slt: break;
@@ -149,7 +149,7 @@ inline void Instruction::assemble(FILE *fp, int i) {
             Instruction::set_machine_code(addi_machine, 0, 11, imm);
             Instruction::set_machine_code(addi_machine, 12, 16, oprand1);
             Instruction::set_machine_code(addi_machine, 20, 24, oprand0);
-            fwrite(addi_machine, sizeof(char), 33, fp);
+            fwrite(addi_machine, sizeof(char), 32, fp);
             break;
         case Ori: break;
         
@@ -158,14 +158,14 @@ inline void Instruction::assemble(FILE *fp, int i) {
             Instruction::set_machine_code(lw_machine, 0, 11, imm);
             Instruction::set_machine_code(lw_machine, 12, 16, oprand1);
             Instruction::set_machine_code(lw_machine, 20, 24, oprand0);
-            fwrite(lw_machine, sizeof(char), 33, fp);
+            fwrite(lw_machine, sizeof(char), 32, fp);
             break;
         case Sw:
             Instruction::set_machine_code(sw_machine, 0, 6, imm >> 5);
             Instruction::set_machine_code(sw_machine, 7, 11, oprand0);
             Instruction::set_machine_code(sw_machine, 12, 16, oprand1);
             Instruction::set_machine_code(sw_machine, 20, 24, imm);
-            fwrite(sw_machine, sizeof(char), 33, fp);
+            fwrite(sw_machine, sizeof(char), 32, fp);
             break;
         case Jalr: break;
         case Flw: break;
@@ -178,14 +178,14 @@ inline void Instruction::assemble(FILE *fp, int i) {
             Instruction::set_machine_code(blt_machine, 7, 11, oprand1);
             Instruction::set_machine_code(blt_machine, 12, 16, oprand0);
             Instruction::set_machine_code(blt_machine, 20, 24, label >> 1);
-            fwrite(blt_machine, sizeof(char), 33, fp);    
+            fwrite(blt_machine, sizeof(char), 32, fp);    
         case Bge: break;
 
         // pattern 4
         case Jal:
             Instruction::set_machine_code(jal_machine, 0, 19, label >> 1);
             Instruction::set_machine_code(jal_machine, 20, 24, oprand0);
-            fwrite(jal_machine, sizeof(char), 33, fp); 
+            fwrite(jal_machine, sizeof(char), 32, fp); 
         // pattern 5
         case Fsqrt_s: break;
 
@@ -196,5 +196,5 @@ inline void Instruction::assemble(FILE *fp, int i) {
             std::cerr << "instruction-execution error" << std::endl;
             exit(1);
     }
-
+    fprintf(fp, ";\n");
 }

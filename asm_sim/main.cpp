@@ -8,6 +8,7 @@
     addi
     blt
     jal
+    label, immまとめる
 */
 
 
@@ -42,9 +43,6 @@ int main(int argc, char const *argv[]) {
 
     program.print_debug();
 
-    // exec assembly
-    program.exec();
-
     // assembler
     fp = fopen("bin.txt", "w");
     if (fp == NULL) {
@@ -52,6 +50,10 @@ int main(int argc, char const *argv[]) {
     }
     program.assembler(fp);
     fclose(fp);
+    
+    // exec assembly
+    program.exec();
+
 
     return 0;
 }

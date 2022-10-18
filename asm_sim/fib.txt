@@ -21,3 +21,5 @@ ret01:
     addi x2, x6, 0
 end:
     sw x2, 100(x4)
+loop:
+    jal x0, loop
