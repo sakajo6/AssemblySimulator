@@ -37,12 +37,6 @@ int main(int argc, char const *argv[]) {
 
     
     //program.print_debug();
-
-    // exec assembler
-    // fp = fopen("bin.txt", "w");
-    // if (fp == NULL) {
-    //     fprintf(stderr, "error: an error occurred opening file.\n");
-    // }
     ofstream ofs("bin.txt");
     streambuf *oldrdbuf = cout.rdbuf(ofs.rdbuf());
     program.assembler();
