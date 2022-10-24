@@ -96,7 +96,7 @@ class Program {
         void read_label(FILE *fp);
         void print_debug();
         void exec();
-        void assembler(FILE *fp);
+        void assembler();
 };
 
 
@@ -131,7 +131,7 @@ inline Instruction Program::read_instruction_0(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[1], operands[2], -1, -1);
+    return Instruction(op, operands[0], operands[1], operands[2], -1);
 }
 
 // opcode r, r, imm
@@ -164,7 +164,7 @@ inline Instruction Program::read_instruction_1(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[1], -1, -1, operands[2]);
+    return Instruction(op, operands[0], operands[1], -1, operands[2]);
 }
 
 // opcode r, imm(r)
@@ -203,7 +203,7 @@ inline Instruction Program::read_instruction_2(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[2], -1, -1, operands[1]);
+    return Instruction(op, operands[0], operands[2], -1, operands[1]);
 }
 
 // opcode r, r, label
@@ -236,7 +236,7 @@ inline Instruction Program::read_instruction_3(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[1], -1, operands[2], -1);
+    return Instruction(op, operands[0], operands[1], -1, operands[2]);
 }
 
 // opcode r, label
@@ -269,7 +269,7 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], -1, -1, operands[1], -1);
+    return Instruction(op, operands[0], -1, -1, operands[1]);
 }
 
 // opcode r, r
@@ -301,7 +301,7 @@ inline Instruction Program::read_instruction_5(Opcode op, FILE *fp) {
                 break;
         }
     }
-    return Instruction(op, operands[0], operands[1], -1, -1, -1);
+    return Instruction(op, operands[0], operands[1], -1, -1);
 }
 
 // opcode r, imm
@@ -333,7 +333,7 @@ inline Instruction Program::read_instruction_6(Opcode op, FILE *fp) {
                 break;
         }
     }
-    return Instruction(op, operands[0], -1, -1, -1, operands[1]);
+    return Instruction(op, operands[0], -1, -1, operands[1]);
 }
 
 inline Instruction Program::read_instruction(FILE *fp) {
@@ -460,9 +460,9 @@ inline void Program::exec() {
     std::cout << std::endl << "fib_ans: " << memory[100] << std::endl; 
 }
 
-inline void Program::assembler(FILE *fp) {
+inline void Program::assembler() {
     int n = instructions.size();
     for (int i = 0; i < n; i++) {
-        instructions[i].assemble(fp, i);
+        instructions[i].assemble(i);
     }
 }

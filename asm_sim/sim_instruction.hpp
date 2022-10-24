@@ -3,6 +3,7 @@
 #include <vector>
 #include <math.h>
 #include <bitset>
+#include <stdlib.h>
 
 #include "sim_opecode.hpp"
 #include "sim_global.hpp"
@@ -20,24 +21,27 @@ class Instruction {
     private: 
         Opcode opcode;
         int oprand0, oprand1, oprand2;
-        int label;
         int imm;
 
-        void set_machine_code(char *mcode, int lidx, int ridx, int imm);
+        void set_machine_R(std::bitset<32> *mcode);
+        void set_machine_I(std::bitset<32> *mcode);
+        void set_machine_S(std::bitset<32> *mcode);
+        void set_machine_B(std::bitset<32> *mcode);
+        void set_machine_U(std::bitset<32> *mcode);
+        void set_machine_J(std::bitset<32> *mcode);
 
     public:
         Instruction() {}
-        Instruction(Opcode opc, int opr0, int opr1, int opr2, int lab, int im) {
+        Instruction(Opcode opc, int opr0, int opr1, int opr2, int im) {
             opcode = opc;
             oprand0 = opr0;
             oprand1 = opr1;
             oprand2 = opr2;
-            label = lab;
             imm = im;
         }
         void print_debug();
         int exec(int pc);
-        void assemble(FILE *fp, int i);
+        void assemble(int i);
 };
 
 inline void Instruction::print_debug() {
@@ -45,7 +49,6 @@ inline void Instruction::print_debug() {
     << oprand0 << " "
     << oprand1 << " "
     << oprand2 << " "
-    << label << " "
     << imm << std::endl;
 }
 
@@ -82,13 +85,13 @@ inline int Instruction::exec(int pc) {
 
         // pattern 3
         // op ope0, ope1, label
-        case Beq: if (xregs[oprand0] == xregs[oprand1]) {pc += label;} else {pc+=4;} break;
-        case Blt: if (xregs[oprand0] < xregs[oprand1]) { pc += label; } else {pc+=4;} break;
-        case Bge: if (xregs[oprand0] >= xregs[oprand1]) {pc += label;} else {pc+=4;} break;
+        case Beq: if (xregs[oprand0] == xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
+        case Blt: if (xregs[oprand0] < xregs[oprand1]) { pc += imm; } else {pc+=4;} break;
+        case Bge: if (xregs[oprand0] >= xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
 
         // pattern 4
         // op ope0, label
-        case Jal: xregs[oprand0] = pc + 4; pc += label; break;
+        case Jal: xregs[oprand0] = pc + 4; pc += imm; break;
 
         // pattern 5
         // op ope0, ope1
@@ -106,95 +109,116 @@ inline int Instruction::exec(int pc) {
     return pc;
 }
 
-inline void Instruction::set_machine_code(char *mcode, int lidx, int ridx, int imm){
-    // [lidx, ridx]
-    unsigned int uimm = (unsigned int)imm;
-    for (int i = ridx; i >= lidx; i--) {
-        mcode[i] = '0' + uimm%2;
-        uimm >>= 1;
-    }
+inline void Instruction::set_machine_R(std::bitset<32> *mcode){
+    *mcode |= std::bitset<32>(oprand2) << 20;
+    *mcode |= std::bitset<32>(oprand1) << 15;
+    *mcode |= std::bitset<32>(oprand0) << 7;
 }
 
-inline void Instruction::assemble(FILE *fp, int i) {
-    char idxfirst[32] = "mem[13'd";
-    char idxsecond[32] = "] <= 32'b";
-    fwrite(idxfirst, sizeof(char), 8, fp);
-    fprintf(fp, "%d", i);
-    fwrite(idxsecond, sizeof(char), 9, fp);
+inline void Instruction::set_machine_I(std::bitset<32> *mcode) { 
+    *mcode |= std::bitset<32>(imm) << 20;
+    *mcode |= std::bitset<32>(oprand1) << 15;
+    *mcode |= std::bitset<32>(oprand0) << 7;
+}
 
+inline void Instruction::set_machine_S(std::bitset<32> *mcode) {
+    *mcode |= std::bitset<32>(imm >> 5) << 25;
+    *mcode |= std::bitset<32>(oprand0) << 20;
+    *mcode |= std::bitset<32>(oprand1) << 15;
+    *mcode |= (std::bitset<32>(imm % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1);
+}
+
+inline void Instruction::set_machine_B(std::bitset<32> *mcode) {
+    *mcode |= std::bitset<32>(imm >> 6) << 25;
+    *mcode |= std::bitset<32>(oprand1) << 20;
+    *mcode |= std::bitset<32>(oprand0) << 15;
+    *mcode |= (std::bitset<32>((imm >> 1) % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1);  
+}
+
+inline void Instruction::set_machine_U(std::bitset<32> *mcode) {
+    *mcode |= std::bitset<32>(imm >> 12) << 12;
+    *mcode |= std::bitset<32>(oprand0) << 7;
+}
+
+inline void Instruction::set_machine_J(std::bitset<32> *mcode) {
+    *mcode |= std::bitset<32>(imm >> 1) << 12;
+    *mcode |= std::bitset<32>(oprand0) << 7;
+}
+
+
+inline void Instruction::assemble(int i) {
+    std::cout << "mem[13'd" << i << "] <= 32'b";
+
+    std::bitset<32> ret_machine;
     switch(opcode) {
         // pattern 0
         // op ope0, ope1, op2
         case Add: 
-            Instruction::set_machine_code(add_machine, 7, 11, oprand2);
-            Instruction::set_machine_code(add_machine, 12, 16, oprand1);
-            Instruction::set_machine_code(add_machine, 20, 24, oprand0);
-            fwrite(add_machine, sizeof(char), 32, fp);
-            break;
-        case Sub: break;
-        case Slt: break;
-
-        case Mul: break;
-        case Div: break;
+            ret_machine = add_machine; set_machine_R(&ret_machine); break;
+        case Sub:
+            ret_machine = sub_machine; set_machine_R(&ret_machine); break;
+        case Slt: 
+            ret_machine = slt_machine; set_machine_R(&ret_machine); break;
+        case Mul: 
+            ret_machine = mul_machine; set_machine_R(&ret_machine); break;
+        case Div: 
+            ret_machine = div_machine; set_machine_R(&ret_machine); break;
         
-        case Fadd_s: break;
-        case Fsub_s: break;
-        case Fmul_s: break;
-        case Fdiv_s: break;
-        case Feq_s: break;
-        case Flt_s: break;
+        case Fadd_s:
+            ret_machine = fadd_machine; set_machine_R(&ret_machine); break;
+        case Fsub_s:
+            ret_machine = fsub_machine; set_machine_R(&ret_machine); break;
+        case Fmul_s:
+            ret_machine = fmul_machine; set_machine_R(&ret_machine); break;
+        case Fdiv_s:
+            ret_machine = fdiv_machine; set_machine_R(&ret_machine); break;
+        case Feq_s:
+            ret_machine = feq_machine; set_machine_R(&ret_machine); break;
+        case Flt_s:
+            ret_machine = flt_machine; set_machine_R(&ret_machine); break;
 
         // pattern 1
         case Addi:
-            Instruction::set_machine_code(addi_machine, 0, 11, imm);
-            Instruction::set_machine_code(addi_machine, 12, 16, oprand1);
-            Instruction::set_machine_code(addi_machine, 20, 24, oprand0);
-            fwrite(addi_machine, sizeof(char), 32, fp);
-            break;
-        case Ori: break;
+            ret_machine = addi_machine; set_machine_I(&ret_machine); break;
+        case Ori: 
+            ret_machine = ori_machine; set_machine_I(&ret_machine); break;
         
         // pattern 2
-        case Lw:             
-            Instruction::set_machine_code(lw_machine, 0, 11, imm);
-            Instruction::set_machine_code(lw_machine, 12, 16, oprand1);
-            Instruction::set_machine_code(lw_machine, 20, 24, oprand0);
-            fwrite(lw_machine, sizeof(char), 32, fp);
-            break;
+        case Lw:     
+            ret_machine = lw_machine; set_machine_I(&ret_machine); break;
         case Sw:
-            Instruction::set_machine_code(sw_machine, 0, 6, imm >> 5);
-            Instruction::set_machine_code(sw_machine, 7, 11, oprand0);
-            Instruction::set_machine_code(sw_machine, 12, 16, oprand1);
-            Instruction::set_machine_code(sw_machine, 20, 24, imm);
-            fwrite(sw_machine, sizeof(char), 32, fp);
-            break;
-        case Jalr: break;
-        case Flw: break;
-        case Fsw: break;
+            ret_machine = sw_machine; set_machine_S(&ret_machine); break;
+        case Jalr: 
+            ret_machine = jalr_machine; set_machine_I(&ret_machine); break;
+        case Flw: 
+            ret_machine = flw_machine; set_machine_I(&ret_machine); break;
+        case Fsw: 
+            ret_machine = fsw_machine; set_machine_S(&ret_machine); break;
 
         // pattern 3
-        case Beq: break;
+        case Beq: 
+            ret_machine = beq_machine; set_machine_B(&ret_machine); break;
         case Blt:
-            Instruction::set_machine_code(blt_machine, 0, 6, label >> 6);
-            Instruction::set_machine_code(blt_machine, 7, 11, oprand1);
-            Instruction::set_machine_code(blt_machine, 12, 16, oprand0);
-            Instruction::set_machine_code(blt_machine, 20, 24, label >> 1);
-            fwrite(blt_machine, sizeof(char), 32, fp);    
-        case Bge: break;
+            ret_machine = blt_machine; set_machine_B(&ret_machine); break;
+        case Bge: 
+            ret_machine = bge_machine; set_machine_B(&ret_machine); break;
 
         // pattern 4
         case Jal:
-            Instruction::set_machine_code(jal_machine, 0, 19, label >> 1);
-            Instruction::set_machine_code(jal_machine, 20, 24, oprand0);
-            fwrite(jal_machine, sizeof(char), 32, fp); 
+            ret_machine = jal_machine; set_machine_J(&ret_machine); break;
+
         // pattern 5
-        case Fsqrt_s: break;
+        case Fsqrt_s: 
+            ret_machine = fsqrt_machine; set_machine_R(&ret_machine); break;
 
         // pattern 6
-        case Lui: break;
+        case Lui: 
+            ret_machine = lui_machine; set_machine_U(&ret_machine); break;
 
         default: 
             std::cerr << "instruction-execution error" << std::endl;
             exit(1);
     }
-    fprintf(fp, ";\n");
+    
+    std::cout << ret_machine.to_string() << ";" << std::endl;
 }
