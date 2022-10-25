@@ -24,7 +24,6 @@ enum Opcode {
     // 2 -> opcode r, imm(r)
     Lw = 200,
     Sw,
-    Jalr,
     Flw,
     Fsw,
 
@@ -32,6 +31,7 @@ enum Opcode {
     Beq = 300,
     Blt,
     Bge,
+    Jalr,
 
     // 4 -> opcode r, label
     Jal = 400,
