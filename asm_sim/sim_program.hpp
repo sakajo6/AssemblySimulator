@@ -73,15 +73,15 @@ class Program {
             {"lui", Lui},
         };
 
-        Instruction read_instruction_0(Opcode op, FILE *fp);
-        Instruction read_instruction_1(Opcode op, FILE *fp);
-        Instruction read_instruction_2(Opcode op, FILE *fp);
-        Instruction read_instruction_3(Opcode op, FILE *fp);
-        Instruction read_instruction_4(Opcode op, FILE *fp);
-        Instruction read_instruction_5(Opcode op, FILE *fp);
-        Instruction read_instruction_6(Opcode op, FILE *fp);
+        Instruction read_instruction_0(Opcode op, FILE *fp, bool brkp);
+        Instruction read_instruction_1(Opcode op, FILE *fp, bool brkp);
+        Instruction read_instruction_2(Opcode op, FILE *fp, bool brkp);
+        Instruction read_instruction_3(Opcode op, FILE *fp, bool brkp);
+        Instruction read_instruction_4(Opcode op, FILE *fp, bool brkp);
+        Instruction read_instruction_5(Opcode op, FILE *fp, bool brkp);
+        Instruction read_instruction_6(Opcode op, FILE *fp, bool brkp);
 
-        Instruction read_instruction(FILE *fp);
+        Instruction read_instruction(FILE *fp, bool brkp);
 
         void getline(FILE *fp);
 
@@ -101,7 +101,7 @@ class Program {
 
 
 // opcode r, r, r
-inline Instruction Program::read_instruction_0(Opcode op, FILE *fp) {
+inline Instruction Program::read_instruction_0(Opcode op, FILE *fp, bool brkp) {
     int operands[3];
     int operand_cnt = 0;
 
@@ -132,13 +132,15 @@ inline Instruction Program::read_instruction_0(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[1], operands[2], -1);
+    return Instruction(op, operands[0], operands[1], operands[2], -1, brkp);
 }
 
 // opcode r, r, imm
-inline Instruction Program::read_instruction_1(Opcode op, FILE *fp) {
+inline Instruction Program::read_instruction_1(Opcode op, FILE *fp, bool brkp) {
     int operands[3];
     int operand_cnt = 0;
+
+    std::cout << "read_instruction called" << std::endl;
 
     std::string operand = "";
     while(feof(fp) == 0) {
@@ -166,11 +168,11 @@ inline Instruction Program::read_instruction_1(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[1], -1, operands[2]);
+    return Instruction(op, operands[0], operands[1], -1, operands[2], brkp);
 }
 
 // opcode r, imm(r)
-inline Instruction Program::read_instruction_2(Opcode op, FILE *fp) {
+inline Instruction Program::read_instruction_2(Opcode op, FILE *fp, bool brkp) {
     int operands[3];
     int operand_cnt = 0;
 
@@ -206,11 +208,11 @@ inline Instruction Program::read_instruction_2(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[2], -1, operands[1]);
+    return Instruction(op, operands[0], operands[2], -1, operands[1], brkp);
 }
 
 // opcode r, r, label
-inline Instruction Program::read_instruction_3(Opcode op, FILE *fp) {
+inline Instruction Program::read_instruction_3(Opcode op, FILE *fp, bool brkp) {
     int operands[3];
     int operand_cnt = 0;
 
@@ -240,11 +242,11 @@ inline Instruction Program::read_instruction_3(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[1], -1, operands[2]);
+    return Instruction(op, operands[0], operands[1], -1, operands[2], brkp);
 }
 
 // opcode r, label
-inline Instruction Program::read_instruction_4(Opcode op, FILE *fp) {
+inline Instruction Program::read_instruction_4(Opcode op, FILE *fp, bool brkp) {
     int operands[2];
     int operand_cnt = 0;
 
@@ -274,11 +276,11 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp) {
         }
     }
 
-    return Instruction(op, operands[0], -1, -1, operands[1]);
+    return Instruction(op, operands[0], -1, -1, operands[1], brkp);
 }
 
 // opcode r, r
-inline Instruction Program::read_instruction_5(Opcode op, FILE *fp) {
+inline Instruction Program::read_instruction_5(Opcode op, FILE *fp, bool brkp) {
     int operands[2];
     int operand_cnt = 0;
 
@@ -307,11 +309,11 @@ inline Instruction Program::read_instruction_5(Opcode op, FILE *fp) {
                 break;
         }
     }
-    return Instruction(op, operands[0], operands[1], -1, -1);
+    return Instruction(op, operands[0], operands[1], -1, -1, brkp);
 }
 
 // opcode r, imm
-inline Instruction Program::read_instruction_6(Opcode op, FILE *fp) {
+inline Instruction Program::read_instruction_6(Opcode op, FILE *fp, bool brkp) {
     int operands[2];
     int operand_cnt = 0;
 
@@ -340,10 +342,10 @@ inline Instruction Program::read_instruction_6(Opcode op, FILE *fp) {
                 break;
         }
     }
-    return Instruction(op, operands[0], -1, -1, operands[1]);
+    return Instruction(op, operands[0], -1, -1, operands[1], brkp);
 }
 
-inline Instruction Program::read_instruction(FILE *fp) {
+inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
     std::string opcode = "";
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
@@ -363,13 +365,13 @@ inline Instruction Program::read_instruction(FILE *fp) {
 
     Opcode op = string_to_opcode[opcode];
 
-    if (op < 100) inst = read_instruction_0(op, fp);
-    else if (op < 200) inst = read_instruction_1(op, fp);
-    else if (op < 300) inst = read_instruction_2(op, fp);
-    else if (op < 400) inst = read_instruction_3(op, fp);
-    else if (op < 500) inst = read_instruction_4(op, fp);
-    else if (op < 600) inst = read_instruction_5(op, fp);
-    else if (op < 700) inst = read_instruction_6(op, fp);
+    if (op < 100) inst = read_instruction_0(op, fp, brkp);
+    else if (op < 200) inst = read_instruction_1(op, fp, brkp);
+    else if (op < 300) inst = read_instruction_2(op, fp, brkp);
+    else if (op < 400) inst = read_instruction_3(op, fp, brkp);
+    else if (op < 500) inst = read_instruction_4(op, fp, brkp);
+    else if (op < 600) inst = read_instruction_5(op, fp, brkp);
+    else if (op < 700) inst = read_instruction_6(op, fp, brkp);
     else std::cerr << "error: unknown opcode." << std::endl;
 
     pc += 4;
@@ -395,7 +397,7 @@ inline void Program::read_label(FILE *fp) {
         else if (c == '.') {
             Program::getline(fp);
         }
-        else if (c == '\t') {
+        else if (c == '\t' || c == '*') {
             Program::getline(fp);
             pc += 4;
         }   
@@ -422,16 +424,21 @@ inline void Program::read_label(FILE *fp) {
 inline void Program::read_program(FILE *fp) {
     pc = 0;
     while(feof(fp) == 0) {
-        int c = fgetc(fp);
-        if (c == -1) {
+        char c = fgetc(fp);
+        if ((int)c == -1) {
             continue;
         }
         else if (c == '.') {
             Program::getline(fp);
         }
-        else if ((char)c == '\t') {
-            instructions.push_back(read_instruction(fp));
+        else if (c == '\t') {
+            instructions.push_back(read_instruction(fp, false));
         }   
+        else if (c == '*') {
+            std::cout << "* detected" << std::endl;
+            fgetc(fp);
+            instructions.push_back(read_instruction(fp, true));
+        }
         else {
             Program::getline(fp);
         }

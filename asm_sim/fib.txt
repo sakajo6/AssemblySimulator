@@ -4,9 +4,9 @@ main:
 	addi	x5, x0, 10
 	sw		x5, 100(x4)
 	lw		x6, 100(x4)
-	addi	x6, x6, -1
+	addi	x6, x6, -2
 	addi	x7, x7, 2
-	blt		x6, x7, ret01
+*	ble		x6, x7, ret01
 	addi	x1, x0, 1
 	addi	x2, x0, 1
 	addi	x8, x8, 0
@@ -15,7 +15,7 @@ fib:
 	add		x2, x1, x2
 	addi	x1, x3, 0
 	addi	x8, x8, 1
-	blt		x8, x6, fib
+*	ble		x8, x6, fib
 	jal		x0, end
 ret01:
 	addi	x6, x0, 1

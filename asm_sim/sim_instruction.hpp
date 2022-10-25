@@ -4,6 +4,7 @@
 #include <math.h>
 #include <bitset>
 #include <stdlib.h>
+#include <iostream>
 
 #include "sim_opecode.hpp"
 #include "sim_global.hpp"
@@ -22,6 +23,7 @@ class Instruction {
         Opcode opcode;
         int oprand0, oprand1, oprand2;
         int imm;
+        bool breakpoint;
 
         void set_machine_R(std::bitset<32> *mcode);
         void set_machine_I(std::bitset<32> *mcode);
@@ -32,12 +34,13 @@ class Instruction {
 
     public:
         Instruction() {}
-        Instruction(Opcode opc, int opr0, int opr1, int opr2, int im) {
+        Instruction(Opcode opc, int opr0, int opr1, int opr2, int im, bool brkp) {
             opcode = opc;
             oprand0 = opr0;
             oprand1 = opr1;
             oprand2 = opr2;
             imm = im;
+            breakpoint = brkp;
         }
         void print_debug();
         int exec(int pc);
@@ -104,6 +107,30 @@ inline int Instruction::exec(int pc) {
         default: 
             std::cerr << "instruction-execution error" << std::endl;
             exit(1);
+    }
+
+    if (breakpoint) {
+        int rownum = 8;
+        int colnum = 32/rownum;
+        std::cout << "pc = " << pc << std::endl;
+        for(int i = 0; i < rownum; i++) {
+            for(int j = 0; j < colnum; j++) {
+                std::cout << "x" << i*colnum + j << ":\t";
+                std::cout << std::hex << xregs[i*colnum + j] << std::dec << ",\t";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+        for(int i = 0; i < rownum; i++) {
+            for(int j = 0; j < colnum; j++) {
+                std::cout << "f" << i*colnum + j << ":\t";
+                std::cout << std::hex << fregs[i*colnum + j] << std::dec << ",\t";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n<<< PRESS ENTER" << std::endl;
+        
+        getchar();
     }
 
     return pc;
