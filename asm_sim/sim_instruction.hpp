@@ -86,7 +86,7 @@ inline int Instruction::exec(int pc) {
         // pattern 3
         // op ope0, ope1, label
         case Beq: if (xregs[oprand0] == xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
-        case Blt: if (xregs[oprand0] < xregs[oprand1]) { pc += imm; } else {pc+=4;} break;
+        case Ble: if (xregs[oprand0] <= xregs[oprand1]) { pc += imm; } else {pc+=4;} break;
         case Bge: if (xregs[oprand0] >= xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
 
         // pattern 4
@@ -198,8 +198,8 @@ inline void Instruction::assemble(int i) {
         // pattern 3
         case Beq: 
             ret_machine = beq_machine; set_machine_B(&ret_machine); break;
-        case Blt:
-            ret_machine = blt_machine; set_machine_B(&ret_machine); break;
+        case Ble:
+            ret_machine = ble_machine; set_machine_B(&ret_machine); break;
         case Bge: 
             ret_machine = bge_machine; set_machine_B(&ret_machine); break;
 

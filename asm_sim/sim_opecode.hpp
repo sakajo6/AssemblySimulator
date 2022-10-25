@@ -29,7 +29,7 @@ enum Opcode {
 
     // 3 -> opcode r, r, label
     Beq = 300,
-    Blt,
+    Ble,
     Bge,
     Jalr,
 

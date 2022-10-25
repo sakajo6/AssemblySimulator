@@ -60,7 +60,7 @@ class Program {
 
             // 3
             {"beq", Beq},
-            {"blt", Blt},
+            {"ble", Ble},
             {"bge", Bge},
 
             // 4
