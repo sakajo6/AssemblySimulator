@@ -109,6 +109,7 @@ inline Instruction Program::read_instruction_0(Opcode op, FILE *fp) {
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
         if ((int)c == -1) continue;
+        else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
@@ -143,6 +144,7 @@ inline Instruction Program::read_instruction_1(Opcode op, FILE *fp) {
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
         if ((int)c == -1) continue;
+        else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
@@ -176,6 +178,7 @@ inline Instruction Program::read_instruction_2(Opcode op, FILE *fp) {
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
         if ((int)c == -1) continue;
+        else if (c == '\t') continue; 
         else if (c == ')') {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
@@ -215,6 +218,7 @@ inline Instruction Program::read_instruction_3(Opcode op, FILE *fp) {
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
         if ((int)c == -1) continue;
+        else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
@@ -248,6 +252,7 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp) {
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
         if ((int)c == -1) continue;
+        else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
@@ -281,6 +286,7 @@ inline Instruction Program::read_instruction_5(Opcode op, FILE *fp) {
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
         if ((int)c == -1) continue;
+        else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
@@ -313,6 +319,7 @@ inline Instruction Program::read_instruction_6(Opcode op, FILE *fp) {
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
         if ((int)c == -1) continue;
+        else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
@@ -337,12 +344,11 @@ inline Instruction Program::read_instruction_6(Opcode op, FILE *fp) {
 }
 
 inline Instruction Program::read_instruction(FILE *fp) {
-    for (int i = 0; i < 3; i++) int c = fgetc(fp);
     std::string opcode = "";
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
         if ((int)c == -1) continue;
-        if (c == ' ') break;
+        if (c == '\t') break;
         opcode += c;
     }
 
@@ -389,7 +395,7 @@ inline void Program::read_label(FILE *fp) {
         else if (c == '.') {
             Program::getline(fp);
         }
-        else if (c == ' ') {
+        else if (c == '\t') {
             Program::getline(fp);
             pc += 4;
         }   
@@ -420,7 +426,10 @@ inline void Program::read_program(FILE *fp) {
         if (c == -1) {
             continue;
         }
-        else if ((char)c == ' ') {
+        else if (c == '.') {
+            Program::getline(fp);
+        }
+        else if ((char)c == '\t') {
             instructions.push_back(read_instruction(fp));
         }   
         else {
