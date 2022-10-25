@@ -6,7 +6,7 @@
 ### make
     - command `make`
 ### execute
-    - command `./fibsimu ./fib.txt`
+    - command `./fibsimu ./fib.s`
     - ファイルの末尾に改行入れないと動かない...
 
 ### breakpoint
