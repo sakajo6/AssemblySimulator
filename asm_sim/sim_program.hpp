@@ -461,7 +461,7 @@ inline void Program::print_debug() {
 }
 
 inline void Program::exec() {
-    pc = 116;
+    pc = labels["min_caml_start"];
     while(pc != instructions.size()*4) {
         // std::cout << pc << std::endl;
         pc = instructions[pc/4].exec(pc);

@@ -1,6 +1,9 @@
 /*
     sw, beqなどoffsetで代入する位置が異なるので注意
     即値をmachine codeに代入する際にunsigned intに変換して操作 <- 実装後、要確認
+
+    x0のzero-regに対応。
+        - 対応策としてはrdとなっているxdはx32とかで挿げ替える
 */
 
 
@@ -15,6 +18,9 @@ using namespace std;
 
 int main(int argc, char const *argv[]) {
     Program program;
+
+    // init resources
+    xregs[2] = 1024;
 
     // read label
     FILE *fp;

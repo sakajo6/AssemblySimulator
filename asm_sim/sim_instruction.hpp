@@ -114,6 +114,7 @@ inline int Instruction::exec(int pc) {
         int rownum = 8;
         int colnum = 32/rownum;
         std::cout << "pc = " << pc << std::endl;
+        std::cout << opcode << " " << oprand0 << " " << oprand1 << " " << oprand2 << std::endl;
         for(int i = 0; i < rownum; i++) {
             for(int j = 0; j < colnum; j++) {
                 std::cout << "x" << i*colnum + j << ":\t";
