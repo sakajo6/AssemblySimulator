@@ -45,10 +45,12 @@ int main(int argc, char const *argv[]) {
     std::cout << "\n<<< debug ended\n" << std::endl;
     
     // exec assembler
+    std::cout << "<<< assembler started\n" << std::endl;
     ofstream ofs("bin.txt");
     streambuf *oldrdbuf = cout.rdbuf(ofs.rdbuf());
     program.assembler();
     cout.rdbuf(oldrdbuf);
+    std::cout << "<<< assembler ended\n" << std::endl;
     
     // exec assembly
     program.exec();

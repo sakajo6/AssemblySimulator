@@ -114,7 +114,7 @@ inline Instruction Program::read_instruction_0(Opcode op, FILE *fp, bool brkp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(1));
-            Program::getline(fp);
+            if (c != '\n') Program::getline(fp);
             break;
         }
         switch(c) {
@@ -140,8 +140,6 @@ inline Instruction Program::read_instruction_1(Opcode op, FILE *fp, bool brkp) {
     int operands[3];
     int operand_cnt = 0;
 
-    std::cout << "read_instruction called" << std::endl;
-
     std::string operand = "";
     while(feof(fp) == 0) {
         char c = (char)fgetc(fp);
@@ -151,7 +149,7 @@ inline Instruction Program::read_instruction_1(Opcode op, FILE *fp, bool brkp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(0));
-            Program::getline(fp);
+            if (c != '\n') Program::getline(fp);
             break;
         }
         switch(c) {
@@ -185,7 +183,7 @@ inline Instruction Program::read_instruction_2(Opcode op, FILE *fp, bool brkp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(1));
-            Program::getline(fp);
+            if (c != '\n') Program::getline(fp);
             break;
         }
         switch(c) {
@@ -225,7 +223,7 @@ inline Instruction Program::read_instruction_3(Opcode op, FILE *fp, bool brkp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = labels[operand] - pc;
-            Program::getline(fp);
+            if (c != '\n') Program::getline(fp);
             break;
         }
         switch(c) {
@@ -259,7 +257,7 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp, bool brkp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = labels[operand] - pc;
-            Program::getline(fp);
+            if (c != '\n') Program::getline(fp);
             break;
         }
         switch(c) {
@@ -293,7 +291,7 @@ inline Instruction Program::read_instruction_5(Opcode op, FILE *fp, bool brkp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(1));
-            Program::getline(fp);
+            if (c != '\n') Program::getline(fp);
             break;
         }
         switch(c) {
@@ -326,7 +324,7 @@ inline Instruction Program::read_instruction_6(Opcode op, FILE *fp, bool brkp) {
             // line ends;
             DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(0));
-            Program::getline(fp);
+            if (c != '\n') Program::getline(fp);
             break;
         }
         switch(c) {
@@ -435,7 +433,6 @@ inline void Program::read_program(FILE *fp) {
             instructions.push_back(read_instruction(fp, false));
         }   
         else if (c == '*') {
-            std::cout << "* detected" << std::endl;
             fgetc(fp);
             instructions.push_back(read_instruction(fp, true));
         }
@@ -464,7 +461,7 @@ inline void Program::print_debug() {
 }
 
 inline void Program::exec() {
-    pc = 0;
+    pc = 116;
     while(pc != instructions.size()*4) {
         // std::cout << pc << std::endl;
         pc = instructions[pc/4].exec(pc);

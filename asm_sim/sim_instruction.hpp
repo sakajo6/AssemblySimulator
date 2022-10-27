@@ -105,6 +105,7 @@ inline int Instruction::exec(int pc) {
         case Lui: xregs[oprand0] = imm << 12; pc+=4; break;
 
         default: 
+            std::cout << pc << std::endl;
             std::cerr << "instruction-execution error" << std::endl;
             exit(1);
     }
