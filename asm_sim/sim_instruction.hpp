@@ -83,10 +83,10 @@ inline int Instruction::exec(int pc) {
         
         // pattern 2
         // op ope0, imm(op1)
-        case Lw: xregs[oprand0] = memory[xregs[oprand1] + imm]; pc+=4; break;
-        case Sw: memory[xregs[oprand1] + imm] = xregs[oprand0]; pc+=4; break;
-        case Flw: fregs[oprand0] = memory[xregs[oprand1] + imm]; pc+=4; break;
-        case Fsw: memory[xregs[oprand1] + imm] = fregs[oprand0]; pc+=4; break;
+        case Lw: xregs[oprand0] = memory[(xregs[oprand1] + imm)/4]; pc+=4; break;
+        case Sw: memory[(xregs[oprand1] + imm)/4] = xregs[oprand0]; pc+=4; break;
+        case Flw: fregs[oprand0] = memory[(xregs[oprand1] + imm)/4]; pc+=4; break;
+        case Fsw: memory[(xregs[oprand1] + imm)/4] = fregs[oprand0]; pc+=4; break;
 
         // pattern 3
         // op ope0, ope1, label
@@ -130,15 +130,15 @@ inline int Instruction::exec(int pc) {
             }
             std::cout << "\n";
         }
-        std::cout << "\n";
-        for(int i = 0; i < rownum; i++) {
-            std::cout << '\t';
-            for(int j = 0; j < colnum; j++) {
-                std::cout << "f" << i*colnum + j << ":\t";
-                std::cout << std::hex << fregs[i*colnum + j] << std::dec << ",\t";
-            }
-            std::cout << "\n";
-        }
+        // std::cout << "\n";
+        // for(int i = 0; i < rownum; i++) {
+        //     std::cout << '\t';
+        //     for(int j = 0; j < colnum; j++) {
+        //         std::cout << "f" << i*colnum + j << ":\t";
+        //         std::cout << std::hex << fregs[i*colnum + j] << std::dec << ",\t";
+        //     }
+        //     std::cout << "\n";
+        // }
         std::cout << "\n\tcurrent pc = " << pc << std::endl;
         std::cout << "\n<<< PRESS ENTER" << std::endl;
         

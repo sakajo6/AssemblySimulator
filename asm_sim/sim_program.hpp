@@ -477,7 +477,7 @@ inline void Program::exec() {
             exit(1);
         }
     }
-    std::cout << std::endl << "fib_ans: " << memory[100] << std::endl; 
+    std::cout << std::endl << "fib_ans: " << memory[25] << std::endl; 
 }
 
 inline void Program::assembler() {
