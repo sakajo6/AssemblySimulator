@@ -33,8 +33,10 @@ class Instruction {
         void set_machine_J(std::bitset<32> *mcode);
 
     public:
+        int line;
         Instruction() {}
-        Instruction(Opcode opc, int opr0, int opr1, int opr2, int im, bool brkp) {
+        Instruction(int ln, Opcode opc, int opr0, int opr1, int opr2, int im, bool brkp) {
+            line = ln;
             opcode = opc;
             oprand0 = opr0;
             oprand1 = opr1;
@@ -77,6 +79,7 @@ inline int Instruction::exec(int pc) {
         // op ope0, ope1, imm
         case Addi: xregs[oprand0] = xregs[oprand1] + imm; pc+=4; break;
         case Ori: xregs[oprand0] = xregs[oprand1] | imm; pc+=4; break;
+        case Jalr: if (oprand0 != 0) {xregs[oprand0] = pc+4;} pc = xregs[oprand1] + imm; break;
         
         // pattern 2
         // op ope0, imm(op1)
@@ -90,7 +93,6 @@ inline int Instruction::exec(int pc) {
         case Beq: if (xregs[oprand0] == xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
         case Ble: if (xregs[oprand0] <= xregs[oprand1]) { pc += imm; } else {pc+=4;} break;
         case Bge: if (xregs[oprand0] >= xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
-        case Jalr: std::cout<<"jalr"<<std::endl; if (oprand0 != 0) {xregs[oprand0] = pc+4;} pc = xregs[oprand1] + imm; break;
 
         // pattern 4
         // op ope0, label
@@ -105,7 +107,8 @@ inline int Instruction::exec(int pc) {
         case Lui: xregs[oprand0] = imm << 12; pc+=4; break;
 
         default: 
-            std::cout << pc << std::endl;
+            std::cout << "error occurred: line " << line << std::endl;
+            std::cout << "current pc = " << pc << std::endl;
             std::cerr << "instruction-execution error" << std::endl;
             exit(1);
     }
@@ -115,9 +118,12 @@ inline int Instruction::exec(int pc) {
     if (breakpoint) {
         int rownum = 8;
         int colnum = 32/rownum;
-        std::cout << "pc = " << pc << std::endl;
-        std::cout << opcode << " " << oprand0 << " " << oprand1 << " " << oprand2 << " " << imm << std::endl;
+
+        std::cout << "\texecuted: line " << line << std::endl;
+        std::cout << '\t' << opcode << " " << oprand0 << " " << oprand1 << " " << oprand2 << " " << imm << std::endl;
+        std::cout << "\n";
         for(int i = 0; i < rownum; i++) {
+            std::cout << '\t';
             for(int j = 0; j < colnum; j++) {
                 std::cout << "x" << i*colnum + j << ":\t";
                 std::cout << std::hex << xregs[i*colnum + j] << std::dec << ",\t";
@@ -126,12 +132,14 @@ inline int Instruction::exec(int pc) {
         }
         std::cout << "\n";
         for(int i = 0; i < rownum; i++) {
+            std::cout << '\t';
             for(int j = 0; j < colnum; j++) {
                 std::cout << "f" << i*colnum + j << ":\t";
                 std::cout << std::hex << fregs[i*colnum + j] << std::dec << ",\t";
             }
             std::cout << "\n";
         }
+        std::cout << "\n\tcurrent pc = " << pc << std::endl;
         std::cout << "\n<<< PRESS ENTER" << std::endl;
         
         getchar();

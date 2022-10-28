@@ -46,9 +46,9 @@ int main(int argc, char const *argv[]) {
     fclose(fp);
 
     
-    std::cout << "<<< debug started\n" << std::endl;
-    program.print_debug();
-    std::cout << "\n<<< debug ended\n" << std::endl;
+    // std::cout << "<<< debug started\n" << std::endl;
+    // program.print_debug();
+    // std::cout << "\n<<< debug ended\n" << std::endl;
     
     // exec assembler
     std::cout << "<<< assembler started\n" << std::endl;

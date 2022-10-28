@@ -20,6 +20,7 @@ enum Opcode {
     // 1 -> opcode r, r, imm
     Addi = 100,
     Ori,
+    Jalr,
 
     // 2 -> opcode r, imm(r)
     Lw = 200,
@@ -31,7 +32,6 @@ enum Opcode {
     Beq = 300,
     Ble,
     Bge,
-    Jalr,
 
     // 4 -> opcode r, label
     Jal = 400,

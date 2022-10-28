@@ -26,6 +26,7 @@ extern float fregs[fregs_size];
 
 class Program {
     private:
+        int line;
         int pc;
         std::vector<Instruction> instructions;
 
@@ -50,11 +51,11 @@ class Program {
             // 1
             {"addi", Addi},
             {"ori", Ori},
+            {"jalr", Jalr},
 
             // 2
             {"lw", Lw},
             {"sw", Sw},
-            {"jalr", Jalr},
             {"flw", Flw},
             {"fsw", Fsw},
 
@@ -87,6 +88,7 @@ class Program {
 
     public:
         Program() {
+            line = 0;
             pc = 0;
             instructions = {};
 
@@ -132,7 +134,7 @@ inline Instruction Program::read_instruction_0(Opcode op, FILE *fp, bool brkp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[1], operands[2], -1, brkp);
+    return Instruction(line, op, operands[0], operands[1], operands[2], -1, brkp);
 }
 
 // opcode r, r, imm
@@ -166,7 +168,7 @@ inline Instruction Program::read_instruction_1(Opcode op, FILE *fp, bool brkp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[1], -1, operands[2], brkp);
+    return Instruction(line, op, operands[0], operands[1], -1, operands[2], brkp);
 }
 
 // opcode r, imm(r)
@@ -206,7 +208,7 @@ inline Instruction Program::read_instruction_2(Opcode op, FILE *fp, bool brkp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[2], -1, operands[1], brkp);
+    return Instruction(line, op, operands[0], operands[2], -1, operands[1], brkp);
 }
 
 // opcode r, r, label
@@ -240,7 +242,7 @@ inline Instruction Program::read_instruction_3(Opcode op, FILE *fp, bool brkp) {
         }
     }
 
-    return Instruction(op, operands[0], operands[1], -1, operands[2], brkp);
+    return Instruction(line, op, operands[0], operands[1], -1, operands[2], brkp);
 }
 
 // opcode r, label
@@ -274,7 +276,7 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp, bool brkp) {
         }
     }
 
-    return Instruction(op, operands[0], -1, -1, operands[1], brkp);
+    return Instruction(line, op, operands[0], -1, -1, operands[1], brkp);
 }
 
 // opcode r, r
@@ -307,7 +309,7 @@ inline Instruction Program::read_instruction_5(Opcode op, FILE *fp, bool brkp) {
                 break;
         }
     }
-    return Instruction(op, operands[0], operands[1], -1, -1, brkp);
+    return Instruction(line, op, operands[0], operands[1], -1, -1, brkp);
 }
 
 // opcode r, imm
@@ -340,7 +342,7 @@ inline Instruction Program::read_instruction_6(Opcode op, FILE *fp, bool brkp) {
                 break;
         }
     }
-    return Instruction(op, operands[0], -1, -1, operands[1], brkp);
+    return Instruction(line, op, operands[0], -1, -1, operands[1], brkp);
 }
 
 inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
@@ -420,6 +422,7 @@ inline void Program::read_label(FILE *fp) {
 }
 
 inline void Program::read_program(FILE *fp) {
+    line = 0;
     pc = 0;
     while(feof(fp) == 0) {
         char c = fgetc(fp);
@@ -427,16 +430,20 @@ inline void Program::read_program(FILE *fp) {
             continue;
         }
         else if (c == '.') {
+            line++;
             Program::getline(fp);
         }
         else if (c == '\t') {
+            line++;
             instructions.push_back(read_instruction(fp, false));
         }   
         else if (c == '*') {
+            line++;
             fgetc(fp);
             instructions.push_back(read_instruction(fp, true));
         }
         else {
+            line++;
             Program::getline(fp);
         }
     }    
@@ -463,12 +470,12 @@ inline void Program::print_debug() {
 inline void Program::exec() {
     pc = labels["min_caml_start"];
     while(pc != instructions.size()*4) {
-        // std::cout << pc << std::endl;
+        int prevpc = pc;
         pc = instructions[pc/4].exec(pc);
-        // for(int i = 0; i < 10; i++) {
-        //     std::cout << regis[i] << " ";
-        // }
-        // std::cout << std::endl;
+        if(pc < 0) {
+            std::cout << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
+            exit(1);
+        }
     }
     std::cout << std::endl << "fib_ans: " << memory[100] << std::endl; 
 }
