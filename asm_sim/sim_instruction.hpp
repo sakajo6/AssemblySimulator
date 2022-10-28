@@ -82,7 +82,6 @@ inline int Instruction::exec(int pc) {
         // op ope0, imm(op1)
         case Lw: xregs[oprand0] = memory[xregs[oprand1] + imm]; pc+=4; break;
         case Sw: memory[xregs[oprand1] + imm] = xregs[oprand0]; pc+=4; break;
-        case Jalr: xregs[oprand0] = pc+4; pc = xregs[oprand1] + imm; break;
         case Flw: fregs[oprand0] = memory[xregs[oprand1] + imm]; pc+=4; break;
         case Fsw: memory[xregs[oprand1] + imm] = fregs[oprand0]; pc+=4; break;
 
@@ -91,6 +90,7 @@ inline int Instruction::exec(int pc) {
         case Beq: if (xregs[oprand0] == xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
         case Ble: if (xregs[oprand0] <= xregs[oprand1]) { pc += imm; } else {pc+=4;} break;
         case Bge: if (xregs[oprand0] >= xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
+        case Jalr: std::cout<<"jalr"<<std::endl; if (oprand0 != 0) {xregs[oprand0] = pc+4;} pc = xregs[oprand1] + imm; break;
 
         // pattern 4
         // op ope0, label
@@ -110,11 +110,13 @@ inline int Instruction::exec(int pc) {
             exit(1);
     }
 
+    xregs[0] = 0;
+
     if (breakpoint) {
         int rownum = 8;
         int colnum = 32/rownum;
         std::cout << "pc = " << pc << std::endl;
-        std::cout << opcode << " " << oprand0 << " " << oprand1 << " " << oprand2 << std::endl;
+        std::cout << opcode << " " << oprand0 << " " << oprand1 << " " << oprand2 << " " << imm << std::endl;
         for(int i = 0; i < rownum; i++) {
             for(int j = 0; j < colnum; j++) {
                 std::cout << "x" << i*colnum + j << ":\t";
