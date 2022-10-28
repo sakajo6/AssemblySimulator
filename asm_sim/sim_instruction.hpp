@@ -104,7 +104,7 @@ inline int Instruction::exec(int pc) {
 
         // pattern 6
         // op ope0, imm
-        case Lui: xregs[oprand0] = imm << 12; pc+=4; break;
+        case Lui: xregs[oprand0] = (imm >> 12) << 12; pc+=4; break;
 
         default: 
             std::cout << "error occurred: line " << line << std::endl;
