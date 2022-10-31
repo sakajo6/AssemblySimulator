@@ -58,59 +58,115 @@ inline void Instruction::print_debug() {
 }
 
 inline int Instruction::exec(int pc) {
-    switch(opcode) {
-        // pattern 0
-        // op ope0, ope1, op2
-        case Add: xregs[oprand0] = xregs[oprand1] + xregs[oprand2]; pc+=4; break;
-        case Sub: xregs[oprand0] = xregs[oprand1] - xregs[oprand2]; pc+=4; break;
-        case Slt: if (xregs[oprand1] < xregs[oprand2]) {xregs[oprand0] = 1;} else {xregs[oprand0] = 0;}; pc+=4; break;
-
-        case Mul: xregs[oprand0] = xregs[oprand1] * xregs[oprand2]; pc+=4; break;
-        case Div: xregs[oprand0] = xregs[oprand1] / xregs[oprand2]; pc+=4; break;
-        
-        case Fadd_s: fregs[oprand0] = fregs[oprand1] + fregs[oprand2]; pc+=4; break;
-        case Fsub_s: fregs[oprand0] = fregs[oprand1] - fregs[oprand2]; pc+=4; break;
-        case Fmul_s: fregs[oprand0] = fregs[oprand1] * fregs[oprand2]; pc+=4; break;
-        case Fdiv_s: fregs[oprand0] = fregs[oprand1] / fregs[oprand2]; pc+=4; break;
-        case Feq_s: if (fregs[oprand1] == fregs[oprand2]) {fregs[oprand0] = 1;} else {fregs[oprand0] = 0;}; pc+=4; break;
-        case Flt_s: if (fregs[oprand1] < fregs[oprand2]) {fregs[oprand0] = 1;} else {fregs[oprand0] = 0;}; pc+=4; break;
-
-        // pattern 1
-        // op ope0, ope1, imm
-        case Addi: xregs[oprand0] = xregs[oprand1] + imm; pc+=4; break;
-        case Ori: xregs[oprand0] = xregs[oprand1] | imm; pc+=4; break;
-        case Jalr: if (oprand0 != 0) {xregs[oprand0] = pc+4;} pc = xregs[oprand1] + imm; break;
-        
-        // pattern 2
-        // op ope0, imm(op1)
-        case Lw: xregs[oprand0] = memory[(xregs[oprand1] + imm)/4]; pc+=4; break;
-        case Sw: memory[(xregs[oprand1] + imm)/4] = xregs[oprand0]; pc+=4; break;
-        case Flw: fregs[oprand0] = memory[(xregs[oprand1] + imm)/4]; pc+=4; break;
-        case Fsw: memory[(xregs[oprand1] + imm)/4] = fregs[oprand0]; pc+=4; break;
-
-        // pattern 3
-        // op ope0, ope1, label
-        case Beq: if (xregs[oprand0] == xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
-        case Ble: if (xregs[oprand0] <= xregs[oprand1]) { pc += imm; } else {pc+=4;} break;
-        case Bge: if (xregs[oprand0] >= xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
-
-        // pattern 4
-        // op ope0, label
-        case Jal: xregs[oprand0] = pc + 4; pc += imm; break;
-
-        // pattern 5
-        // op ope0, ope1
-        case Fsqrt_s: fregs[oprand0] = sqrt(fregs[oprand1]); pc+=4; break;
-
-        // pattern 6
-        // op ope0, imm
-        case Lui: xregs[oprand0] = (imm >> 12) << 12; pc+=4; break;
-
-        default: 
-            std::cout << "error occurred: line " << line << std::endl;
-            std::cout << "current pc = " << pc << std::endl;
-            std::cerr << "instruction-execution error" << std::endl;
-            exit(1);
+    if (opcode < 50) {
+        switch(opcode) {
+            // pattern 0
+            // op ope0, ope1, op2
+            case Add: xregs[oprand0] = xregs[oprand1] + xregs[oprand2]; pc+=4; break;
+            case Sub: xregs[oprand0] = xregs[oprand1] - xregs[oprand2]; pc+=4; break;
+            case Slt: if (xregs[oprand1] < xregs[oprand2]) {xregs[oprand0] = 1;} else {xregs[oprand0] = 0;}; pc+=4; break;
+            case Mul: xregs[oprand0] = xregs[oprand1] * xregs[oprand2]; pc+=4; break;
+            case Div: xregs[oprand0] = xregs[oprand1] / xregs[oprand2]; pc+=4; break;
+            default: 
+                std::cout << "error occurred: line " << line << std::endl;
+                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "instruction-execution error" << std::endl;
+                exit(1);
+        }      
+    }
+    else if (opcode < 100) {
+        switch(opcode) {
+            case Fadd_s: fregs[oprand0] = fregs[oprand1] + fregs[oprand2]; pc+=4; break;
+            case Fsub_s: fregs[oprand0] = fregs[oprand1] - fregs[oprand2]; pc+=4; break;
+            case Fmul_s: fregs[oprand0] = fregs[oprand1] * fregs[oprand2]; pc+=4; break;
+            case Fdiv_s: fregs[oprand0] = fregs[oprand1] / fregs[oprand2]; pc+=4; break;
+            case Feq_s: if (fregs[oprand1] == fregs[oprand2]) {fregs[oprand0] = 1;} else {fregs[oprand0] = 0;}; pc+=4; break;
+            case Flt_s: if (fregs[oprand1] < fregs[oprand2]) {fregs[oprand0] = 1;} else {fregs[oprand0] = 0;}; pc+=4; break;
+            default: 
+                std::cout << "error occurred: line " << line << std::endl;
+                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "instruction-execution error" << std::endl;
+                exit(1);
+        }
+    }
+    else if (opcode < 200) {
+        switch(opcode) {          
+            // pattern 1
+            // op ope0, ope1, imm
+            case Addi: xregs[oprand0] = xregs[oprand1] + imm; pc+=4; break;
+            case Ori: xregs[oprand0] = xregs[oprand1] | imm; pc+=4; break;
+            case Jalr: if (oprand0 != 0) {xregs[oprand0] = pc+4;} pc = xregs[oprand1] + imm; break;
+            default: 
+                std::cout << "error occurred: line " << line << std::endl;
+                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "instruction-execution error" << std::endl;
+                exit(1);
+        }
+    }
+    else if (opcode < 300) {
+        switch(opcode) {
+            // pattern 2
+            // op ope0, imm(op1)
+            case Lw: xregs[oprand0] = memory[(xregs[oprand1] + imm)/4]; pc+=4; break;
+            case Sw: memory[(xregs[oprand1] + imm)/4] = xregs[oprand0]; pc+=4; break;
+            case Flw: fregs[oprand0] = memory[(xregs[oprand1] + imm)/4]; pc+=4; break;
+            case Fsw: memory[(xregs[oprand1] + imm)/4] = fregs[oprand0]; pc+=4; break;
+            default: 
+                std::cout << "error occurred: line " << line << std::endl;
+                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "instruction-execution error" << std::endl;
+                exit(1);
+        }
+    }
+    else if (opcode < 400) {
+        switch(opcode) {
+            // pattern 3
+            // op ope0, ope1, label
+            case Beq: if (xregs[oprand0] == xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
+            case Ble: if (xregs[oprand0] <= xregs[oprand1]) { pc += imm; } else {pc+=4;} break;
+            case Bge: if (xregs[oprand0] >= xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
+            default: 
+                std::cout << "error occurred: line " << line << std::endl;
+                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "instruction-execution error" << std::endl;
+                exit(1);
+        }
+    }
+    else if (opcode < 500) {
+        switch(opcode) {
+            // pattern 4
+            // op ope0, label
+            case Jal: xregs[oprand0] = pc + 4; pc += imm; break;
+            default: 
+                std::cout << "error occurred: line " << line << std::endl;
+                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "instruction-execution error" << std::endl;
+                exit(1);
+        }
+    }
+    else if (opcode < 600) {
+        switch(opcode) {            
+            // pattern 5
+            // op ope0, ope1
+            case Fsqrt_s: fregs[oprand0] = sqrt(fregs[oprand1]); pc+=4; break;
+            default: 
+                std::cout << "error occurred: line " << line << std::endl;
+                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "instruction-execution error" << std::endl;
+                exit(1);
+        }
+    }
+    else if (opcode < 700) {
+        switch(opcode) {
+            // pattern 6
+            // op ope0, imm
+            case Lui: xregs[oprand0] = (imm >> 12) << 12; pc+=4; break;
+            default: 
+                std::cout << "error occurred: line " << line << std::endl;
+                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "instruction-execution error" << std::endl;
+                exit(1);
+        }
     }
 
     xregs[0] = 0;
@@ -191,74 +247,94 @@ inline void Instruction::assemble(int i) {
     std::cout << "mem[13'd" << i << "] <= 32'b";
 
     std::bitset<32> ret_machine;
-    switch(opcode) {
-        // pattern 0
-        // op ope0, ope1, op2
-        case Add: 
-            ret_machine = add_machine; set_machine_R(&ret_machine); break;
-        case Sub:
-            ret_machine = sub_machine; set_machine_R(&ret_machine); break;
-        case Slt: 
-            ret_machine = slt_machine; set_machine_R(&ret_machine); break;
-        case Mul: 
-            ret_machine = mul_machine; set_machine_R(&ret_machine); break;
-        case Div: 
-            ret_machine = div_machine; set_machine_R(&ret_machine); break;
-        
-        case Fadd_s:
-            ret_machine = fadd_machine; set_machine_R(&ret_machine); break;
-        case Fsub_s:
-            ret_machine = fsub_machine; set_machine_R(&ret_machine); break;
-        case Fmul_s:
-            ret_machine = fmul_machine; set_machine_R(&ret_machine); break;
-        case Fdiv_s:
-            ret_machine = fdiv_machine; set_machine_R(&ret_machine); break;
-        case Feq_s:
-            ret_machine = feq_machine; set_machine_R(&ret_machine); break;
-        case Flt_s:
-            ret_machine = flt_machine; set_machine_R(&ret_machine); break;
-
-        // pattern 1
-        case Addi:
-            ret_machine = addi_machine; set_machine_I(&ret_machine); break;
-        case Ori: 
-            ret_machine = ori_machine; set_machine_I(&ret_machine); break;
-        
-        // pattern 2
-        case Lw:     
-            ret_machine = lw_machine; set_machine_I(&ret_machine); break;
-        case Sw:
-            ret_machine = sw_machine; set_machine_S(&ret_machine); break;
-        case Jalr: 
-            ret_machine = jalr_machine; set_machine_I(&ret_machine); break;
-        case Flw: 
-            ret_machine = flw_machine; set_machine_I(&ret_machine); break;
-        case Fsw: 
-            ret_machine = fsw_machine; set_machine_S(&ret_machine); break;
-
-        // pattern 3
-        case Beq: 
-            ret_machine = beq_machine; set_machine_B(&ret_machine); break;
-        case Ble:
-            ret_machine = ble_machine; set_machine_B(&ret_machine); break;
-        case Bge: 
-            ret_machine = bge_machine; set_machine_B(&ret_machine); break;
-
-        // pattern 4
-        case Jal:
-            ret_machine = jal_machine; set_machine_J(&ret_machine); break;
-
-        // pattern 5
-        case Fsqrt_s: 
-            ret_machine = fsqrt_machine; set_machine_R(&ret_machine); break;
-
-        // pattern 6
-        case Lui: 
-            ret_machine = lui_machine; set_machine_U(&ret_machine); break;
-
-        default: 
-            std::cerr << "instruction-execution error" << std::endl;
-            exit(1);
+    if (opcode < 50) {
+        switch(opcode) {
+            // pattern 0
+            // op ope0, ope1, op2
+            case Add: 
+                ret_machine = add_machine; set_machine_R(&ret_machine); break;
+            case Sub:
+                ret_machine = sub_machine; set_machine_R(&ret_machine); break;
+            case Slt: 
+                ret_machine = slt_machine; set_machine_R(&ret_machine); break;
+            case Mul: 
+                ret_machine = mul_machine; set_machine_R(&ret_machine); break;
+            case Div: 
+                ret_machine = div_machine; set_machine_R(&ret_machine); break;
+        }       
+    }
+    else if (opcode < 100) {
+        switch(opcode) {
+            case Fadd_s:
+                ret_machine = fadd_machine; set_machine_R(&ret_machine); break;
+            case Fsub_s:
+                ret_machine = fsub_machine; set_machine_R(&ret_machine); break;
+            case Fmul_s:
+                ret_machine = fmul_machine; set_machine_R(&ret_machine); break;
+            case Fdiv_s:
+                ret_machine = fdiv_machine; set_machine_R(&ret_machine); break;
+            case Feq_s:
+                ret_machine = feq_machine; set_machine_R(&ret_machine); break;
+            case Flt_s:
+                ret_machine = flt_machine; set_machine_R(&ret_machine); break;
+        }
+    }
+    else if (opcode < 200) {
+        switch(opcode) {            
+            // pattern 1
+            case Addi:
+                ret_machine = addi_machine; set_machine_I(&ret_machine); break;
+            case Ori: 
+                ret_machine = ori_machine; set_machine_I(&ret_machine); break;
+            
+        }
+    }
+    else if (opcode < 300) {
+        switch(opcode) {
+            // pattern 2
+            case Lw:     
+                ret_machine = lw_machine; set_machine_I(&ret_machine); break;
+            case Sw:
+                ret_machine = sw_machine; set_machine_S(&ret_machine); break;
+            case Jalr: 
+                ret_machine = jalr_machine; set_machine_I(&ret_machine); break;
+            case Flw: 
+                ret_machine = flw_machine; set_machine_I(&ret_machine); break;
+            case Fsw: 
+                ret_machine = fsw_machine; set_machine_S(&ret_machine); break;
+        }
+    }
+    else if (opcode < 400) {
+        switch(opcode) {
+            // pattern 3
+            case Beq: 
+                ret_machine = beq_machine; set_machine_B(&ret_machine); break;
+            case Ble:
+                ret_machine = ble_machine; set_machine_B(&ret_machine); break;
+            case Bge: 
+                ret_machine = bge_machine; set_machine_B(&ret_machine); break;            
+        }
+    }
+    else if (opcode < 500) {
+        switch(opcode) {
+            // pattern 4
+            case Jal:
+                ret_machine = jal_machine; set_machine_J(&ret_machine); break;
+        }
+    }
+    else if (opcode < 600) {
+        switch(opcode) {            
+            // pattern 5
+            case Fsqrt_s: 
+                ret_machine = fsqrt_machine; set_machine_R(&ret_machine); break;
+        }
+    }
+    else if (opcode < 700) {
+        switch(opcode) {
+            // pattern 6
+            case Lui: 
+                ret_machine = lui_machine; set_machine_U(&ret_machine); break;
+        }
     }
     
     std::cout << ret_machine.to_string() << ";" << std::endl;

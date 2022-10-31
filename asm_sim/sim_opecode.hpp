@@ -5,11 +5,10 @@ enum Opcode {
     Add = 0,
     Sub,
     Slt,
-
     Mul,
     Div,
 
-    Fadd_s,
+    Fadd_s = 50,
     Fsub_s,
     Fmul_s,
     Fdiv_s,
@@ -48,7 +47,6 @@ std::map<std::string, Opcode> string_to_opcode = {
     {"add", Add},
     {"sub", Sub},
     {"slt", Slt},
-
     {"mul", Mul},
     {"div", Div},
 
