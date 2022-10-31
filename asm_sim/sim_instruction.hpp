@@ -125,8 +125,10 @@ inline int Instruction::exec(int pc) {
         for(int i = 0; i < rownum; i++) {
             std::cout << '\t';
             for(int j = 0; j < colnum; j++) {
-                std::cout << "x" << i*colnum + j << ":\t";
-                std::cout << std::hex << xregs[i*colnum + j] << std::dec << ",\t";
+                std::cout << "x" << i*colnum + j;
+                if ((i*colnum + j)/10 == 0) std::cout << "  ";
+                else std::cout << " ";
+                std::cout << "0x" << std::hex << xregs[i*colnum + j] << std::dec << ",\t";
             }
             std::cout << "\n";
         }

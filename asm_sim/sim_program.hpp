@@ -469,7 +469,7 @@ inline void Program::print_debug() {
 
 inline void Program::exec() {
     pc = labels["min_caml_start"];
-    while(pc != instructions.size()*4) {
+    while(pc != instructions.size()*4 - 1) {
         int prevpc = pc;
         pc = instructions[pc/4].exec(pc);
         if(pc < 0) {
@@ -477,7 +477,6 @@ inline void Program::exec() {
             exit(1);
         }
     }
-    std::cout << std::endl << "fib_ans: " << memory[25] << std::endl; 
 }
 
 inline void Program::assembler() {

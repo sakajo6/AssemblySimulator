@@ -60,6 +60,21 @@ int main(int argc, char const *argv[]) {
     
     // exec assembly
     program.exec();
+    std::cout << "program finished\n" << std::endl;
+    
+    int rownum = 8;
+    int colnum = 32/rownum;
+    std::cout << "\n";
+    for(int i = 0; i < rownum; i++) {
+        std::cout << '\t';
+        for(int j = 0; j < colnum; j++) {
+            std::cout << "x" << i*colnum + j;
+            if ((i*colnum + j)/10 == 0) std::cout << "  ";
+            else std::cout << " ";
+            std::cout << "0x" << std::hex << xregs[i*colnum + j] << std::dec << ",\t";
+        }
+        std::cout << "\n";
+    }
 
 
     return 0;
