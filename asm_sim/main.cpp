@@ -54,16 +54,16 @@ int main(int argc, char const *argv[]) {
     cout.rdbuf(oldrdbuf);
     std::cout << "<<< assembler ended\n" << std::endl;
 
-    std::cout << "<<< execute simulator debug?[y/n]" << std::endl;
-    char inputchar = getchar();
-    if (inputchar == 'y') {
-        std::cout << "<<< debug started\n" << std::endl;
-        program.print_debug();
-        std::cout << "\n<<< debug ended\n" << std::endl;
-    }
+    // std::cout << "<<< execute simulator debug?[y/n]" << std::endl;
+    // char inputchar = getchar();
+    // if (inputchar == 'y') {
+    //     std::cout << "<<< debug started\n" << std::endl;
+    //     program.print_debug();
+    //     std::cout << "\n<<< debug ended\n" << std::endl;
+    // }
     
 
-    std::cout << "<<< output stats?[y/n]" << std::endl;
+    // std::cout << "<<< output stats?[y/n]" << std::endl;
     // inputchar = getchar();
     bool statsflag = false;
     // if (inputchar == 'y') {
