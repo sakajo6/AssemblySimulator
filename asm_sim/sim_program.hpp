@@ -58,7 +58,7 @@ class Program {
         void read_program(FILE *fp);
         void read_label(FILE *fp);
         void print_debug();
-        long long int exec();
+        long long int exec(bool statsflag);
         void assembler();
         void print_stats();
 };
@@ -426,18 +426,17 @@ inline void Program::print_debug() {
 
     std::cout << std::endl;
 
-    std::cout << instructions.size() << std::endl;
+    std::cout << "instruction num: " << instructions.size() << std::endl;
 }
 
-inline long long int Program::exec() {
+inline long long int Program::exec(bool statsflag) {
     long long int counter = 0;
 
     pc = labels["min_caml_start"];
     while(pc != instructions.size()*4) {
         int prevpc = pc;
-        Instruction instructiontemp = instructions[pc/4];
-        stats[instructiontemp.opcode]++;
-        pc = instructiontemp.exec(pc);
+        if (statsflag) stats[instructions[pc/4].opcode]++;
+        pc = instructions[pc/4].exec(pc);
         counter++;
         if(pc < 0) {
             std::cout << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;

@@ -46,11 +46,6 @@ int main(int argc, char const *argv[]) {
     std::cout << "\n<<< program read ended\n" << std::endl;
     fclose(fp);
 
-    
-    // std::cout << "<<< debug started\n" << std::endl;
-    // program.print_debug();
-    // std::cout << "\n<<< debug ended\n" << std::endl;
-    
     // exec assembler
     std::cout << "<<< assembler started\n" << std::endl;
     ofstream ofs("bin.txt");
@@ -58,12 +53,29 @@ int main(int argc, char const *argv[]) {
     program.assembler();
     cout.rdbuf(oldrdbuf);
     std::cout << "<<< assembler ended\n" << std::endl;
+
+    std::cout << "<<< execute simulator debug?[y/n]" << std::endl;
+    char inputchar = getchar();
+    if (inputchar == 'y') {
+        std::cout << "<<< debug started\n" << std::endl;
+        program.print_debug();
+        std::cout << "\n<<< debug ended\n" << std::endl;
+    }
+    
+
+    std::cout << "<<< output stats?[y/n]" << std::endl;
+    // inputchar = getchar();
+    bool statsflag = false;
+    // if (inputchar == 'y') {
+    //     statsflag = true;
+    // }
     
     // exec assembly
 	struct timespec start, end;
     
 	clock_gettime(CLOCK_REALTIME, &start);
-    long long int counter = program.exec();
+    std::cout << "<<< program executing\n" << std::endl;
+    long long int counter = program.exec(statsflag);
     clock_gettime(CLOCK_REALTIME, &end);
 
     std::cout << "<<< program finished\n" << std::endl;
@@ -86,10 +98,12 @@ int main(int argc, char const *argv[]) {
     std::cout << "\n";
 
     // stats
-    ofstream ofs2("stats.txt");
-    oldrdbuf = cout.rdbuf(ofs2.rdbuf());
-    program.print_stats();
-    cout.rdbuf(oldrdbuf);
+    if (statsflag) {
+        ofstream ofs2("stats.txt");
+        oldrdbuf = cout.rdbuf(ofs2.rdbuf());
+        program.print_stats();
+        cout.rdbuf(oldrdbuf);
+    }
 
     return 0;
 }

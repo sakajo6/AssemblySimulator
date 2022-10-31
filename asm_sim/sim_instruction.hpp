@@ -50,11 +50,12 @@ class Instruction {
 };
 
 inline void Instruction::print_debug() {
-    std::cout << opcode << " "
-    << oprand0 << " "
-    << oprand1 << " "
-    << oprand2 << " "
-    << imm << std::endl;
+    std::cout << opcode_to_string[opcode] << " ";
+    if (oprand0 != -1) std::cout << "a" << oprand0 << " ";
+    if (oprand1 != -1) std::cout << "a" << oprand1 << " ";
+    if (oprand2 != -1) std::cout << "a" << oprand2 << " ";
+    if (imm != -1) std::cout << imm << " ";
+    std::cout << std::endl;
 }
 
 inline int Instruction::exec(int pc) {
