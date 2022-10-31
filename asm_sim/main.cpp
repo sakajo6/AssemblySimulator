@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <iostream>
+#include <time.h>
 
 #include "sim_program.hpp"
 
@@ -59,8 +60,17 @@ int main(int argc, char const *argv[]) {
     std::cout << "<<< assembler ended\n" << std::endl;
     
     // exec assembly
-    program.exec();
+	struct timespec start, end;
+    
+	clock_gettime(CLOCK_REALTIME, &start);
+    long long int counter = program.exec();
+    clock_gettime(CLOCK_REALTIME, &end);
+
     std::cout << "<<< program finished\n" << std::endl;
+    std::cout << "\telapsed time: ";
+    std::cout << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << std::endl;
+    std::cout << "\tcounter: " << counter << '\n' << std::endl;
+
     int rownum = 8;
     int colnum = 32/rownum;
     for(int i = 0; i < rownum; i++) {
