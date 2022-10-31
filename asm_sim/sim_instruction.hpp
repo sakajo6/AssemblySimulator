@@ -20,7 +20,6 @@ extern float fregs[fregs_size];
 
 class Instruction {
     private: 
-        Opcode opcode;
         int oprand0, oprand1, oprand2;
         int imm;
         bool breakpoint;
@@ -33,6 +32,7 @@ class Instruction {
         void set_machine_J(std::bitset<32> *mcode);
 
     public:
+        Opcode opcode;
         int line;
         Instruction() {}
         Instruction(int ln, Opcode opc, int opr0, int opr1, int opr2, int im, bool brkp) {

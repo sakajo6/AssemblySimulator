@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <algorithm>
 
 #include "sim_instruction.hpp"
 #include "sim_opecode.hpp"
@@ -31,48 +32,7 @@ class Program {
         std::vector<Instruction> instructions;
 
         std::map<std::string, int> labels;
-
-        std::map<std::string, Opcode> string_to_opcode = {
-            // 0
-            {"add", Add},
-            {"sub", Sub},
-            {"slt", Slt},
-
-            {"mul", Mul},
-            {"div", Div},
-
-            {"fadd.s", Fadd_s},
-            {"fsub.s", Fsub_s},
-            {"fmul.s", Fmul_s},
-            {"fdiv.s", Fdiv_s},
-            {"feq.s", Feq_s},
-            {"flt.s", Flt_s},
-
-            // 1
-            {"addi", Addi},
-            {"ori", Ori},
-            {"jalr", Jalr},
-
-            // 2
-            {"lw", Lw},
-            {"sw", Sw},
-            {"flw", Flw},
-            {"fsw", Fsw},
-
-            // 3
-            {"beq", Beq},
-            {"ble", Ble},
-            {"bge", Bge},
-
-            // 4
-            {"jal", Jal},
-
-            // 5
-            {"fsqrt.s", Fsqrt_s},
-
-            // 6
-            {"lui", Lui},
-        };
+        std::map<Opcode, int> stats; 
 
         Instruction read_instruction_0(Opcode op, FILE *fp, bool brkp);
         Instruction read_instruction_1(Opcode op, FILE *fp, bool brkp);
@@ -93,12 +53,14 @@ class Program {
             instructions = {};
 
             labels.clear();
+            stats.clear();
         }
         void read_program(FILE *fp);
         void read_label(FILE *fp);
         void print_debug();
         long long int exec();
         void assembler();
+        void print_stats();
 };
 
 
@@ -473,7 +435,9 @@ inline long long int Program::exec() {
     pc = labels["min_caml_start"];
     while(pc != instructions.size()*4) {
         int prevpc = pc;
-        pc = instructions[pc/4].exec(pc);
+        Instruction instructiontemp = instructions[pc/4];
+        stats[instructiontemp.opcode]++;
+        pc = instructiontemp.exec(pc);
         counter++;
         if(pc < 0) {
             std::cout << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
@@ -482,6 +446,17 @@ inline long long int Program::exec() {
     }
 
     return counter;
+}
+
+inline void Program::print_stats() {
+    std::vector<std::pair<int, Opcode>> instr_counter;
+    for(auto i: stats) {
+        instr_counter.push_back({i.second, i.first});
+    }
+    std::sort(instr_counter.begin(), instr_counter.end(), std::greater<>());
+    for(auto i: instr_counter) {
+        std::cout << opcode_to_string[i.second] << ": \t" << i.first << std::endl;
+    }
 }
 
 inline void Program::assembler() {

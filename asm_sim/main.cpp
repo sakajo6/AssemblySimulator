@@ -85,6 +85,11 @@ int main(int argc, char const *argv[]) {
     }
     std::cout << "\n";
 
+    // stats
+    ofstream ofs2("stats.txt");
+    oldrdbuf = cout.rdbuf(ofs2.rdbuf());
+    program.print_stats();
+    cout.rdbuf(oldrdbuf);
 
     return 0;
 }
