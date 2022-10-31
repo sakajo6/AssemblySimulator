@@ -44,3 +44,5 @@ min_caml_start:
 	lw		x1, 4(x2)
 	addi	x10, x4, 0
 	addi	x2, x2, 112
+min_caml_print_int:
+*	lw		x1, 4(x2)

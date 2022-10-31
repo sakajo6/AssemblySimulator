@@ -60,11 +60,9 @@ int main(int argc, char const *argv[]) {
     
     // exec assembly
     program.exec();
-    std::cout << "program finished\n" << std::endl;
-    
+    std::cout << "<<< program finished\n" << std::endl;
     int rownum = 8;
     int colnum = 32/rownum;
-    std::cout << "\n";
     for(int i = 0; i < rownum; i++) {
         std::cout << '\t';
         for(int j = 0; j < colnum; j++) {
@@ -75,6 +73,7 @@ int main(int argc, char const *argv[]) {
         }
         std::cout << "\n";
     }
+    std::cout << "\n";
 
 
     return 0;

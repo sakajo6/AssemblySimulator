@@ -469,7 +469,7 @@ inline void Program::print_debug() {
 
 inline void Program::exec() {
     pc = labels["min_caml_start"];
-    while(pc != instructions.size()*4 - 1) {
+    while(pc != instructions.size()*4) {
         int prevpc = pc;
         pc = instructions[pc/4].exec(pc);
         if(pc < 0) {
