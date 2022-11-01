@@ -6,7 +6,7 @@
 ### make
     - command `make`
 ### execute
-    - command `./fibsimu ./fib.s`
+    - command `./simu ./fib.s`
     - ファイルの末尾に改行入れないと動かない...
 
 #### 実行時オプション
