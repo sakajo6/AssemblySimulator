@@ -177,7 +177,8 @@ inline int Instruction::exec(int pc) {
         int colnum = 32/rownum;
 
         std::cout << "\texecuted: line " << line << std::endl;
-        std::cout << '\t' << opcode << " " << oprand0 << " " << oprand1 << " " << oprand2 << " " << imm << std::endl;
+        std::cout << "\t";
+        print_debug();
         std::cout << "\n";
         for(int i = 0; i < rownum; i++) {
             std::cout << '\t';
@@ -287,7 +288,8 @@ inline void Instruction::assemble(int i) {
                 ret_machine = addi_machine; set_machine_I(&ret_machine); break;
             case Ori: 
                 ret_machine = ori_machine; set_machine_I(&ret_machine); break;
-            
+            case Jalr: 
+                ret_machine = jalr_machine; set_machine_I(&ret_machine); break;
         }
     }
     else if (opcode < 300) {
@@ -297,8 +299,6 @@ inline void Instruction::assemble(int i) {
                 ret_machine = lw_machine; set_machine_I(&ret_machine); break;
             case Sw:
                 ret_machine = sw_machine; set_machine_S(&ret_machine); break;
-            case Jalr: 
-                ret_machine = jalr_machine; set_machine_I(&ret_machine); break;
             case Flw: 
                 ret_machine = flw_machine; set_machine_I(&ret_machine); break;
             case Fsw: 
