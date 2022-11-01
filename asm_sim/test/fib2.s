@@ -31,7 +31,7 @@ ble.22:
 min_caml_start:
 	addi	x2, x2, -112
 	lui		x4, 0	# 5
-	ori		x4, x0, 39	# 5
+	ori		x4, x0, 20	# 5
 	sw		x1, 4(x2)
 	addi	x2, x2, 8	
 	jal		x1, fib.9

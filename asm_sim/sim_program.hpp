@@ -12,6 +12,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
+#include <string.h>
 
 #include "sim_instruction.hpp"
 #include "sim_opecode.hpp"
@@ -47,6 +48,9 @@ class Program {
         void getline(FILE *fp);
 
     public:
+        bool asmflag;
+        bool statsflag;
+        bool debugflag;
         Program() {
             line = 0;
             pc = 0;
@@ -58,9 +62,10 @@ class Program {
         void read_program(FILE *fp);
         void read_label(FILE *fp);
         void print_debug();
-        long long int exec(bool statsflag);
+        long long int exec();
         void assembler();
         void print_stats();
+        void readinput(int argc, char const *argv[]);
 };
 
 
@@ -429,7 +434,7 @@ inline void Program::print_debug() {
     std::cout << "instruction num: " << instructions.size() << std::endl;
 }
 
-inline long long int Program::exec(bool statsflag) {
+inline long long int Program::exec() {
     long long int counter = 0;
 
     pc = labels["min_caml_start"];
@@ -462,5 +467,26 @@ inline void Program::assembler() {
     int n = instructions.size();
     for (int i = 0; i < n; i++) {
         instructions[i].assemble(i);
+    }
+}
+
+inline void Program::readinput(int argc, char const *argv[]) {
+    // options
+    char asmoption[] = "--asm";
+    char statsoption[] = "--stats";
+    char debugoption[] = "--debug";
+
+    asmflag = false;
+    statsflag = false;
+    debugflag = false;
+
+    for(int i = 2; i < argc; i++) {
+        if (strcmp(argv[i], asmoption) == 0) asmflag = true;
+        else if (strcmp(argv[i], statsoption) == 0) statsflag = true;
+        else if (strcmp(argv[i], debugoption) == 0) debugflag = true; 
+        else {
+            std::cout << "<<< runtime parameters are invalid" << std::endl;
+            exit(1);
+        }
     }
 }
