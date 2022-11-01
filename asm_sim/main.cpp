@@ -32,7 +32,7 @@ int main(int argc, char const *argv[]) {
     }
     std::cout << "<<< label read started...\n" << std::endl;
     program.read_label(fp);
-    std::cout << "\n<<< label read ended\n" << std::endl;
+    std::cout << "\nlabel read ended >>>\n" << std::endl;
     fclose(fp);
 
     // read assembly
@@ -43,35 +43,35 @@ int main(int argc, char const *argv[]) {
     }
     std::cout << "<<< program read started...\n" << std::endl;
     program.read_program(fp);
-    std::cout << "\n<<< program read ended\n" << std::endl;
+    std::cout << "\nprogram read ended >>>\n" << std::endl;
     fclose(fp);
 
     // exec assembler
     if (program.asmflag) {
-        std::cout << "<<< assembler started\n" << std::endl;
+        std::cout << "<<< assembler started...\n" << std::endl;
         ofstream ofs("bin.txt");
         streambuf *oldrdbuf = cout.rdbuf(ofs.rdbuf());
         program.assembler();
         cout.rdbuf(oldrdbuf);
-        std::cout << "<<< assembler ended\n" << std::endl;
+        std::cout << "assembler ended >>>\n" << std::endl;
     }
 
     // exec simulator debug
     if (program.debugflag) {
-        std::cout << "<<< debug started\n" << std::endl;
+        std::cout << "<<< debug started...\n" << std::endl;
         program.print_debug();
-        std::cout << "\n<<< debug ended\n" << std::endl;
+        std::cout << "\ndebug ended >>>\n" << std::endl;
     }
 
     // exec assembly
 	struct timespec start, end;
     
 	clock_gettime(CLOCK_REALTIME, &start);
-    std::cout << "<<< program executing\n" << std::endl;
+    std::cout << "<<< program execution started...\n" << std::endl;
     long long int counter = program.exec();
     clock_gettime(CLOCK_REALTIME, &end);
 
-    std::cout << "<<< program finished\n" << std::endl;
+    std::cout << "program finished >>>\n" << std::endl;
     std::cout << "\telapsed time: ";
     std::cout << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << std::endl;
     std::cout << "\tcounter: " << counter << '\n' << std::endl;

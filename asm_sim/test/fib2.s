@@ -1,3 +1,5 @@
+start:
+	jal		x1, min_caml_start
 fib.9:
 	lui		x5, 0	# 3
 	ori		x5, x0, 1	# 3
@@ -31,7 +33,7 @@ ble.22:
 min_caml_start:
 	addi	x2, x2, -112
 	lui		x4, 0	# 5
-	ori		x4, x0, 5	# 5
+	ori		x4, x0, 10	# 5
 	sw		x1, 4(x2)
 	addi	x2, x2, 8	
 	jal		x1, fib.9
