@@ -437,7 +437,7 @@ inline void Program::print_debug() {
 inline long long int Program::exec() {
     long long int counter = 0;
 
-    pc = labels["min_caml_start"];
+    pc = 0;
     while(pc != instructions.size()*4) {
         int prevpc = pc;
         if (statsflag) stats[instructions[pc/4].opcode]++;
