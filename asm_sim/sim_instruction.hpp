@@ -69,8 +69,8 @@ inline int Instruction::exec(int pc) {
             case Mul: xregs[oprand0] = xregs[oprand1] * xregs[oprand2]; pc+=4; break;
             case Div: xregs[oprand0] = xregs[oprand1] / xregs[oprand2]; pc+=4; break;
             default: 
-                std::cout << "error occurred: line " << line << std::endl;
-                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "error occurred: line " << line << std::endl;
+                std::cerr << "current pc = " << pc << std::endl;
                 std::cerr << "instruction-execution error" << std::endl;
                 exit(1);
         }      
@@ -84,8 +84,8 @@ inline int Instruction::exec(int pc) {
             case Feq_s: if (fregs[oprand1] == fregs[oprand2]) {fregs[oprand0] = 1;} else {fregs[oprand0] = 0;}; pc+=4; break;
             case Flt_s: if (fregs[oprand1] < fregs[oprand2]) {fregs[oprand0] = 1;} else {fregs[oprand0] = 0;}; pc+=4; break;
             default: 
-                std::cout << "error occurred: line " << line << std::endl;
-                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "error occurred: line " << line << std::endl;
+                std::cerr << "current pc = " << pc << std::endl;
                 std::cerr << "instruction-execution error" << std::endl;
                 exit(1);
         }
@@ -98,8 +98,8 @@ inline int Instruction::exec(int pc) {
             case Ori: xregs[oprand0] = xregs[oprand1] | imm; pc+=4; break;
             case Jalr: if (oprand0 != 0) {xregs[oprand0] = pc+4;} pc = xregs[oprand1] + imm; break;
             default: 
-                std::cout << "error occurred: line " << line << std::endl;
-                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "error occurred: line " << line << std::endl;
+                std::cerr << "current pc = " << pc << std::endl;
                 std::cerr << "instruction-execution error" << std::endl;
                 exit(1);
         }
@@ -113,8 +113,8 @@ inline int Instruction::exec(int pc) {
             case Flw: fregs[oprand0] = memory[(xregs[oprand1] + imm)/4]; pc+=4; break;
             case Fsw: memory[(xregs[oprand1] + imm)/4] = fregs[oprand0]; pc+=4; break;
             default: 
-                std::cout << "error occurred: line " << line << std::endl;
-                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "error occurred: line " << line << std::endl;
+                std::cerr << "current pc = " << pc << std::endl;
                 std::cerr << "instruction-execution error" << std::endl;
                 exit(1);
         }
@@ -127,8 +127,8 @@ inline int Instruction::exec(int pc) {
             case Ble: if (xregs[oprand0] <= xregs[oprand1]) { pc += imm; } else {pc+=4;} break;
             case Bge: if (xregs[oprand0] >= xregs[oprand1]) {pc += imm;} else {pc+=4;} break;
             default: 
-                std::cout << "error occurred: line " << line << std::endl;
-                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "error occurred: line " << line << std::endl;
+                std::cerr << "current pc = " << pc << std::endl;
                 std::cerr << "instruction-execution error" << std::endl;
                 exit(1);
         }
@@ -139,8 +139,8 @@ inline int Instruction::exec(int pc) {
             // op ope0, label
             case Jal: xregs[oprand0] = pc + 4; pc += imm; break;
             default: 
-                std::cout << "error occurred: line " << line << std::endl;
-                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "error occurred: line " << line << std::endl;
+                std::cerr << "current pc = " << pc << std::endl;
                 std::cerr << "instruction-execution error" << std::endl;
                 exit(1);
         }
@@ -151,8 +151,8 @@ inline int Instruction::exec(int pc) {
             // op ope0, ope1
             case Fsqrt_s: fregs[oprand0] = sqrt(fregs[oprand1]); pc+=4; break;
             default: 
-                std::cout << "error occurred: line " << line << std::endl;
-                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "error occurred: line " << line << std::endl;
+                std::cerr << "current pc = " << pc << std::endl;
                 std::cerr << "instruction-execution error" << std::endl;
                 exit(1);
         }
@@ -163,8 +163,8 @@ inline int Instruction::exec(int pc) {
             // op ope0, imm
             case Lui: xregs[oprand0] = (imm >> 12) << 12; pc+=4; break;
             default: 
-                std::cout << "error occurred: line " << line << std::endl;
-                std::cout << "current pc = " << pc << std::endl;
+                std::cerr << "error occurred: line " << line << std::endl;
+                std::cerr << "current pc = " << pc << std::endl;
                 std::cerr << "instruction-execution error" << std::endl;
                 exit(1);
         }

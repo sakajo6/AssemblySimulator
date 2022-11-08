@@ -431,7 +431,7 @@ inline long long int Program::exec() {
         pc = instructions[pc/4].exec(pc);
         counter++;
         if(pc < 0) {
-            std::cout << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
+            std::cerr << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
             exit(1);
         }
     }
@@ -484,7 +484,7 @@ inline void Program::readinput(int argc, char const *argv[]) {
         else if (strcmp(argv[i], statsoption) == 0) statsflag = true;
         else if (strcmp(argv[i], debugoption) == 0) debugflag = true; 
         else {
-            std::cout << "<<< runtime parameters are invalid" << std::endl;
+            std::cerr << "<<< runtime parameters are invalid" << std::endl;
             exit(1);
         }
     }
