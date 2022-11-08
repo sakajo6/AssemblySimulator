@@ -8,7 +8,6 @@
 
 
 #include <stdio.h>
-#include <iostream>
 #include <fstream>
 #include <time.h>
 
@@ -27,51 +26,48 @@ int main(int argc, char const *argv[]) {
     FILE *fp;
     fp = fopen(argv[1], "r");
     if (fp == NULL) {
-        fprintf(stderr, "error: an error occurred opening file.\n");
+        std::cerr << "error: an error occurred opening file.\n" << std::endl;
         return 1;
     }
-    std::cout << "<<< label read started...\n" << std::endl;
     program.read_label(fp);
-    std::cout << "\nlabel read ended >>>\n" << std::endl;
     fclose(fp);
 
     // read assembly
     fp = fopen(argv[1], "r");
     if (fp == NULL) {
-        fprintf(stderr, "error: an error occurred opening file.\n");
+        std::cerr << "error: an error occurred opening file.\n" << std::endl;
         return 1;
     }
-    std::cout << "<<< program read started...\n" << std::endl;
     program.read_program(fp);
-    std::cout << "\nprogram read ended >>>\n" << std::endl;
     fclose(fp);
 
     // exec assembler
     if (program.asmflag) {
-        std::cout << "<<< assembler started...\n" << std::endl;
-        ofstream ofs("bin.txt");
-        streambuf *oldrdbuf = cout.rdbuf(ofs.rdbuf());
-        program.assembler();
-        cout.rdbuf(oldrdbuf);
-        std::cout << "assembler ended >>>\n" << std::endl;
+        fp = fopen("./output/bin.txt", "w");
+        if (fp == NULL) {
+            std::cerr << "error: an error occurred opening file.\n" << std::endl;
+            return 1;
+        }
+        program.assembler(fp);
     }
 
     // exec simulator debug
     if (program.debugflag) {
-        std::cout << "<<< debug started...\n" << std::endl;
-        program.print_debug();
-        std::cout << "\ndebug ended >>>\n" << std::endl;
+        fp = fopen("./output/debug.txt", "w");
+        if (fp == NULL) {
+            std::cerr << "error: an error occurred opening file.\n" << std::endl;
+            return 1;
+        }
+        program.print_debug(fp);
     }
 
     // exec assembly
 	struct timespec start, end;
     
 	clock_gettime(CLOCK_REALTIME, &start);
-    std::cout << "<<< program execution started...\n" << std::endl;
     long long int counter = program.exec();
     clock_gettime(CLOCK_REALTIME, &end);
 
-    std::cout << "program finished >>>\n" << std::endl;
     std::cout << "\telapsed time: ";
     std::cout << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << std::endl;
     std::cout << "\tcounter: " << counter << '\n' << std::endl;
@@ -92,10 +88,12 @@ int main(int argc, char const *argv[]) {
 
     // stats
     if (program.statsflag) {
-        ofstream ofs2("stats.txt");
-        streambuf *oldrdbuf = cout.rdbuf(ofs2.rdbuf());
-        program.print_stats();
-        cout.rdbuf(oldrdbuf);
+        fp = fopen("./output/stats.txt", "w");
+        if (fp == NULL) {
+            std::cerr << "error: an error occurred opening file.\n" << std::endl;
+            return 1;
+        }
+        program.print_stats(fp);
     }
 
     return 0;

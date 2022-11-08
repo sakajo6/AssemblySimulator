@@ -44,18 +44,18 @@ class Instruction {
             imm = im;
             breakpoint = brkp;
         }
-        void print_debug();
+        void print_debug(FILE *fp);
         int exec(int pc);
-        void assemble(int i);
+        void assemble(FILE *fp, int i);
 };
 
-inline void Instruction::print_debug() {
-    std::cout << opcode_to_string[opcode] << " ";
-    if (oprand0 != -1) std::cout << "a" << oprand0 << " ";
-    if (oprand1 != -1) std::cout << "a" << oprand1 << " ";
-    if (oprand2 != -1) std::cout << "a" << oprand2 << " ";
-    if (imm != -1) std::cout << imm << " ";
-    std::cout << std::endl;
+inline void Instruction::print_debug(FILE *fp) {
+    fprintf(fp, "%s ", opcode_to_string[opcode].c_str());
+    if (oprand0 != -1) fprintf(fp, "a%d ", oprand0);
+    if (oprand1 != -1) fprintf(fp, "a%d ", oprand1);
+    if (oprand2 != -1) fprintf(fp, "a%d ", oprand2);
+    if (imm != -1) fprintf(fp, "%d ", imm);
+    fprintf(fp, "\n");
 }
 
 inline int Instruction::exec(int pc) {
@@ -178,7 +178,7 @@ inline int Instruction::exec(int pc) {
 
         std::cout << "\texecuted: line " << line << std::endl;
         std::cout << "\t";
-        print_debug();
+        print_debug(stdout);
         std::cout << "\n";
         for(int i = 0; i < rownum; i++) {
             std::cout << '\t';
@@ -245,8 +245,8 @@ inline void Instruction::set_machine_J(std::bitset<32> *mcode) {
 }
 
 
-inline void Instruction::assemble(int i) {
-    std::cout << "mem[13'd" << i << "] <= 32'b";
+inline void Instruction::assemble(FILE *fp, int i) {
+    fprintf(fp, "mem[13'd%d] <= 32'b", i);
 
     std::bitset<32> ret_machine;
     if (opcode < 50) {
@@ -337,6 +337,6 @@ inline void Instruction::assemble(int i) {
                 ret_machine = lui_machine; set_machine_U(&ret_machine); break;
         }
     }
-    
-    std::cout << ret_machine.to_string() << ";" << std::endl;
+    std::string ret_machine_str = ret_machine.to_string();
+    fprintf(fp, "%s;\n", ret_machine_str.c_str());
 }

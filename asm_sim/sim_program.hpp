@@ -2,17 +2,12 @@
 
 #define DEBUG
 
-#ifdef DEBUG
-#define DEBUG_PRINTF printf
-#else
-#define DEBUG_PRINTF (void)0:printf
-#endif
-
 #include <vector>
 #include <string>
 #include <map>
 #include <algorithm>
 #include <string.h>
+#include <stdlib.h>
 
 #include "sim_instruction.hpp"
 #include "sim_opecode.hpp"
@@ -61,10 +56,10 @@ class Program {
         }
         void read_program(FILE *fp);
         void read_label(FILE *fp);
-        void print_debug();
+        void print_debug(FILE *fp);
         long long int exec();
-        void assembler();
-        void print_stats();
+        void assembler(FILE *fp);
+        void print_stats(FILE *fp);
         void readinput(int argc, char const *argv[]);
 };
 
@@ -81,7 +76,6 @@ inline Instruction Program::read_instruction_0(Opcode op, FILE *fp, bool brkp) {
         else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
-            DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(1));
             if (c != '\n') Program::getline(fp);
             break;
@@ -90,7 +84,6 @@ inline Instruction Program::read_instruction_0(Opcode op, FILE *fp, bool brkp) {
             case ' ': 
                 break;
             case ',':
-                DEBUG_PRINTF("%s, ", operand.c_str());
                 operands[operand_cnt] = stoi(operand.substr(1));
                 operand = "";
                 operand_cnt++;
@@ -116,7 +109,6 @@ inline Instruction Program::read_instruction_1(Opcode op, FILE *fp, bool brkp) {
         else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
-            DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(0));
             if (c != '\n') Program::getline(fp);
             break;
@@ -124,7 +116,6 @@ inline Instruction Program::read_instruction_1(Opcode op, FILE *fp, bool brkp) {
         switch(c) {
             case ' ': break;
             case ',':
-                DEBUG_PRINTF("%s, ", operand.c_str());
                 operands[operand_cnt] = stoi(operand.substr(1));
                 operand = "";
                 operand_cnt++;
@@ -150,7 +141,6 @@ inline Instruction Program::read_instruction_2(Opcode op, FILE *fp, bool brkp) {
         else if (c == '\t') continue; 
         else if (c == ')') {
             // line ends;
-            DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(1));
             if (c != '\n') Program::getline(fp);
             break;
@@ -158,13 +148,11 @@ inline Instruction Program::read_instruction_2(Opcode op, FILE *fp, bool brkp) {
         switch(c) {
             case ' ': break;
             case ',':
-                DEBUG_PRINTF("%s, ", operand.c_str());
                 operands[operand_cnt] = stoi(operand.substr(1));
                 operand = "";
                 operand_cnt++;
                 break;
             case '(':
-                DEBUG_PRINTF("%s, ", operand.c_str());
                 operands[operand_cnt] = stoi(operand.substr(0));
                 operand = "";
                 operand_cnt++;
@@ -190,7 +178,6 @@ inline Instruction Program::read_instruction_3(Opcode op, FILE *fp, bool brkp) {
         else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
-            DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = labels[operand] - pc;
             if (c != '\n') Program::getline(fp);
             break;
@@ -198,7 +185,6 @@ inline Instruction Program::read_instruction_3(Opcode op, FILE *fp, bool brkp) {
         switch(c) {
             case ' ': break;
             case ',':
-                DEBUG_PRINTF("%s, ", operand.c_str());
                 operands[operand_cnt] = stoi(operand.substr(1));
                 operand = "";
                 operand_cnt++;
@@ -224,7 +210,6 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp, bool brkp) {
         else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
-            DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = labels[operand] - pc;
             if (c != '\n') Program::getline(fp);
             break;
@@ -232,7 +217,6 @@ inline Instruction Program::read_instruction_4(Opcode op, FILE *fp, bool brkp) {
         switch(c) {
             case ' ': break;
             case ',':
-                DEBUG_PRINTF("%s, ", operand.c_str());
                 operands[operand_cnt] = stoi(operand.substr(1));
                 operand = "";
                 operand_cnt++;
@@ -258,7 +242,6 @@ inline Instruction Program::read_instruction_5(Opcode op, FILE *fp, bool brkp) {
         else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
-            DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(1));
             if (c != '\n') Program::getline(fp);
             break;
@@ -266,7 +249,6 @@ inline Instruction Program::read_instruction_5(Opcode op, FILE *fp, bool brkp) {
         switch(c) {
             case ' ': break;
             case ',':
-                DEBUG_PRINTF("%s, ", operand.c_str());
                 operands[operand_cnt] = stoi(operand.substr(1));
                 operand = "";
                 operand_cnt++;
@@ -291,7 +273,6 @@ inline Instruction Program::read_instruction_6(Opcode op, FILE *fp, bool brkp) {
         else if (c == '\t') continue;
         else if (c < ' ' || c == '#') {
             // line ends;
-            DEBUG_PRINTF("%s;\n", operand.c_str());
             operands[operand_cnt] = stoi(operand.substr(0));
             if (c != '\n') Program::getline(fp);
             break;
@@ -299,7 +280,6 @@ inline Instruction Program::read_instruction_6(Opcode op, FILE *fp, bool brkp) {
         switch(c) {
             case ' ': break;
             case ',':
-                DEBUG_PRINTF("%s, ", operand.c_str());
                 operands[operand_cnt] = stoi(operand.substr(1));
                 operand = "";
                 operand_cnt++;
@@ -323,7 +303,6 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
 
     Instruction inst;
 
-    DEBUG_PRINTF("%s, ", opcode.c_str());
 
     if (string_to_opcode.count(opcode) == 0) {
         std::cerr << "error: invalid opcode." << std::endl;
@@ -355,6 +334,8 @@ inline void Program::getline(FILE *fp) {
 }
 
 inline void Program::read_label(FILE *fp) {
+    std::cout << "<<< label reading started..." << std::endl;
+
     pc = 0;
     while(feof(fp) == 0) {
         char c = fgetc(fp);
@@ -382,13 +363,15 @@ inline void Program::read_label(FILE *fp) {
             }
 
             labels[label] = pc;
-
-            DEBUG_PRINTF("%s,\n", label.c_str());   
         }
     }
+
+    std::cout << "label reading finished >>>\n" << std::endl;
 }
 
 inline void Program::read_program(FILE *fp) {
+    std::cout << "<<< program reading started..." << std::endl;
+
     line = 0;
     pc = 0;
     while(feof(fp) == 0) {
@@ -414,27 +397,31 @@ inline void Program::read_program(FILE *fp) {
             Program::getline(fp);
         }
     }    
+    
+    std::cout << "program reading finished >>>\n" << std::endl;
 }
 
-inline void Program::print_debug() {
+inline void Program::print_debug(FILE *fp) {
+    std::cout << "<<< debug started..." << std::endl;
     int inst_num = (int)instructions.size();
     for(int i = 0; i < inst_num; i++) {
         Instruction tmp_inst = instructions[i];
-        tmp_inst.print_debug();
+        tmp_inst.print_debug(fp);
     }
 
-    std::cout << std::endl;
+    fprintf(fp, "\n");
 
     for(auto i: labels) {
-        std::cout << i.first << " " << i.second << std::endl;
+        fprintf(fp, "%s %d\n", i.first.c_str(), i.second);
     }
 
-    std::cout << std::endl;
-
-    std::cout << "instruction num: " << instructions.size() << std::endl;
+    fprintf(fp, "\ninstruction num: %d\n", int(instructions.size()));
+    std::cout << "debug finished >>>\n" << std::endl;
 }
 
 inline long long int Program::exec() {
+    std::cout << "<<< program execution started..." << std::endl; 
+
     long long int counter = 0;
 
     pc = 0;
@@ -449,25 +436,32 @@ inline long long int Program::exec() {
         }
     }
 
+    std::cout << "program finished >>>\n" << std::endl;
     return counter;
 }
 
-inline void Program::print_stats() {
+inline void Program::print_stats(FILE *fp) {
+    std::cout << "<<< stats printing started..." << std::endl;
+
     std::vector<std::pair<int, Opcode>> instr_counter;
     for(auto i: stats) {
         instr_counter.push_back({i.second, i.first});
     }
     std::sort(instr_counter.begin(), instr_counter.end(), std::greater<>());
     for(auto i: instr_counter) {
-        std::cout << opcode_to_string[i.second] << ": \t" << i.first << std::endl;
+        fprintf(fp, "%s: \t%d\n", opcode_to_string[i.second].c_str(), i.first);
     }
+
+    std::cout << "stats printing finished >>>\n" << std::endl;
 }
 
-inline void Program::assembler() {
+inline void Program::assembler(FILE *fp) {
+    std::cout << "<<< assembler started..." << std::endl;
     int n = instructions.size();
     for (int i = 0; i < n; i++) {
-        instructions[i].assemble(i);
+        instructions[i].assemble(fp, i);
     }
+    std::cout << "assembler finished >>>\n" << std::endl;
 }
 
 inline void Program::readinput(int argc, char const *argv[]) {
@@ -475,6 +469,11 @@ inline void Program::readinput(int argc, char const *argv[]) {
     char asmoption[] = "--asm";
     char statsoption[] = "--stats";
     char debugoption[] = "--debug";
+
+    std::cout << "<<< runtime parameters:" << std::endl;
+    std::cout << "\t--asm:\t\toutput binary file to ./output/output.txt" << std::endl;
+    std::cout << "\t--stats:\toutput runtime stats to ./output/stats.txt" << std::endl;
+    std::cout << "\t--debug:\toutput parsed assembly to ./output/debug.txt\n" << std::endl;
 
     asmflag = false;
     statsflag = false;

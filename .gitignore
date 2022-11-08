@@ -1,4 +1,2 @@
-myfolder/
-error.txt
-test.txt
-../test.txt
+./asm_sim/memo.txt
+./asm_sim/output/*
