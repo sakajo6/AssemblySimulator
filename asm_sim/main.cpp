@@ -17,6 +17,7 @@ using namespace std;
 
 int main(int argc, char const *argv[]) {
     Program program;
+    // check runtime param
     program.readinput(argc, argv);
 
     // init resources
@@ -49,6 +50,7 @@ int main(int argc, char const *argv[]) {
             return 1;
         }
         program.assembler(fp);
+        fclose(fp);
     }
 
     // exec simulator debug
@@ -59,6 +61,7 @@ int main(int argc, char const *argv[]) {
             return 1;
         }
         program.print_debug(fp);
+        fclose(fp);
     }
 
     // exec assembly
@@ -94,6 +97,7 @@ int main(int argc, char const *argv[]) {
             return 1;
         }
         program.print_stats(fp);
+        fclose(fp);
     }
 
     return 0;

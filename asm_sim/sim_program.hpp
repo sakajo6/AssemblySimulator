@@ -25,24 +25,18 @@ class Program {
     private:
         int line;
         int pc;
-        std::vector<Instruction> instructions;
 
         std::map<std::string, int> labels;
         std::map<Opcode, int> stats; 
 
-        Instruction read_instruction_0(Opcode op, FILE *fp, bool brkp);
-        Instruction read_instruction_1(Opcode op, FILE *fp, bool brkp);
-        Instruction read_instruction_2(Opcode op, FILE *fp, bool brkp);
-        Instruction read_instruction_3(Opcode op, FILE *fp, bool brkp);
-        Instruction read_instruction_4(Opcode op, FILE *fp, bool brkp);
-        Instruction read_instruction_5(Opcode op, FILE *fp, bool brkp);
-        Instruction read_instruction_6(Opcode op, FILE *fp, bool brkp);
+        void read_operand(std::string, int &, Instruction &);
+        void read_float(std::string, Instruction &);
+        Instruction read_instruction(FILE *, bool);
 
-        Instruction read_instruction(FILE *fp, bool brkp);
-
-        void getline(FILE *fp);
+        void readline(FILE *);
 
     public:
+        std::vector<Instruction> instructions;
         bool asmflag;
         bool statsflag;
         bool debugflag;
@@ -54,278 +48,140 @@ class Program {
             labels.clear();
             stats.clear();
         }
-        void read_program(FILE *fp);
-        void read_label(FILE *fp);
-        void print_debug(FILE *fp);
+        void read_program(FILE *);
+        void read_label(FILE *);
+        void print_debug(FILE *);
         long long int exec();
-        void assembler(FILE *fp);
-        void print_stats(FILE *fp);
-        void readinput(int argc, char const *argv[]);
+        void assembler(FILE *);
+        void print_stats(FILE *);
+        void readinput(int, char const *[]);
 };
 
-
-// opcode r, r, r
-inline Instruction Program::read_instruction_0(Opcode op, FILE *fp, bool brkp) {
-    int operands[3];
-    int operand_cnt = 0;
-
-    std::string operand = "";
-    while(feof(fp) == 0) {
-        char c = (char)fgetc(fp);
-        if ((int)c == -1) continue;
-        else if (c == '\t') continue;
-        else if (c < ' ' || c == '#') {
-            // line ends;
-            operands[operand_cnt] = stoi(operand.substr(1));
-            if (c != '\n') Program::getline(fp);
-            break;
+inline void Program::read_operand(std::string operand, int &regcnt, Instruction &inst) {
+    if (operand[0] == 'x' || operand[0] == 'f') {
+        // reg
+        if (operand[1] >= '0' && operand[1] <= '9') {
+            int reg = stoi(operand.substr(1));
+            switch(regcnt) {
+                case 0: inst.reg0 = reg; break;
+                case 1: inst.reg1 = reg; break;
+                case 2: inst.reg2 = reg; break;
+            }
+            regcnt++;
         }
-        switch(c) {
-            case ' ': 
-                break;
-            case ',':
-                operands[operand_cnt] = stoi(operand.substr(1));
-                operand = "";
-                operand_cnt++;
-                break;
-            default:
-                operand += c;
-                break;
+        // label
+        else {
+            inst.imm = labels[operand] - pc;
         }
     }
-
-    return Instruction(line, op, operands[0], operands[1], operands[2], -1, brkp);
+    // imm
+    else if ((operand[0] >= '0' && operand[0] <= '9') || operand[0] == '-') {
+        inst.imm = stoi(operand.substr(0));
+    }
+    // label
+    else {
+        inst.imm = labels[operand] - pc;
+    }
 }
 
-// opcode r, r, imm
-inline Instruction Program::read_instruction_1(Opcode op, FILE *fp, bool brkp) {
-    int operands[3];
-    int operand_cnt = 0;
-
-    std::string operand = "";
-    while(feof(fp) == 0) {
-        char c = (char)fgetc(fp);
-        if ((int)c == -1) continue;
-        else if (c == '\t') continue;
-        else if (c < ' ' || c == '#') {
-            // line ends;
-            operands[operand_cnt] = stoi(operand.substr(0));
-            if (c != '\n') Program::getline(fp);
-            break;
-        }
-        switch(c) {
-            case ' ': break;
-            case ',':
-                operands[operand_cnt] = stoi(operand.substr(1));
-                operand = "";
-                operand_cnt++;
-                break;
-            default:
-                operand += c;
-                break;
-        }
-    }
-
-    return Instruction(line, op, operands[0], operands[1], -1, operands[2], brkp);
-}
-
-// opcode r, imm(r)
-inline Instruction Program::read_instruction_2(Opcode op, FILE *fp, bool brkp) {
-    int operands[3];
-    int operand_cnt = 0;
-
-    std::string operand = "";
-    while(feof(fp) == 0) {
-        char c = (char)fgetc(fp);
-        if ((int)c == -1) continue;
-        else if (c == '\t') continue; 
-        else if (c == ')') {
-            // line ends;
-            operands[operand_cnt] = stoi(operand.substr(1));
-            if (c != '\n') Program::getline(fp);
-            break;
-        }
-        switch(c) {
-            case ' ': break;
-            case ',':
-                operands[operand_cnt] = stoi(operand.substr(1));
-                operand = "";
-                operand_cnt++;
-                break;
-            case '(':
-                operands[operand_cnt] = stoi(operand.substr(0));
-                operand = "";
-                operand_cnt++;
-                break;
-            default:
-                operand += c;
-                break;
-        }
-    }
-
-    return Instruction(line, op, operands[0], operands[2], -1, operands[1], brkp);
-}
-
-// opcode r, r, label
-inline Instruction Program::read_instruction_3(Opcode op, FILE *fp, bool brkp) {
-    int operands[3];
-    int operand_cnt = 0;
-
-    std::string operand = "";
-    while(feof(fp) == 0) {
-        char c = (char)fgetc(fp);
-        if ((int)c == -1) continue;
-        else if (c == '\t') continue;
-        else if (c < ' ' || c == '#') {
-            // line ends;
-            operands[operand_cnt] = labels[operand] - pc;
-            if (c != '\n') Program::getline(fp);
-            break;
-        }
-        switch(c) {
-            case ' ': break;
-            case ',':
-                operands[operand_cnt] = stoi(operand.substr(1));
-                operand = "";
-                operand_cnt++;
-                break;
-            default:
-                operand += c;
-                break;
-        }
-    }
-
-    return Instruction(line, op, operands[0], operands[1], -1, operands[2], brkp);
-}
-
-// opcode r, label
-inline Instruction Program::read_instruction_4(Opcode op, FILE *fp, bool brkp) {
-    int operands[2];
-    int operand_cnt = 0;
-
-    std::string operand = "";
-    while(feof(fp) == 0) {
-        char c = (char)fgetc(fp);
-        if ((int)c == -1) continue;
-        else if (c == '\t') continue;
-        else if (c < ' ' || c == '#') {
-            // line ends;
-            operands[operand_cnt] = labels[operand] - pc;
-            if (c != '\n') Program::getline(fp);
-            break;
-        }
-        switch(c) {
-            case ' ': break;
-            case ',':
-                operands[operand_cnt] = stoi(operand.substr(1));
-                operand = "";
-                operand_cnt++;
-                break;
-            default:
-                operand += c;
-                break;
-        }
-    }
-
-    return Instruction(line, op, operands[0], -1, -1, operands[1], brkp);
-}
-
-// opcode r, r
-inline Instruction Program::read_instruction_5(Opcode op, FILE *fp, bool brkp) {
-    int operands[2];
-    int operand_cnt = 0;
-
-    std::string operand = "";
-    while(feof(fp) == 0) {
-        char c = (char)fgetc(fp);
-        if ((int)c == -1) continue;
-        else if (c == '\t') continue;
-        else if (c < ' ' || c == '#') {
-            // line ends;
-            operands[operand_cnt] = stoi(operand.substr(1));
-            if (c != '\n') Program::getline(fp);
-            break;
-        }
-        switch(c) {
-            case ' ': break;
-            case ',':
-                operands[operand_cnt] = stoi(operand.substr(1));
-                operand = "";
-                operand_cnt++;
-                break;
-            default:
-                operand += c;
-                break;
-        }
-    }
-    return Instruction(line, op, operands[0], operands[1], -1, -1, brkp);
-}
-
-// opcode r, imm
-inline Instruction Program::read_instruction_6(Opcode op, FILE *fp, bool brkp) {
-    int operands[2];
-    int operand_cnt = 0;
-
-    std::string operand = "";
-    while(feof(fp) == 0) {
-        char c = (char)fgetc(fp);
-        if ((int)c == -1) continue;
-        else if (c == '\t') continue;
-        else if (c < ' ' || c == '#') {
-            // line ends;
-            operands[operand_cnt] = stoi(operand.substr(0));
-            if (c != '\n') Program::getline(fp);
-            break;
-        }
-        switch(c) {
-            case ' ': break;
-            case ',':
-                operands[operand_cnt] = stoi(operand.substr(1));
-                operand = "";
-                operand_cnt++;
-                break;
-            default:
-                operand += c;
-                break;
-        }
-    }
-    return Instruction(line, op, operands[0], -1, -1, operands[1], brkp);
+inline void Program::read_float(std::string operand, Instruction &inst) {
+    union { float f; int i; } ftemp;
+    ftemp.f = std::stof(operand);
+    inst.imm = ftemp.i;
 }
 
 inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
+    char c;
+
     std::string opcode = "";
     while(feof(fp) == 0) {
-        char c = (char)fgetc(fp);
+        c = (char)fgetc(fp);
         if ((int)c == -1) continue;
         if (c == '\t') break;
         opcode += c;
     }
 
-    Instruction inst;
-
-
+    std::cout << opcode << std::endl;
     if (string_to_opcode.count(opcode) == 0) {
         std::cerr << "error: invalid opcode." << std::endl;
         exit(1);
     }
 
     Opcode op = string_to_opcode[opcode];
+    Instruction inst(line, op, brkp);
+    
+    if (op == Word) {
+        while(feof(fp) == 0) {
+            bool flag = false;
+            c = (char)fgetc(fp);
+            if ((int)c == -1) continue;
+            else if (c == '\t') continue;
+            else {
+                std::string operand = "";
+                operand += c;
+                while(feof(fp) == 0) {
+                    c = (char)fgetc(fp);
+                    if ((int)c == -1) continue;
+                    else if (c == '\n' || c == '\t') {
+                        if (c == '\t') Program::readline(fp);
+                        Program::read_float(operand, inst);
+                        flag = true;
+                        break;
+                    }
+                    else {
+                        operand += c;
+                    }
+                }
+            }
+            if(flag) break;
+        }
+    }
+    else {
+        while(feof(fp) == 0) {
+            c = (char)fgetc(fp);
+            if ((int)c == -1) continue;
+            else if (c == '\t') continue;
+            else {
+                // 終端記号(\t, \n)が出現するまではオペランドを読み続ける
+                int regcnt = 0;
+                std::string operand = "";
+                operand += c;
+                while (true) {
+                    bool flag = false;
+                    // '\t', '\n', ' ', '(', ')'がオペランドの区切り文字が出現したらnext operand
+                    while(feof(fp) == 0) {
+                        c = (char)fgetc(fp);
+                        if ((int)c == -1) continue;
+                        else if (c == '\n' || c == '\t' || c == ')') {
+                            if (c == '\t' || c == ')') Program::readline(fp);
+                            flag = true;
+                            std::cout << operand << std::endl;
+                            read_operand(operand, regcnt, inst);
+                            break;
+                        }
+                        else if (c == ' ' || c == '('){
+                            std::cout << operand << " ";
+                            read_operand(operand, regcnt, inst);
+                            break;
+                        }
+                        else {
+                            operand += c;
+                        }
+                    }
+                    if (flag) break;
+                    operand = "";
+                }
+                break;
+            }
+        }
+    }
 
-    if (op < 100) inst = read_instruction_0(op, fp, brkp);
-    else if (op < 200) inst = read_instruction_1(op, fp, brkp);
-    else if (op < 300) inst = read_instruction_2(op, fp, brkp);
-    else if (op < 400) inst = read_instruction_3(op, fp, brkp);
-    else if (op < 500) inst = read_instruction_4(op, fp, brkp);
-    else if (op < 600) inst = read_instruction_5(op, fp, brkp);
-    else if (op < 700) inst = read_instruction_6(op, fp, brkp);
-    else std::cerr << "error: unknown opcode." << std::endl;
-
+    inst.print_debug(stdout);
     pc += 4;
-
     return inst;
 }
 
-inline void Program::getline(FILE *fp) {
+inline void Program::readline(FILE *fp) {
     while(feof(fp) == 0) {
         int c = fgetc(fp);
         if (c == -1) continue;
@@ -338,15 +194,15 @@ inline void Program::read_label(FILE *fp) {
 
     pc = 0;
     while(feof(fp) == 0) {
-        char c = fgetc(fp);
+        char c = (char)fgetc(fp);
         if ((int)c == -1) {
             continue;
         }
         else if (c == '.') {
-            Program::getline(fp);
+            Program::readline(fp);
         }
         else if (c == '\t' || c == '*') {
-            Program::getline(fp);
+            Program::readline(fp);
             pc += 4;
         }   
         else {
@@ -356,7 +212,7 @@ inline void Program::read_label(FILE *fp) {
                 char c = (char)fgetc(fp);
                 if ((int)c == -1) continue;
                 else if (c == ':') {
-                    Program::getline(fp);
+                    Program::readline(fp);
                     break;
                 }
                 label += c;
@@ -381,7 +237,7 @@ inline void Program::read_program(FILE *fp) {
         }
         else if (c == '.') {
             line++;
-            Program::getline(fp);
+            Program::readline(fp);
         }
         else if (c == '\t') {
             line++;
@@ -394,7 +250,7 @@ inline void Program::read_program(FILE *fp) {
         }
         else {
             line++;
-            Program::getline(fp);
+            Program::readline(fp);
         }
     }    
     
@@ -404,6 +260,7 @@ inline void Program::read_program(FILE *fp) {
 inline void Program::print_debug(FILE *fp) {
     std::cout << "<<< debug started..." << std::endl;
     int inst_num = (int)instructions.size();
+    fprintf(fp, "%d\n", inst_num);
     for(int i = 0; i < inst_num; i++) {
         Instruction tmp_inst = instructions[i];
         tmp_inst.print_debug(fp);
