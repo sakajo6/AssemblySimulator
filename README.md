@@ -5,9 +5,10 @@
 
 ### make
     - command `make`
+    
 ### execute
-    - command `./sim ./test/fib.s`
-    - ファイルの末尾に改行入れないと動かない...
+    - command `./sim`
+    - ./asm_sim/inputに実行したいassemblyを格納して`./sim`を実行。(複数ファイル可)
 
 #### 実行時オプション
     - `--stats`: 実行時の統計情報を./asm_sim/output/stats.txtに出力

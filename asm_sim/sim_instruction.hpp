@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <math.h>
 #include <bitset>
 #include <stdlib.h>
@@ -23,13 +24,17 @@ class Instruction {
         int line;
         Opcode opcode;
         bool breakpoint;
+        std::string filename;
+
         int reg0, reg1, reg2;
         int imm;
+
         Instruction() {}
-        Instruction(int ln, Opcode opc, bool brkp) {
+        Instruction(int ln, Opcode opc, bool brkp, std::string curfile) {
             line = ln;
             opcode = opc;
             breakpoint = brkp;
+            filename = curfile;
 
             reg0 = -1;
             reg1 = -1;
@@ -135,7 +140,7 @@ inline int Instruction::exec(int pc) {
         int rownum = 8;
         int colnum = 32/rownum;
 
-        std::cout << "\texecuted: line " << line << std::endl;
+        std::cout << "\t" << filename << ", line " << line << std::endl;
         std::cout << "\t";
         print_debug(stdout);
         std::cout << "\n";
