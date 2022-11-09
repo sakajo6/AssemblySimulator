@@ -79,13 +79,13 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
     }
     // %hi, %lo
     else if (operand[0] == '%') {
-        std::cout << operand.substr(1) << std::endl;
-        std::cout << labels[operand.substr(1)] << std::endl;
-        inst.imm = labels[operand.substr(1)];
+        if (labels.count(operand.substr(1)) == 0) inst.imm = -4;
+        else inst.imm = labels[operand.substr(1)];
     }
     // label
     else {
-        inst.imm = labels[operand] - pc;
+        if (labels.count(operand) == 0) inst.imm = -4 - pc; 
+        else inst.imm = labels[operand] - pc;
     }
 }
 
