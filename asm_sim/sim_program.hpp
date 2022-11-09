@@ -448,7 +448,7 @@ inline void Program::exec() {
     // initialization
     Program::init_source();
 
-    FILE *fp = fopen("./output/output.txt", "w");
+    FILE *fp = fopen("./output/output.ppm", "w");
     if (fp == NULL) {
         std::cerr << "error: an error occurred opening file.\n" << std::endl;
         exit(1);
