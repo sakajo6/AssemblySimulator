@@ -85,8 +85,6 @@ inline int Instruction::exec(int pc) {
             case Flt_s: if (fregs[reg1] < fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
             case Flw: 
                 ftemp.i = memory[(xregs[reg1] + imm)/4];
-                std::cout << xregs[reg1] + imm << std::endl;
-                std::cout << ftemp.f << std::endl;
                 fregs[reg0] = ftemp.f; pc+=4; break;
             case Fsw: 
                 ftemp.f = fregs[reg0];
@@ -144,10 +142,8 @@ inline int Instruction::exec(int pc) {
         for(int i = 0; i < rownum; i++) {
             std::cout << '\t';
             for(int j = 0; j < colnum; j++) {
-                std::cout << "x" << i*colnum + j;
-                if ((i*colnum + j)/10 == 0) std::cout << "  ";
-                else std::cout << " ";
-                std::cout << "0x" << std::hex << xregs[i*colnum + j] << std::dec << ",\t";
+                std::cout << "x" << i*colnum + j << ":\t";
+                std::cout << xregs[i*colnum + j] << ",\t";
             }
             std::cout << "\n";
         }
@@ -156,7 +152,7 @@ inline int Instruction::exec(int pc) {
             std::cout << '\t';
             for(int j = 0; j < colnum; j++) {
                 std::cout << "f" << i*colnum + j << ":\t";
-                std::cout << std::hex << fregs[i*colnum + j] << std::dec << ",\t";
+                std::cout << fregs[i*colnum + j] << ",\t";
             }
             std::cout << "\n";
         }

@@ -78,6 +78,12 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
     else if ((operand[0] >= '0' && operand[0] <= '9') || operand[0] == '-') {
         inst.imm = stoi(operand.substr(0));
     }
+    // %hi, %lo
+    else if (operand[0] == '%') {
+        std::cout << operand.substr(1) << std::endl;
+        std::cout << labels[operand.substr(1)] << std::endl;
+        inst.imm = labels[operand.substr(1)];
+    }
     // label
     else {
         inst.imm = labels[operand] - pc;
@@ -101,7 +107,6 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
         opcode += c;
     }
 
-    std::cout << opcode << std::endl;
     if (string_to_opcode.count(opcode) == 0) {
         std::cerr << "error: invalid opcode." << std::endl;
         exit(1);
@@ -152,15 +157,28 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
                     while(feof(fp) == 0) {
                         c = (char)fgetc(fp);
                         if ((int)c == -1) continue;
+                        else if (c == '%') {
+                            while(feof(fp) == 0) {
+                                c = (char)fgetc(fp);
+                                if ((int)c == -1) continue;
+                                else if (c == '(') operand = "";
+                                else if (c == ')') {
+                                    Program::readline(fp);
+                                    flag = true;
+                                    read_operand("%" + operand, regcnt, inst);
+                                    break;
+                                }
+                                else operand += c;
+                            }
+                            break;
+                        }
                         else if (c == '\n' || c == '\t' || c == ')') {
                             if (c == '\t' || c == ')') Program::readline(fp);
                             flag = true;
-                            std::cout << operand << std::endl;
                             read_operand(operand, regcnt, inst);
                             break;
                         }
                         else if (c == ' ' || c == '('){
-                            std::cout << operand << " ";
                             read_operand(operand, regcnt, inst);
                             break;
                         }
@@ -176,7 +194,6 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
         }
     }
 
-    inst.print_debug(stdout);
     pc += 4;
     return inst;
 }
@@ -263,6 +280,7 @@ inline void Program::print_debug(FILE *fp) {
     fprintf(fp, "%d\n", inst_num);
     for(int i = 0; i < inst_num; i++) {
         Instruction tmp_inst = instructions[i];
+        fprintf(fp, "%d:\t", i);
         tmp_inst.print_debug(fp);
     }
 
