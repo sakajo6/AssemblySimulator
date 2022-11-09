@@ -235,8 +235,6 @@ inline void Program::read_label() {
                 Program::read_line(fp);
                 pc += 4;
             }   
-        }   
-            }   
             else {
                 label = "";
                 label += c;
@@ -289,8 +287,6 @@ inline void Program::read_program() {
             else if (c == '\t') {
                 line++;
                 instructions.push_back(read_instruction(fp, false));
-            }   
-        }   
             }   
             else if (c == '*') {
                 line++;
