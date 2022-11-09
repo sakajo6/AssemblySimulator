@@ -28,6 +28,9 @@ int main(int argc, char const *argv[]) {
     // read assembly
     program.read_program();
 
+    // read sld
+    program.read_sld();
+
     // exec assembler
     program.assembler();
 

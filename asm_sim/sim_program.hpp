@@ -34,11 +34,13 @@ class Program {
 
         void read_line(FILE *);
         void read_operand(std::string, int &, Instruction &);
-        void read_float(std::string, Instruction &);
+        int read_float(std::string);
         Instruction read_instruction(FILE *, bool);
 
         std::vector<std::string> input_files;
         std::string current_file;
+
+        int sld_datacnt;
 
     public:
         bool statsflag;
@@ -54,6 +56,7 @@ class Program {
         }
         void read_label();
         void read_program();
+        void read_sld();
         void read_input(int, char const *[]);
         void print_debug();
         void print_stats();
@@ -103,10 +106,10 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
     }
 }
 
-inline void Program::read_float(std::string operand, Instruction &inst) {
+inline int Program::read_float(std::string operand) {
     union { float f; int i; } ftemp;
     ftemp.f = std::stof(operand);
-    inst.imm = ftemp.i;
+    return ftemp.i;
 }
 
 inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
@@ -142,7 +145,7 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
                     if ((int)c == -1) continue;
                     else if (c == '\n' || c == '\t') {
                         if (c == '\t') Program::read_line(fp);
-                        Program::read_float(operand, inst);
+                        inst.imm = Program::read_float(operand);
                         flag = true;
                         break;
                     }
@@ -216,6 +219,8 @@ inline void Program::read_label() {
 
     pc = 4;
     for(auto fn: input_files) {
+        if (fn.substr(fn.size() - 2) != ".s") continue;
+
         FILE *fp = fopen(fn.c_str(), "r");
         if (fp == NULL) {
             std::cerr << "error: an error occurred opening file.\n" << std::endl;
@@ -267,6 +272,8 @@ inline void Program::read_program() {
 
     pc = 4;
     for(auto fn: input_files) {
+        if (fn.substr(fn.size() - 2) != ".s") continue;
+
         FILE *fp = fopen(fn.c_str(), "r");
         if (fp == NULL) {
             std::cerr << "error: an error occurred opening file.\n" << std::endl;
@@ -302,6 +309,45 @@ inline void Program::read_program() {
     }
     
     std::cout << "program reading finished >>>\n" << std::endl;
+}
+
+inline void Program::read_sld() {
+    std::cout << "<<< sld readin started\n" << std::endl;
+
+    for(auto fn: input_files) {
+        if (fn.substr(fn.size() - 2) == ".s") continue;
+
+        FILE *fp = fopen(fn.c_str(), "r");
+        if (fp == NULL) {
+            std::cerr << "error: an error occurred opening file.\n" << std::endl;
+            exit(1);
+        }
+        std::string num = "";
+        int addr = instructions.size();
+        sld_datacnt = 0;
+        bool reading = false;
+        while(feof(fp) == 0) {
+            char c = fgetc(fp);
+            if ((int)c == -1) {
+                continue;
+            }
+            else if (c == '\n' || c == ' ') {
+                if (reading) {
+                    sld_datacnt++;
+                    memory[addr] = read_float(num);
+
+                    num = "";
+                    addr++;
+                }
+                reading = false;
+            }
+            else {
+                reading = true;
+                num += c;
+            }
+        }
+    }
+    std::cout << "sld reading finished >>>\n" << std::endl;
 }
 
 inline void Program::read_input(int argc, char const *argv[]) {
@@ -348,19 +394,24 @@ inline void Program::print_debug() {
     }    
 
     int inst_num = (int)instructions.size();
-    fprintf(fp, "instruction counter: %d\n\n", int(instructions.size()));
+    fprintf(fp, "<<< instruction counter: %d\n", inst_num);
     for(int i = 0; i < inst_num; i++) {
         Instruction tmp_inst = instructions[i];
-        fprintf(fp, "%d:  \t", i*4);
+        fprintf(fp, "\t%d:  \t", i*4);
         tmp_inst.print_debug(fp);
     }
 
-    fprintf(fp, "\n");
-
+    fprintf(fp, "\n<<< labels\n");
     for(auto i: labels) {
-        fprintf(fp, "%s %d\n", i.first.c_str(), i.second);
+        fprintf(fp, "\t%s: %d\n", i.first.c_str(), i.second);
     }
 
+    fprintf(fp, "\n<<< sld input: %d\n", sld_datacnt);
+    for(int i = inst_num; i < inst_num + sld_datacnt; i++) {
+        union { float f; int i; } tempf;
+        tempf.i = memory[i];
+        fprintf(fp, "\t%f\n", tempf.f);
+    }
 
     fclose(fp);
     std::cout << "debug finished >>>\n" << std::endl;
