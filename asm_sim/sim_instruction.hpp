@@ -279,4 +279,6 @@ inline void Instruction::assemble(FILE *fp, int i) {
 
     std::string ret_machine_str = ret_machine.to_string();
     fprintf(fp, "%s;\n", ret_machine_str.c_str());
+
+    memory[i] = (int)(ret_machine.to_ullong());
 }

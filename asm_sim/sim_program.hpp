@@ -37,7 +37,6 @@ class Program {
 
     public:
         std::vector<Instruction> instructions;
-        bool asmflag;
         bool statsflag;
         bool debugflag;
         Program() {
@@ -341,22 +340,18 @@ inline void Program::assembler(FILE *fp) {
 
 inline void Program::readinput(int argc, char const *argv[]) {
     // options
-    char asmoption[] = "--asm";
     char statsoption[] = "--stats";
     char debugoption[] = "--debug";
 
     std::cout << "<<< runtime parameters:" << std::endl;
-    std::cout << "\t--asm:\t\toutput binary file to ./output/output.txt" << std::endl;
     std::cout << "\t--stats:\toutput runtime stats to ./output/stats.txt" << std::endl;
     std::cout << "\t--debug:\toutput parsed assembly to ./output/debug.txt\n" << std::endl;
 
-    asmflag = false;
     statsflag = false;
     debugflag = false;
 
     for(int i = 2; i < argc; i++) {
-        if (strcmp(argv[i], asmoption) == 0) asmflag = true;
-        else if (strcmp(argv[i], statsoption) == 0) statsflag = true;
+        if (strcmp(argv[i], statsoption) == 0) statsflag = true;
         else if (strcmp(argv[i], debugoption) == 0) debugflag = true; 
         else {
             std::cerr << "<<< runtime parameters are invalid" << std::endl;

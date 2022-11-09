@@ -10,7 +10,6 @@
     - ファイルの末尾に改行入れないと動かない...
 
 #### 実行時オプション
-    - `--asm`: 機械語コードを./asm_sim/output/bin.txtに出力
     - `--stats`: 実行時の統計情報を./asm_sim/output/stats.txtに出力
     - `--debug`: 各asm命令をどのようにパースしたかを./asm_sim/output/debug.txtに出力(simulator係用)
 

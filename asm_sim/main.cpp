@@ -43,15 +43,13 @@ int main(int argc, char const *argv[]) {
     fclose(fp);
 
     // exec assembler
-    if (program.asmflag) {
-        fp = fopen("./output/bin.txt", "w");
-        if (fp == NULL) {
-            std::cerr << "error: an error occurred opening file.\n" << std::endl;
-            return 1;
-        }
-        program.assembler(fp);
-        fclose(fp);
+    fp = fopen("./output/bin.txt", "w");
+    if (fp == NULL) {
+        std::cerr << "error: an error occurred opening file.\n" << std::endl;
+        return 1;
     }
+    program.assembler(fp);
+    fclose(fp);
 
     // exec simulator debug
     if (program.debugflag) {
