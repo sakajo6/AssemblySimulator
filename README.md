@@ -4,6 +4,7 @@
     - asm_simディレクトリがassemblyのシミュレータ
 
 ### make
+    - `cd asm_sim`
     - command `make`
     
 ### execute
