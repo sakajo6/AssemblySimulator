@@ -42,7 +42,7 @@ class Instruction {
             imm = -1;
         }
         void print_debug(FILE *);
-        int exec(int);
+        int exec(FILE *, int);
         void assemble(FILE *, int);
 };
 
@@ -55,7 +55,7 @@ inline void Instruction::print_debug(FILE *fp) {
     fprintf(fp, "\n");
 }
 
-inline int Instruction::exec(int pc) {
+inline int Instruction::exec(FILE *fp, int pc) {
     if (opcode < 10) {
         switch(opcode) {
             case Add: xregs[reg0] = xregs[reg1] + xregs[reg2]; pc+=4; break;
@@ -84,16 +84,20 @@ inline int Instruction::exec(int pc) {
         }
     }
     else if (opcode < 30) {
-        union {float f; int i; } ftemp;
         switch(opcode) {          
             case Feq_s: if (fregs[reg1] == fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
             case Flt_s: if (fregs[reg1] < fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
             case Flw: 
+                {union {float f; int i; } ftemp;
                 ftemp.i = memory[(xregs[reg1] + imm)/4];
-                fregs[reg0] = ftemp.f; pc+=4; break;
+                fregs[reg0] = ftemp.f; pc+=4;} break;
             case Fsw: 
+                {union {float f; int i; } ftemp;
                 ftemp.f = fregs[reg0];
-                memory[(xregs[reg1] + imm)/4] = ftemp.i; pc+=4; break;
+                int addr = xregs[reg1] + imm;
+                if (addr == -1) fprintf(fp, "%f\n", ftemp.f);
+                else memory[addr/4] = ftemp.i;
+                pc+=4;} break;
             case Fsqrt_s: fregs[reg0] = sqrt(fregs[reg1]); pc+=4; break;
             default: 
                 std::cerr << "error occurred: line " << line << std::endl;
@@ -108,7 +112,11 @@ inline int Instruction::exec(int pc) {
             case Ori: xregs[reg0] = xregs[reg1] | imm; pc+=4; break;
             case Jalr: if (reg0 != 0) {xregs[reg0] = pc+4;} pc = xregs[reg1] + imm; break;
             case Lw: xregs[reg0] = memory[(xregs[reg1] + imm)/4]; pc+=4; break;
-            case Sw: memory[(xregs[reg1] + imm)/4] = xregs[reg0]; pc+=4; break;
+            case Sw: 
+                {int addr = xregs[reg1] + imm;
+                if (addr == -1) fprintf(fp, "%d\n", xregs[reg0]);
+                else memory[addr/4] = xregs[reg0];
+                pc+=4;} break;
             default: 
                 std::cerr << "error occurred: line " << line << std::endl;
                 std::cerr << "current pc = " << pc << std::endl;

@@ -16,13 +16,6 @@
 #include "sim_global.hpp"
 
 
-extern const int memory_size;
-extern int memory[memory_size];
-extern const int xregs_size;
-extern int xregs[xregs_size];
-extern const int fregs_size;
-extern float fregs[fregs_size];
-
 class Program {
     private:
         int line;
@@ -455,6 +448,12 @@ inline void Program::exec() {
     // initialization
     Program::init_source();
 
+    FILE *fp = fopen("./output/output.txt", "w");
+    if (fp == NULL) {
+        std::cerr << "error: an error occurred opening file.\n" << std::endl;
+        exit(1);
+    }
+
     struct timespec start, end;
 
     clock_gettime(CLOCK_REALTIME, &start);
@@ -464,7 +463,7 @@ inline void Program::exec() {
     while(pc != instructions.size()*4) {
         int prevpc = pc;
         if (statsflag) stats[instructions[pc/4].opcode]++;
-        pc = instructions[pc/4].exec(pc);
+        pc = instructions[pc/4].exec(fp, pc);
         counter++;
         if(pc < 0) {
             std::cerr << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;

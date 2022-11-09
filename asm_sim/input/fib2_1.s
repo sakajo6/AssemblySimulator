@@ -1,6 +1,7 @@
 fib.9:
 	lui		x5, 0	# 3
 	ori		x5, x0, 1	# 3
+	sw		x4, -1(x0)
 	ble		x4, x5, ble.22	# 3
 	lui		x5, 0	# 4
 	ori		x5, x0, 1	# 4
