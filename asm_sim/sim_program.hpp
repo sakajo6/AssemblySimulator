@@ -32,15 +32,16 @@ class Program {
         std::map<std::string, int> labels;
         std::map<Opcode, int> stats; 
 
-        void read_line(FILE *);
-        void read_operand(std::string, int &, Instruction &);
-        int read_float(std::string);
-        Instruction read_instruction(FILE *, bool);
-
         std::vector<std::string> input_files;
         std::string current_file;
 
         int sld_datacnt;
+
+        void read_line(FILE *);
+        void read_operand(std::string, int &, Instruction &);
+        int read_float(std::string);
+        Instruction read_instruction(FILE *, bool);
+        void init_source();
 
     public:
         bool statsflag;
@@ -259,7 +260,7 @@ inline void Program::read_label() {
         fclose(fp);
     }
 
-    std::cout << "label reading finished >>>\n" << std::endl;
+    std::cout << "<<< label reading finished\n" << std::endl;
 }
 
 inline void Program::read_program() {
@@ -308,11 +309,11 @@ inline void Program::read_program() {
         fclose(fp);
     }
     
-    std::cout << "program reading finished >>>\n" << std::endl;
+    std::cout << "<<< program reading finished\n" << std::endl;
 }
 
 inline void Program::read_sld() {
-    std::cout << "<<< sld readin started\n" << std::endl;
+    std::cout << "<<< sld reading started" << std::endl;
 
     for(auto fn: input_files) {
         if (fn.substr(fn.size() - 2) == ".s") continue;
@@ -347,7 +348,7 @@ inline void Program::read_sld() {
             }
         }
     }
-    std::cout << "sld reading finished >>>\n" << std::endl;
+    std::cout << "<<< sld reading finished\n" << std::endl;
 }
 
 inline void Program::read_input(int argc, char const *argv[]) {
@@ -414,7 +415,7 @@ inline void Program::print_debug() {
     }
 
     fclose(fp);
-    std::cout << "debug finished >>>\n" << std::endl;
+    std::cout << "<<< debug finished\n" << std::endl;
 }
 
 inline void Program::print_stats() {
@@ -436,11 +437,23 @@ inline void Program::print_stats() {
     }
 
     fclose(fp);
-    std::cout << "stats printing finished >>>\n" << std::endl;
+    std::cout << "<<< stats printing finished\n" << std::endl;
+}
+
+inline void Program::init_source() {
+    xregs[2] = 2048;
+
+    // regs for input
+    xregs[28] = instructions.size();
+    xregs[29] = sld_datacnt;
+    xregs[30] = 0;
 }
 
 inline void Program::exec() {
     std::cout << "<<< program execution started..." << std::endl; 
+
+    // initialization
+    Program::init_source();
 
     struct timespec start, end;
 
@@ -476,7 +489,7 @@ inline void Program::exec() {
         std::cout << "\n";
     }
     std::cout << "\n";
-    std::cout << "program finished >>>\n" << std::endl;
+    std::cout << "<<< program finished\n" << std::endl;
 }
 
 inline void Program::assembler() {
@@ -494,5 +507,5 @@ inline void Program::assembler() {
     }
 
     fclose(fp);
-    std::cout << "assembler finished >>>\n" << std::endl;
+    std::cout << "<<< assembler finished\n" << std::endl;
 }
