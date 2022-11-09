@@ -9,10 +9,7 @@ int main(int argc, char const *argv[]) {
     Program program;
     // check runtime param
     program.read_input(argc, argv);
-
-    // init resources
-    xregs[2] = 1024;
-
+    
     // read label
     program.read_label();
 
