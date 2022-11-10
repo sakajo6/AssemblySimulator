@@ -6,6 +6,8 @@
 using namespace std;
 
 int main(int argc, char const *argv[]) {
+    std::cout << fixed << std::setprecision(10);
+
     Program program;
     // check runtime param
     program.read_input(argc, argv);

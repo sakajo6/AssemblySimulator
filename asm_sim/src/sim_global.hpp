@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <algorithm>
+
 /*
     memory info:
         text section
@@ -24,3 +27,26 @@ int xregs[xregs_size];
 
 const int fregs_size = 32;
 float fregs[fregs_size];
+
+namespace globalfun {
+    std::string print_int(int x) {
+        std::string retstr = "";
+
+        int xtemp = std::abs(x);
+        while(xtemp) {
+            retstr += ('0' + xtemp%10);
+            xtemp /= 10;
+        }
+
+        if (x < 0) retstr += '-';
+        else if (x == 0) retstr += '0';
+        else retstr += ' ';
+
+        int n = (int) retstr.size();
+        for(int i = 0; i < 11 - n; i++) {
+            retstr += ' ';
+        }
+        std::reverse(retstr.begin(), retstr.end());
+        return retstr;
+    }
+}

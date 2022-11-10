@@ -12,4 +12,4 @@ min_caml_start:
 	addi	x2, x2, -8	
 	lw		x1, 4(x2)
 	addi	x10, x4, 0
-	addi	x2, x2, 112
+*	addi	x2, x2, 112

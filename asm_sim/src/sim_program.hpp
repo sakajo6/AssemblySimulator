@@ -482,8 +482,17 @@ inline void Program::exec() {
     for(int i = 0; i < rownum; i++) {
         std::cout << '\t';
         for(int j = 0; j < colnum; j++) {
-            std::cout << "x" << i*colnum + j << "\t";
-            std::cout << xregs[i*colnum + j] << ",\t";
+            std::cout << "x" << i*colnum + j << ":\t";
+            std::cout << globalfun::print_int(xregs[i*colnum + j]) << ",\t";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
+    for(int i = 0; i < rownum; i++) {
+        std::cout << '\t';
+        for(int j = 0; j < colnum; j++) {
+            std::cout << "f" << i*colnum + j << ":\t";
+            std::cout << fregs[i*colnum + j] << ",\t";
         }
         std::cout << "\n";
     }

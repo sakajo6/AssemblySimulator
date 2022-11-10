@@ -55,87 +55,145 @@ inline void Instruction::print_debug(FILE *fp) {
     fprintf(fp, "\n");
 }
 
+
+
 inline int Instruction::exec(FILE *fp, int pc) {
     if (opcode < 10) {
-        switch(opcode) {
-            case Add: xregs[reg0] = xregs[reg1] + xregs[reg2]; pc+=4; break;
-            case Sub: xregs[reg0] = xregs[reg1] - xregs[reg2]; pc+=4; break;
-            case Slt: if (xregs[reg1] < xregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
-            case Mul: xregs[reg0] = xregs[reg1] * xregs[reg2]; pc+=4; break;
-            case Div: xregs[reg0] = xregs[reg1] / xregs[reg2]; pc+=4; break;
-            default: 
-                std::cerr << "error occurred: line " << line << std::endl;
-                std::cerr << "current pc = " << pc << std::endl;
-                std::cerr << "instruction-execution error" << std::endl;
-                exit(1);
-        }      
+        if (opcode < 2) {
+            switch(opcode) {
+                case Add: xregs[reg0] = xregs[reg1] + xregs[reg2]; pc+=4; break;
+                case Sub: xregs[reg0] = xregs[reg1] - xregs[reg2]; pc+=4; break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }  
+        }
+        else {
+            switch(opcode) {
+                case Slt: if (xregs[reg1] < xregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
+                case Mul: xregs[reg0] = xregs[reg1] * xregs[reg2]; pc+=4; break;
+                case Div: xregs[reg0] = xregs[reg1] / xregs[reg2]; pc+=4; break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }  
+        } 
     }
     else if (opcode < 20) {
-        switch(opcode) {
-            case Fadd_s: fregs[reg0] = fregs[reg1] + fregs[reg2]; pc+=4; break;
-            case Fsub_s: fregs[reg0] = fregs[reg1] - fregs[reg2]; pc+=4; break;
-            case Fmul_s: fregs[reg0] = fregs[reg1] * fregs[reg2]; pc+=4; break;
-            case Fdiv_s: fregs[reg0] = fregs[reg1] / fregs[reg2]; pc+=4; break;
-            default: 
-                std::cerr << "error occurred: line " << line << std::endl;
-                std::cerr << "current pc = " << pc << std::endl;
-                std::cerr << "instruction-execution error" << std::endl;
-                exit(1);
+        if (opcode < 12) {
+            switch(opcode) {
+                case Fadd_s: fregs[reg0] = fregs[reg1] + fregs[reg2]; pc+=4; break;
+                case Fsub_s: fregs[reg0] = fregs[reg1] - fregs[reg2]; pc+=4; break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }
         }
+        else {
+            switch(opcode) {
+                case Fmul_s: fregs[reg0] = fregs[reg1] * fregs[reg2]; pc+=4; break;
+                case Fdiv_s: fregs[reg0] = fregs[reg1] / fregs[reg2]; pc+=4; break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }
+        }
+
     }
     else if (opcode < 30) {
-        switch(opcode) {          
-            case Feq_s: if (fregs[reg1] == fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
-            case Flt_s: if (fregs[reg1] < fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
-            case Flw: 
-                {union {float f; int i; } ftemp;
-                ftemp.i = memory[(xregs[reg1] + imm)/4];
-                fregs[reg0] = ftemp.f; pc+=4;} break;
-            case Fsw: 
-                {union {float f; int i; } ftemp;
-                ftemp.f = fregs[reg0];
-                int addr = xregs[reg1] + imm;
-                if (addr == -1) fprintf(fp, "%f\n", ftemp.f);
-                else memory[addr/4] = ftemp.i;
-                pc+=4;} break;
-            case Fsqrt_s: fregs[reg0] = sqrt(fregs[reg1]); pc+=4; break;
-            default: 
-                std::cerr << "error occurred: line " << line << std::endl;
-                std::cerr << "current pc = " << pc << std::endl;
-                std::cerr << "instruction-execution error" << std::endl;
-                exit(1);
+        if (opcode < 22) {
+            switch(opcode) {          
+                case Feq_s: if (fregs[reg1] == fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
+                case Flt_s: if (fregs[reg1] < fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }
+        }
+        else {
+            switch(opcode) {          
+                case Flw: 
+                    {union {float f; int i; } ftemp;
+                    ftemp.i = memory[(xregs[reg1] + imm)/4];
+                    fregs[reg0] = ftemp.f; pc+=4;} break;
+                case Fsw: 
+                    {union {float f; int i; } ftemp;
+                    ftemp.f = fregs[reg0];
+                    int addr = xregs[reg1] + imm;
+                    if (addr == -1) fprintf(fp, "%f\n", ftemp.f);
+                    else memory[addr/4] = ftemp.i;
+                    pc+=4;} break;
+                case Fsqrt_s: fregs[reg0] = sqrt(fregs[reg1]); pc+=4; break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }
         }
     }
     else if (opcode < 40) {
-        switch(opcode) {
-            case Addi: xregs[reg0] = xregs[reg1] + imm; pc+=4; break;
-            case Ori: xregs[reg0] = xregs[reg1] | imm; pc+=4; break;
-            case Jalr: if (reg0 != 0) {xregs[reg0] = pc+4;} pc = xregs[reg1] + imm; break;
-            case Lw: xregs[reg0] = memory[(xregs[reg1] + imm)/4]; pc+=4; break;
-            case Sw: 
-                {int addr = xregs[reg1] + imm;
-                if (addr == -1) fprintf(fp, "%d\n", xregs[reg0]);
-                else memory[addr/4] = xregs[reg0];
-                pc+=4;} break;
-            default: 
-                std::cerr << "error occurred: line " << line << std::endl;
-                std::cerr << "current pc = " << pc << std::endl;
-                std::cerr << "instruction-execution error" << std::endl;
-                exit(1);
+        if (opcode < 32) {
+            switch(opcode) {
+                case Addi: xregs[reg0] = xregs[reg1] + imm; pc+=4; break;
+                case Ori: xregs[reg0] = xregs[reg1] | imm; pc+=4; break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }
+        }
+        else {
+            switch(opcode) {
+                case Jalr: if (reg0 != 0) {xregs[reg0] = pc+4;} pc = xregs[reg1] + imm; break;
+                case Lw: xregs[reg0] = memory[(xregs[reg1] + imm)/4]; pc+=4; break;
+                case Sw: 
+                    {int addr = xregs[reg1] + imm;
+                    if (addr == -1) fprintf(fp, "%d\n", xregs[reg0]);
+                    else memory[addr/4] = xregs[reg0];
+                    pc+=4;} break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }
         }
     }
     else if (opcode < 50) {
-        switch(opcode) {
-            case Beq: if (xregs[reg0] == xregs[reg1]) {pc += imm;} else {pc+=4;} break;
-            case Ble: if (xregs[reg0] <= xregs[reg1]) { pc += imm; } else {pc+=4;} break;
-            case Bge: if (xregs[reg0] >= xregs[reg1]) {pc += imm;} else {pc+=4;} break;
-            case Jal: xregs[reg0] = pc + 4; pc += imm; break;
-            case Lui: xregs[reg0] = (imm >> 12) << 12; pc+=4; break;
-            default: 
-                std::cerr << "error occurred: line " << line << std::endl;
-                std::cerr << "current pc = " << pc << std::endl;
-                std::cerr << "instruction-execution error" << std::endl;
-                exit(1);
+        if (opcode < 42) {
+            switch(opcode) {
+                case Beq: if (xregs[reg0] == xregs[reg1]) {pc += imm;} else {pc+=4;} break;
+                case Ble: if (xregs[reg0] <= xregs[reg1]) { pc += imm; } else {pc+=4;} break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }
+        }
+        else {
+            switch(opcode) {
+                case Bge: if (xregs[reg0] >= xregs[reg1]) {pc += imm;} else {pc+=4;} break;
+                case Jal: xregs[reg0] = pc + 4; pc += imm; break;
+                case Lui: xregs[reg0] = (imm >> 12) << 12; pc+=4; break;
+                default: 
+                    std::cerr << "error occurred: line " << line << std::endl;
+                    std::cerr << "current pc = " << pc << std::endl;
+                    std::cerr << "instruction-execution error" << std::endl;
+                    exit(1);
+            }
         }
     }
     else {
@@ -156,7 +214,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
             std::cout << '\t';
             for(int j = 0; j < colnum; j++) {
                 std::cout << "x" << i*colnum + j << ":\t";
-                std::cout << xregs[i*colnum + j] << ",\t";
+                std::cout << globalfun::print_int(xregs[i*colnum + j]) << ",\t";
             }
             std::cout << "\n";
         }
