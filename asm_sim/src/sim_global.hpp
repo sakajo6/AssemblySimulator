@@ -49,4 +49,26 @@ namespace globalfun {
         std::reverse(retstr.begin(), retstr.end());
         return retstr;
     }
+    void print_regs() {
+        int rownum = 8;
+        int colnum = 32/rownum;
+        for(int i = 0; i < rownum; i++) {
+            std::cout << '\t';
+            for(int j = 0; j < colnum; j++) {
+                std::cout << "x" << i*colnum + j << ":\t";
+                std::cout << globalfun::print_int(xregs[i*colnum + j]) << ",\t";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+        for(int i = 0; i < rownum; i++) {
+            std::cout << '\t';
+            for(int j = 0; j < colnum; j++) {
+                std::cout << "f" << i*colnum + j << ":\t";
+                std::cout << fregs[i*colnum + j] << ",\t";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+    }
 }

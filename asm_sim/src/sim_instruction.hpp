@@ -206,30 +206,13 @@ inline int Instruction::exec(FILE *fp, int pc) {
     xregs[0] = 0;
 
     if (breakpoint) {
-        int rownum = 8;
-        int colnum = 32/rownum;
-
         std::cout << "\t" << filename << ", line " << line << std::endl;
         std::cout << "\t";
         print_debug(stdout);
         std::cout << "\n";
-        for(int i = 0; i < rownum; i++) {
-            std::cout << '\t';
-            for(int j = 0; j < colnum; j++) {
-                std::cout << "x" << i*colnum + j << ":\t";
-                std::cout << globalfun::print_int(xregs[i*colnum + j]) << ",\t";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "\n";
-        for(int i = 0; i < rownum; i++) {
-            std::cout << '\t';
-            for(int j = 0; j < colnum; j++) {
-                std::cout << "f" << i*colnum + j << ":\t";
-                std::cout << fregs[i*colnum + j] << ",\t";
-            }
-            std::cout << "\n";
-        }
+
+        globalfun::print_regs();
+
         std::cout << "\n\tcurrent pc = " << pc << std::endl;
         std::cout << "\n<<< PRESS ENTER" << std::endl;
         

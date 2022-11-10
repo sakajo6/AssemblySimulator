@@ -498,26 +498,8 @@ inline void Program::exec() {
     std::cout << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << std::endl;
     std::cout << "\tcounter: " << counter << '\n' << std::endl;
 
-    int rownum = 8;
-    int colnum = 32/rownum;
-    for(int i = 0; i < rownum; i++) {
-        std::cout << '\t';
-        for(int j = 0; j < colnum; j++) {
-            std::cout << "x" << i*colnum + j << ":\t";
-            std::cout << globalfun::print_int(xregs[i*colnum + j]) << ",\t";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n";
-    for(int i = 0; i < rownum; i++) {
-        std::cout << '\t';
-        for(int j = 0; j < colnum; j++) {
-            std::cout << "f" << i*colnum + j << ":\t";
-            std::cout << fregs[i*colnum + j] << ",\t";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n";
+    globalfun::print_regs();
+
     std::cout << "<<< program finished\n" << std::endl;
 
     if (statsflag) {
