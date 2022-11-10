@@ -1,2 +1,2 @@
 sim: ./src/*
-	g++ -O3 -o sim ./src/main.cpp 
+	g++ -std=c++17 -O3 -o sim ./src/main.cpp 
