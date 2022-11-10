@@ -42,7 +42,7 @@ class Instruction {
             imm = -1;
         }
         void print_debug(FILE *);
-        int exec(FILE *, int);
+        int exec(FILE *, int, bool);
         void assemble(FILE *, int);
 };
 
@@ -57,7 +57,7 @@ inline void Instruction::print_debug(FILE *fp) {
 
 
 
-inline int Instruction::exec(FILE *fp, int pc) {
+inline int Instruction::exec(FILE *fp, int pc, bool binflag) {
     if (opcode < 10) {
         if (opcode < 2) {
             switch(opcode) {
@@ -211,7 +211,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
         print_debug(stdout);
         std::cout << "\n";
 
-        globalfun::print_regs();
+        globalfun::print_regs(binflag);
 
         std::cout << "\n\tcurrent pc = " << pc << std::endl;
         std::cout << "\n<<< PRESS ENTER" << std::endl;

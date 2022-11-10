@@ -2,6 +2,7 @@
 
 #include <string>
 #include <algorithm>
+#include <bitset>
 
 /*
     memory info:
@@ -49,14 +50,24 @@ namespace globalfun {
         std::reverse(retstr.begin(), retstr.end());
         return retstr;
     }
-    void print_regs() {
+    std::string print_float(float f) {
+        union { float f; int i; } tempf;
+        tempf.f = f;
+        return std::bitset<32>(tempf.i).to_string();
+    }
+    void print_regs(bool binflag) {
         int rownum = 8;
         int colnum = 32/rownum;
+        if (binflag) {
+            rownum = 16;
+            colnum = 32/rownum;
+        }
         for(int i = 0; i < rownum; i++) {
             std::cout << '\t';
             for(int j = 0; j < colnum; j++) {
                 std::cout << "x" << i*colnum + j << ":\t";
-                std::cout << globalfun::print_int(xregs[i*colnum + j]) << ",\t";
+                if (binflag) std::cout << std::bitset<32>(xregs[i*colnum + j]) << ",\t";
+                else std::cout << globalfun::print_int(xregs[i*colnum + j]) << ",\t";
             }
             std::cout << "\n";
         }
@@ -65,7 +76,8 @@ namespace globalfun {
             std::cout << '\t';
             for(int j = 0; j < colnum; j++) {
                 std::cout << "f" << i*colnum + j << ":\t";
-                std::cout << fregs[i*colnum + j] << ",\t";
+                if (binflag) std::cout << globalfun::print_float(fregs[i*colnum + j]) << ",\t";
+                else std::cout << fregs[i*colnum + j] << ",\t";
             }
             std::cout << "\n";
         }

@@ -18,6 +18,7 @@
 ### 実行時オプション
     - `--stats`: 実行時の統計情報を./asm_sim/output/stats.txtに出力
     - `--debug`: 各asm命令をどのようにパースしたかを./asm_sim/output/debug.txtに出力(simulator係用)
+    - `--bin`: registerの値をbinary表現で出力
 
 ### breakpoint
     - 実行前に実行したいファイルの命令の先頭に'*'を記入して実行

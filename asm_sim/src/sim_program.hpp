@@ -1,7 +1,5 @@
 #pragma once
 
-#define DEBUG
-
 #include <vector>
 #include <string>
 #include <map>
@@ -20,6 +18,7 @@ class Program {
     private:
         bool statsflag;
         bool debugflag;
+        bool binflag;
 
         int line;
         int pc;
@@ -370,17 +369,21 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     // options
     char statsoption[] = "--stats";
     char debugoption[] = "--debug";
+    char binoption[] = "--bin";
 
     std::cout << "<<< runtime parameters:" << std::endl;
     std::cout << "\t--stats:\toutput runtime stats to ./output/stats.txt" << std::endl;
-    std::cout << "\t--debug:\toutput parsed assembly to ./output/debug.txt\n" << std::endl;
+    std::cout << "\t--debug:\toutput parsed assembly to ./output/debug.txt" << std::endl;
+    std::cout << "\t--bin:\toutput register values in binary\n" << std::endl;
 
     statsflag = false;
     debugflag = false;
+    binflag = false;
 
     for(int i = 1; i < argc; i++) {
         if (strcmp(argv[i], statsoption) == 0) statsflag = true;
         else if (strcmp(argv[i], debugoption) == 0) debugflag = true; 
+        else if (strcmp(argv[i], binoption) == 0) binflag = true;
         else {
             std::cerr << "<<< runtime parameters are invalid" << std::endl;
             exit(1);
@@ -486,7 +489,7 @@ inline void Program::exec() {
     while(pc != endpoint) {
         int prevpc = pc;
         if (statsflag) stats[instructions[pc/4].opcode]++;
-        pc = instructions[pc/4].exec(fp, pc);
+        pc = instructions[pc/4].exec(fp, pc, binflag);
         counter++;
         if(pc < 0) {
             std::cerr << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
@@ -500,7 +503,7 @@ inline void Program::exec() {
     std::cout << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << std::endl;
     std::cout << "\tcounter: " << counter << '\n' << std::endl;
 
-    globalfun::print_regs();
+    globalfun::print_regs(binflag);
 
     std::cout << "<<< program finished\n" << std::endl;
 
