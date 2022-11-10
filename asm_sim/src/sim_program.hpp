@@ -262,6 +262,8 @@ inline void Program::read_label() {
         fclose(fp);
     }
 
+    labels["data"] = pc;
+
     std::cout << "<<< label reading finished\n" << std::endl;
 }
 

@@ -331,7 +331,7 @@ inline void Instruction::assemble(FILE *fp, int i) {
         }
     }
     else if (opcode < 60) {
-        ret_machine = std::bitset<32>(0);
+        ret_machine = std::bitset<32>(-1);
     }
     else {
         ret_machine = std::bitset<32>(imm);
