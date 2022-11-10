@@ -375,10 +375,10 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     char brkalloption[] = "--brkall";
 
     std::cout << "<<< runtime arguments:" << std::endl;
-    std::cout << "\t\033[34m--stats:\toutput runtime stats to ./output/stats.txt\033[m" << std::endl;
-    std::cout << "\t\033[34m--debug:\toutput parsed assembly to ./output/debug.txt\033[m" << std::endl;
-    std::cout << "\t\033[34m--bin:  \toutput register values in binary\033[m" << std::endl;
-    std::cout << "\t\033[34m--brkall:\tassign break-pointer to all instructions\033[m\n" << std::endl;
+    std::cout << "\t\033[31m--stats:\toutput runtime stats to ./output/stats.txt\033[m" << std::endl;
+    std::cout << "\t\033[31m--debug:\toutput parsed assembly to ./output/debug.txt\033[m" << std::endl;
+    std::cout << "\t\033[31m--bin:  \toutput register values in binary\033[m" << std::endl;
+    std::cout << "\t\033[31m--brkall:\tassign break-pointer to all instructions\033[m\n" << std::endl;
 
     std::cout << "<<< These are runtime arguments. PRESS ENTER" << std::endl;
     getchar();
