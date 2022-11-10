@@ -259,7 +259,6 @@ inline void Instruction::set_machine_J(std::bitset<32> *mcode) {
 }
 
 inline void Instruction::assemble(FILE *fp, int i) {
-    std::cout << opcode_to_string[opcode] << std::endl;
     fprintf(fp, "mem[13'd%d] <= 32'b", i);
 
     std::bitset<32> ret_machine;
@@ -338,7 +337,6 @@ inline void Instruction::assemble(FILE *fp, int i) {
         ret_machine = std::bitset<32>(imm);
     }
     std::string ret_machine_str = ret_machine.to_string();
-    std::cout << ret_machine_str << std::endl;
     fprintf(fp, "%s;\n", ret_machine_str.c_str());
 
     memory[i] = (int)(ret_machine.to_ullong());

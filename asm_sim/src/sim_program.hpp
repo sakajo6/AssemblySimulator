@@ -362,6 +362,7 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
         input_files.push_back(file.path());
     }
     std::cout << "<<< input files" << std::endl;
+    sort(input_files.begin(), input_files.end());
     for(auto fn: input_files) {
         std::cout << "\t\033[32m" << fn << "\033[m" << std::endl;
     }
@@ -374,10 +375,10 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     char brkalloption[] = "--brkall";
 
     std::cout << "<<< runtime arguments:" << std::endl;
-    std::cout << "\t\033[34m --stats:\toutput runtime stats to ./output/stats.txt\033[m" << std::endl;
-    std::cout << "\t--debug:\toutput parsed assembly to ./output/debug.txt" << std::endl;
-    std::cout << "\t--bin:  \toutput register values in binary" << std::endl;
-    std::cout << "\t--brkall:\tassign break-pointer to all instructions\n" << std::endl;
+    std::cout << "\t\033[34m--stats:\toutput runtime stats to ./output/stats.txt\033[m" << std::endl;
+    std::cout << "\t\033[34m--debug:\toutput parsed assembly to ./output/debug.txt\033[m" << std::endl;
+    std::cout << "\t\033[34m--bin:  \toutput register values in binary\033[m" << std::endl;
+    std::cout << "\t\033[34m--brkall:\tassign break-pointer to all instructions\033[m\n" << std::endl;
 
     std::cout << "<<< These are runtime arguments. PRESS ENTER" << std::endl;
     getchar();
@@ -385,7 +386,7 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     statsflag = false;
     debugflag = false;
     binflag = false;
-    brkallflag = "--brkall";
+    brkallflag = false;
 
     for(int i = 1; i < argc; i++) {
         if (strcmp(argv[i], statsoption) == 0) statsflag = true;
