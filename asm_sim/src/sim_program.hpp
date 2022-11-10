@@ -30,6 +30,8 @@ class Program {
 
         int sld_datacnt;
 
+        int endpoint;
+
         void read_line(FILE *);
         void read_operand(std::string, int &, Instruction &);
         int read_float(std::string);
@@ -116,7 +118,7 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
         if (c == '\t') break;
         opcode += c;
     }
-
+    
     if (string_to_opcode.count(opcode) == 0) {
         std::cerr << "error: invalid opcode: " << opcode << std::endl;
         exit(1);
@@ -125,7 +127,10 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
     Opcode op = string_to_opcode[opcode];
     Instruction inst(line, op, brkp, current_file);
     
-    if (op == Word) {
+    if (op == Exit) {
+        endpoint = pc;
+    }
+    else if (op == Word) {
         while(feof(fp) == 0) {
             bool flag = false;
             c = (char)fgetc(fp);
@@ -460,7 +465,7 @@ inline void Program::exec() {
 
     long long int counter = 0;
     pc = 0;
-    while(pc != instructions.size()*4) {
+    while(pc != endpoint) {
         int prevpc = pc;
         if (statsflag) stats[instructions[pc/4].opcode]++;
         pc = instructions[pc/4].exec(fp, pc);

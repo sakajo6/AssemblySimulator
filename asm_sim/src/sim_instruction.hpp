@@ -196,6 +196,9 @@ inline int Instruction::exec(FILE *fp, int pc) {
             }
         }
     }
+    else if (opcode < 60) {
+        std::cerr << "this is end-point" << std::endl;
+    }
     else {
         std::cerr << "this is data section" << std::endl;
     }
@@ -343,6 +346,9 @@ inline void Instruction::assemble(FILE *fp, int i) {
             case Lui: 
                 ret_machine = lui_machine; set_machine_U(&ret_machine); break;
         }
+    }
+    else if (opcode < 60) {
+        ret_machine = std::bitset<32>(0);
     }
     else {
         ret_machine = std::bitset<32>(imm);

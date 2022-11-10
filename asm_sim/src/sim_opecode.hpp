@@ -31,7 +31,9 @@ enum Opcode {
     Jal,
     Lui,
 
-    Word = 50,
+    Exit = 50,
+
+    Word = 60,
 };
 
 std::map<std::string, Opcode> string_to_opcode = {
@@ -64,6 +66,8 @@ std::map<std::string, Opcode> string_to_opcode = {
     {"bge", Bge},
     {"jal", Jal},
     {"lui", Lui},
+
+    {"EXIT", Exit},
 
     {".word", Word}
 };
@@ -98,5 +102,7 @@ std::map<Opcode, std::string> opcode_to_string = {
     {Jal, "jal"},    
     {Lui, "lui"},
     
+    {Exit, "EXIT"},
+
     {Word, ".word"},
 };
