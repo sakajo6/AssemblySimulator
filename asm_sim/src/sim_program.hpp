@@ -17,7 +17,6 @@
 class Program {
     private:
         bool statsflag;
-        bool debugflag;
         bool binflag;
         bool brkallflag;
 
@@ -370,13 +369,11 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
 
     // options
     char statsoption[] = "--stats";
-    char debugoption[] = "--debug";
     char binoption[] = "--bin";
     char brkalloption[] = "--brkall";
 
     std::cout << "<<< runtime arguments:" << std::endl;
     std::cout << "\t\033[31m--stats:\toutput runtime stats to ./output/stats.txt\033[m" << std::endl;
-    std::cout << "\t\033[31m--debug:\toutput parsed assembly to ./output/debug.txt\033[m" << std::endl;
     std::cout << "\t\033[31m--bin:  \toutput register values in binary\033[m" << std::endl;
     std::cout << "\t\033[31m--brkall:\tassign break-pointer to all instructions\033[m\n" << std::endl;
 
@@ -384,13 +381,11 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     getchar();
 
     statsflag = false;
-    debugflag = false;
     binflag = false;
     brkallflag = false;
 
     for(int i = 1; i < argc; i++) {
         if (strcmp(argv[i], statsoption) == 0) statsflag = true;
-        else if (strcmp(argv[i], debugoption) == 0) debugflag = true; 
         else if (strcmp(argv[i], binoption) == 0) binflag = true;
         else if (strcmp(argv[i], brkalloption) == 0) brkallflag = true;
         else {
@@ -439,9 +434,7 @@ inline void Program::read_inputs(int argc, char const *argv[]) {
     Program::read_program();
     Program::read_sld();
 
-    if (debugflag) {
-        Program::print_debug();
-    }
+    Program::print_debug();
 }
 
 inline void Program::print_stats() {
