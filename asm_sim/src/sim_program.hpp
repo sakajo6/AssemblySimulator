@@ -18,6 +18,9 @@
 
 class Program {
     private:
+        bool statsflag;
+        bool debugflag;
+
         int line;
         int pc;
 
@@ -36,11 +39,18 @@ class Program {
         void read_operand(std::string, int &, Instruction &);
         int read_float(std::string);
         Instruction read_instruction(FILE *, bool);
+        void read_label();
+        void read_program();
+        void read_sld();
+        void read_inputfiles(int, char const *[]);
+        
         void init_source();
 
+        void print_debug();
+        void assembler();
+        void print_stats();
+
     public:
-        bool statsflag;
-        bool debugflag;
         Program() {
             line = 0;
             pc = 0;
@@ -50,14 +60,8 @@ class Program {
             labels.clear();
             stats.clear();
         }
-        void read_label();
-        void read_program();
-        void read_sld();
-        void read_input(int, char const *[]);
-        void print_debug();
-        void print_stats();
+        void read_inputs(int, char const *argv[]);
         void exec();
-        void assembler();
 };
 
 inline void Program::read_line(FILE *fp) {
@@ -118,7 +122,7 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
         if (c == '\t') break;
         opcode += c;
     }
-    
+
     if (string_to_opcode.count(opcode) == 0) {
         std::cerr << "error: invalid opcode: " << opcode << std::endl;
         exit(1);
@@ -349,7 +353,7 @@ inline void Program::read_sld() {
     std::cout << "<<< sld reading finished\n" << std::endl;
 }
 
-inline void Program::read_input(int argc, char const *argv[]) {
+inline void Program::read_inputfiles(int argc, char const *argv[]) {
     // input files
     std::string path = "./input";
     for(const auto &file: std::filesystem::directory_iterator(path)) {
@@ -380,7 +384,6 @@ inline void Program::read_input(int argc, char const *argv[]) {
             exit(1);
         }
     }
-
 }
 
 inline void Program::print_debug() {
@@ -416,6 +419,17 @@ inline void Program::print_debug() {
     std::cout << "<<< debug finished\n" << std::endl;
 }
 
+inline void Program::read_inputs(int argc, char const *argv[]) {
+    Program::read_inputfiles(argc, argv);
+    Program::read_label();
+    Program::read_program();
+    Program::read_sld();
+
+    if (debugflag) {
+        Program::print_debug();
+    }
+}
+
 inline void Program::print_stats() {
     std::cout << "<<< stats printing started..." << std::endl;
 
@@ -448,6 +462,8 @@ inline void Program::init_source() {
 }
 
 inline void Program::exec() {
+    Program::assembler();
+
     std::cout << "<<< program execution started..." << std::endl; 
 
     // initialization
@@ -503,6 +519,10 @@ inline void Program::exec() {
     }
     std::cout << "\n";
     std::cout << "<<< program finished\n" << std::endl;
+
+    if (statsflag) {
+        Program::print_stats();
+    }
 }
 
 inline void Program::assembler() {

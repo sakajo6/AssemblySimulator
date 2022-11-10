@@ -3,39 +3,12 @@
 
 #include "sim_program.hpp"
 
-using namespace std;
-
 int main(int argc, char const *argv[]) {
-    std::cout << fixed << std::setprecision(10);
+    std::cout << std::fixed << std::setprecision(10);
 
     Program program;
-    // check runtime param
-    program.read_input(argc, argv);
-    
-    // read label
-    program.read_label();
-
-    // read assembly
-    program.read_program();
-
-    // read sld
-    program.read_sld();
-
-    // exec assembler
-    program.assembler();
-
-    // exec simulator debug
-    if (program.debugflag) {
-        program.print_debug();
-    }
-
-    // exec assembly
+    program.read_inputs(argc, argv);
     program.exec();
-
-    // stats
-    if (program.statsflag) {
-        program.print_stats();
-    }
 
     return 0;
 }
