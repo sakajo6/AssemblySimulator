@@ -42,7 +42,7 @@ class Instruction {
             imm = -1;
         }
         void print_debug(FILE *);
-        int exec(FILE *, int, bool);
+        int exec(FILE *, int, bool, bool);
         void assemble(FILE *, int);
 };
 
@@ -57,7 +57,7 @@ inline void Instruction::print_debug(FILE *fp) {
 
 
 
-inline int Instruction::exec(FILE *fp, int pc, bool binflag) {
+inline int Instruction::exec(FILE *fp, int pc, bool binflag, bool brkallflag) {
     if (opcode < 10) {
         if (opcode < 2) {
             switch(opcode) {
@@ -205,7 +205,7 @@ inline int Instruction::exec(FILE *fp, int pc, bool binflag) {
 
     xregs[0] = 0;
 
-    if (breakpoint) {
+    if (breakpoint || brkallflag) {
         std::cout << "\t" << filename << ", line " << line << std::endl;
         std::cout << "\t";
         print_debug(stdout);

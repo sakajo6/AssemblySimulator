@@ -19,6 +19,7 @@ class Program {
         bool statsflag;
         bool debugflag;
         bool binflag;
+        bool brkallflag;
 
         int line;
         int pc;
@@ -370,6 +371,7 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     char statsoption[] = "--stats";
     char debugoption[] = "--debug";
     char binoption[] = "--bin";
+    char brkalloption[] = "--brkall";
 
     std::cout << "<<< runtime parameters:" << std::endl;
     std::cout << "\t--stats:\toutput runtime stats to ./output/stats.txt" << std::endl;
@@ -379,11 +381,13 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     statsflag = false;
     debugflag = false;
     binflag = false;
+    brkallflag = "--brkall";
 
     for(int i = 1; i < argc; i++) {
         if (strcmp(argv[i], statsoption) == 0) statsflag = true;
         else if (strcmp(argv[i], debugoption) == 0) debugflag = true; 
         else if (strcmp(argv[i], binoption) == 0) binflag = true;
+        else if (strcmp(argv[i], brkalloption) == 0) brkallflag = true;
         else {
             std::cerr << "<<< runtime parameters are invalid" << std::endl;
             exit(1);
@@ -489,7 +493,7 @@ inline void Program::exec() {
     while(pc != endpoint) {
         int prevpc = pc;
         if (statsflag) stats[instructions[pc/4].opcode]++;
-        pc = instructions[pc/4].exec(fp, pc, binflag);
+        pc = instructions[pc/4].exec(fp, pc, binflag, brkallflag);
         counter++;
         if(pc < 0) {
             std::cerr << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
