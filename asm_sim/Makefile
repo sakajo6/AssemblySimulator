@@ -1,4 +1,4 @@
 sim: ./src/*
-	g++ -std=c++17 -O3 -o sim ./src/main.cpp 
+	g++ -std=c++17 -O3 -o sim ./src/main.cpp -lstdc++fs
 clean:
-	g++
+	rm ./sim

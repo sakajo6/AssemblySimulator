@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <filesystem>
+#include <experimental/filesystem>
 
 #include "sim_instruction.hpp"
 #include "sim_opecode.hpp"
@@ -85,7 +85,7 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
         }
         // label: reg: x, f 始まりで数字が続かない
         else {
-            if (labels.count(operand) == 0) inst.imm = -4 - pc;
+            if (labels.count(operand) == 0) inst.imm = 1000000; 
             else inst.imm = labels[operand] - pc;
         }
     }
@@ -100,7 +100,7 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
     }
     // label: その他
     else {
-        if (labels.count(operand) == 0) inst.imm = -4 - pc; 
+        if (labels.count(operand) == 0) inst.imm = 1000000;
         else inst.imm = labels[operand] - pc;
     }
 }
@@ -357,7 +357,7 @@ inline void Program::read_sld() {
 inline void Program::read_inputfiles(int argc, char const *argv[]) {
     // input files
     std::string path = "./input";
-    for(const auto &file: std::filesystem::directory_iterator(path)) {
+    for(const auto &file: std::experimental::filesystem::directory_iterator(path)) {
         input_files.push_back(file.path());
     }
     std::cout << "<<< input files" << std::endl;
@@ -377,8 +377,7 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     std::cout << "\t\033[31m--bin:  \toutput register values in binary\033[m" << std::endl;
     std::cout << "\t\033[31m--brkall:\tassign break-pointer to all instructions\033[m\n" << std::endl;
 
-    std::cout << "<<< These are runtime arguments. PRESS ENTER" << std::endl;
-    getchar();
+    std::cout << "<<< These are runtime arguments.\n" << std::endl;
 
     statsflag = false;
     binflag = false;
