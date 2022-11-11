@@ -8,11 +8,3 @@ ble: 	177
 jalr: 	177
 sub: 	176
 add: 	88
-
-let a = (1, (2, 3)) in
-
-let a = 
-    let b = 1 in 
-    let c = (2, 3) in 
-    (b, c) in
-    let d = (a, 4) in
