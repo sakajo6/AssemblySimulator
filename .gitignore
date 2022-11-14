@@ -1,4 +1,5 @@
-asm_sim/memo.txt
-asm_sim/input
-asm_sim/output
+asm_sim/input/*.txt
+asm_sim/input/*.s
+asm_sim/output/*
 asm_sim/sim
+asm_sim/mydir
