@@ -1,4 +1,4 @@
-asm_sim/input/*.txt
+asm_sim/input/*.sld
 asm_sim/input/*.s
 asm_sim/output/*
 asm_sim/sim
