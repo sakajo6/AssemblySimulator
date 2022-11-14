@@ -16,7 +16,6 @@
 
 class Program {
     private:
-        bool statsflag;
         bool binflag;
         bool brkallflag;
 
@@ -25,7 +24,7 @@ class Program {
 
         std::vector<Instruction> instructions;
         std::map<std::string, int> labels;
-        std::map<Opcode, int> stats; 
+        std::vector<int> stats; 
 
         std::vector<std::string> input_files;
         std::string current_file;
@@ -57,7 +56,7 @@ class Program {
             input_files = {};
 
             labels.clear();
-            stats.clear();
+            stats.assign(100, 0);
         }
         void read_inputs(int, char const *argv[]);
         void exec();
@@ -368,24 +367,20 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     std::cout << std::endl;
 
     // options
-    char statsoption[] = "--stats";
     char binoption[] = "--bin";
     char brkalloption[] = "--brkall";
 
     std::cout << "<<< runtime arguments:" << std::endl;
-    std::cout << "\t\033[31m--stats:\toutput runtime stats to ./output/stats.txt\033[m" << std::endl;
     std::cout << "\t\033[31m--bin:  \toutput register values in binary\033[m" << std::endl;
     std::cout << "\t\033[31m--brkall:\tassign break-pointer to all instructions\033[m\n" << std::endl;
 
     std::cout << "<<< These are runtime arguments.\n" << std::endl;
 
-    statsflag = false;
     binflag = false;
     brkallflag = false;
 
     for(int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], statsoption) == 0) statsflag = true;
-        else if (strcmp(argv[i], binoption) == 0) binflag = true;
+        if (strcmp(argv[i], binoption) == 0) binflag = true;
         else if (strcmp(argv[i], brkalloption) == 0) brkallflag = true;
         else {
             std::cerr << "<<< runtime parameters are invalid" << std::endl;
@@ -446,8 +441,10 @@ inline void Program::print_stats() {
     }    
 
     std::vector<std::pair<int, Opcode>> instr_counter;
-    for(auto i: stats) {
-        instr_counter.push_back({i.second, i.first});
+    for(int i = 0; i < 100; i++) {
+        if (opcode_to_string.count((Opcode)i)) {
+            instr_counter.push_back({stats[i], (Opcode)i});
+        }
     }
     std::sort(instr_counter.begin(), instr_counter.end(), std::greater<>());
     for(auto i: instr_counter) {
@@ -489,7 +486,6 @@ inline void Program::exec() {
     pc = 0;
     while(pc != endpoint) {
         int prevpc = pc;
-        if (statsflag) stats[instructions[pc/4].opcode]++;
         pc = instructions[pc/4].exec(fp, pc, binflag, brkallflag);
         counter++;
         if(pc < 0) {
@@ -508,9 +504,8 @@ inline void Program::exec() {
 
     std::cout << "<<< program finished\n" << std::endl;
 
-    if (statsflag) {
-        Program::print_stats();
-    }
+
+    Program::print_stats();
 }
 
 inline void Program::assembler() {

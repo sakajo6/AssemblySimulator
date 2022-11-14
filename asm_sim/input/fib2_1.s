@@ -30,7 +30,7 @@ fib.9:
 min_caml_start:
 	addi	x2, x2, -112
 	lui		x4, 0
-	ori		x4, x0, 10
+	ori		x4, x0, 36
 	sw		x1, 4(x2)
 	addi	x2, x2, 8	
 	jal		x1, fib.9

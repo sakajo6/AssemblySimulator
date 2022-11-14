@@ -30,7 +30,7 @@
 	112:  	jalr a0 a1 0 
 	116:  	addi a2 a2 -112 
 	120:  	lui a4 0 
-	124:  	ori a4 a0 10 
+	124:  	ori a4 a0 36 
 	128:  	sw a1 a2 4 
 	132:  	addi a2 a2 8 
 	136:  	jal a1 -132 

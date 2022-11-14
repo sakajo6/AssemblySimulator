@@ -16,7 +16,6 @@
     - 出力(.ppm)を./asm_sim/outputに出力
 
 ### 実行時オプション
-    - `--stats`: 実行時の統計情報を./asm_sim/output/stats.txtに出力
     - `--bin`: registerの値をbinary表現で出力
     - `--brkall`: すべての命令でブレークポインタを起動
 
