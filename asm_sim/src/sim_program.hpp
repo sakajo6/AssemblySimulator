@@ -486,7 +486,9 @@ inline void Program::exec() {
     pc = 0;
     while(pc != endpoint) {
         int prevpc = pc;
-        pc = instructions[pc/4].exec(fp, pc, binflag, brkallflag);
+        Instruction curinst = instructions[pc/4];
+        stats[curinst.opcode]++;
+        pc = curinst.exec(fp, pc, binflag, brkallflag);
         counter++;
         if(pc < 0) {
             std::cerr << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
@@ -496,11 +498,12 @@ inline void Program::exec() {
 
     clock_gettime(CLOCK_REALTIME, &end);
 
+
+    globalfun::print_regs(binflag);
+    
     std::cout << "\telapsed time: ";
     std::cout << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << std::endl;
     std::cout << "\tcounter: " << counter << '\n' << std::endl;
-
-    globalfun::print_regs(binflag);
 
     std::cout << "<<< program finished\n" << std::endl;
 

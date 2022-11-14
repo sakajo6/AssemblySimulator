@@ -1,7 +1,6 @@
 fib.9:
 	lui		x5, 0	# 3
 	ori		x5, x0, 1	# 3
-	sw		x4, -1(x0)
 	ble		x4, x5, ble.22	# 3
 	lui		x5, 0	# 4
 	ori		x5, x0, 1	# 4
@@ -30,7 +29,7 @@ fib.9:
 min_caml_start:
 	addi	x2, x2, -112
 	lui		x4, 0
-	ori		x4, x0, 36
+	ori		x4, x0, 39
 	sw		x1, 4(x2)
 	addi	x2, x2, 8	
 	jal		x1, fib.9
