@@ -230,7 +230,7 @@ inline void Program::read_label() {
 
         FILE *fp = fopen(fn.c_str(), "r");
         if (fp == NULL) {
-            std::cerr << "error: an error occurred opening file.\n" << std::endl;
+            std::cerr << "error: an error occurred opening " << fn << ".\n" << std::endl;
             exit(1);
         }
         
@@ -288,13 +288,18 @@ inline void Program::read_program() {
     entrypoint.imm = labels["min_caml_start"];
     instructions.push_back(entrypoint);
 
+    FILE *fpout = fopen("./output/pcToFilePos.txt", "w");
+    if (fpout == NULL) {
+        std::cerr << "error: an error occurred opening ./output/pcAndInst.txt.\n" << std::endl;
+        exit(1);   
+    }
     pc = 4;
     for(auto fn: input_files) {
         if (fn.substr(fn.size() - 2) != ".s") continue;
 
         FILE *fp = fopen(fn.c_str(), "r");
         if (fp == NULL) {
-            std::cerr << "error: an error occurred opening file.\n" << std::endl;
+            std::cerr << "error: an error occurred opening " << fn << ".\n" << std::endl;
             exit(1);
         }
 
@@ -311,12 +316,24 @@ inline void Program::read_program() {
             }
             else if (c == '\t') {
                 line++;
-                instructions.push_back(read_instruction(fp, false));
+                Instruction tempinst = read_instruction(fp, false);
+
+                fprintf(fpout, "\t%d:  \t", pc - 4);
+                tempinst.print_debug(fpout);
+                fprintf(fpout, "\t\t%s:%d\n", fn.c_str(), line);
+
+                instructions.push_back(tempinst);
             }   
             else if (c == '*') {
                 line++;
                 fgetc(fp);
-                instructions.push_back(read_instruction(fp, true));
+                Instruction tempinst = read_instruction(fp, true);
+
+                fprintf(fpout, "\t%d:  \t", pc - 4);
+                tempinst.print_debug(fpout);
+                fprintf(fpout, "\t\t%s:%d\n", fn.c_str(), line);
+
+                instructions.push_back(tempinst);
             }
             else {
                 line++;
@@ -325,6 +342,8 @@ inline void Program::read_program() {
         }   
         fclose(fp);
     }
+
+    fclose(fpout);
     
     std::cout << "<<< program reading finished\n" << std::endl;
 }
@@ -337,7 +356,7 @@ inline void Program::read_sld() {
 
         FILE *fp = fopen(fn.c_str(), "r");
         if (fp == NULL) {
-            std::cerr << "error: an error occurred opening file.\n" << std::endl;
+            std::cerr << "error: an error occurred opening " << fn << ".\n" << std::endl;
             exit(1);
         }
         std::string num = "";
@@ -413,7 +432,7 @@ inline void Program::print_debug() {
 
     FILE *fp = fopen("./output/debug.txt", "w");
     if (fp == NULL) {
-        std::cerr << "error: an error occurred opening file.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./output/debug.txt.\n" << std::endl;
         exit(1);
     }    
 
@@ -423,6 +442,7 @@ inline void Program::print_debug() {
         Instruction tmp_inst = instructions[i];
         fprintf(fp, "\t%d:  \t", i*4);
         tmp_inst.print_debug(fp);
+        fprintf(fp, "\n");
     }
 
     fprintf(fp, "\n<<< labels\n");
@@ -459,7 +479,7 @@ inline void Program::print_stats() {
 
     FILE *fp = fopen("./output/stats.txt", "w");
     if (fp == NULL) {
-        std::cerr << "error: an error occurred opening file.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./output/stats.txt.\n" << std::endl;
         exit(1);
     }    
 
@@ -497,7 +517,7 @@ inline void Program::exec() {
 
     FILE *fp = fopen("./output/output.ppm", "w");
     if (fp == NULL) {
-        std::cerr << "error: an error occurred opening file.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./output/output.ppm.\n" << std::endl;
         exit(1);
     }
 
@@ -539,7 +559,7 @@ inline void Program::assembler() {
 
     FILE *fp = fopen("./output/bin.txt", "w");
     if (fp == NULL) {
-        std::cerr << "error: an error occurred opening file.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./output/bin.txt.\n" << std::endl;
         exit(1);
     }
 

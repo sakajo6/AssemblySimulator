@@ -52,7 +52,6 @@ inline void Instruction::print_debug(FILE *fp) {
     if (reg1 != -1) fprintf(fp, "a%d ", reg1);
     if (reg2 != -1) fprintf(fp, "a%d ", reg2);
     if (imm != -1) fprintf(fp, "%d ", imm);
-    fprintf(fp, "\n");
 }
 
 
@@ -231,8 +230,8 @@ inline int Instruction::exec(FILE *fp, int pc, bool binflag, bool brkallflag) {
     if (breakpoint || brkallflag) {
         std::cout << "\t" << filename << ", line " << line << std::endl;
         std::cout << "\t";
-        print_debug(stdout);
-        std::cout << "\n";
+        Instruction::print_debug(stdout);
+        std::cout << "\n\n";
 
         globalfun::print_regs(binflag);
 
