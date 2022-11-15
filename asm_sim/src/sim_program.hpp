@@ -352,6 +352,10 @@ inline void Program::read_sld() {
             else if (c == '\n' || c == ' ') {
                 if (reading) {
                     sld_datacnt++;
+                    if (addr < 0 || addr > memory_size) {
+                        std::cerr << "error: memory outof range. input data = " << sld_datacnt << std::endl;
+                        exit(1);
+                    }
                     memory.at(addr) = read_float(num);
 
                     num = "";
@@ -429,6 +433,10 @@ inline void Program::print_debug() {
     fprintf(fp, "\n<<< sld input: %d\n", sld_datacnt);
     for(int i = inst_num; i < inst_num + sld_datacnt; i++) {
         union { float f; int i; } tempf;
+        if (i < 0 || i >= memory_size) {
+            std::cerr << "error: memory outof range. input data = " << i << std::endl;
+            exit(1);
+        }
         tempf.i = memory.at(i);
         fprintf(fp, "\t%f\n", tempf.f);
     }

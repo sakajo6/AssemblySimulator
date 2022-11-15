@@ -124,14 +124,25 @@ inline int Instruction::exec(FILE *fp, int pc, bool binflag, bool brkallflag) {
             switch(opcode) {          
                 case Flw: 
                     {union {float f; int i; } ftemp;
-                    ftemp.i = memory.at((xregs[reg1] + imm)/4);
+                    int addr = (xregs[reg1] + imm)/4;
+                    if (addr < 0 || addr >= memory_size) {
+                        std::cerr << "error: memory outof range. pc = " << pc << std::endl;
+                        exit(1);
+                    }
+                    ftemp.i = memory.at(addr);
                     fregs[reg0] = ftemp.f; pc+=4;} break;
                 case Fsw: 
                     {union {float f; int i; } ftemp;
                     ftemp.f = fregs[reg0];
                     int addr = xregs[reg1] + imm;
-                    if (addr == -1) fprintf(fp, "%f\n", ftemp.f);
-                    else memory.at(addr/4) = ftemp.i;
+                    if (addr != -1) {
+                        if (addr/4 < -1 || addr/4 >= memory_size) {
+                            std::cerr << "error: memory outof range. pc = " << pc << std::endl;
+                            exit(1);
+                        }
+                        memory.at(addr/4) = ftemp.i;
+                    }
+                    else fprintf(fp, "%f\n", ftemp.f);
                     pc+=4;} break;
                 case Fsqrt_s: fregs[reg0] = sqrt(fregs[reg1]); pc+=4; break;
                 default: 
@@ -157,11 +168,23 @@ inline int Instruction::exec(FILE *fp, int pc, bool binflag, bool brkallflag) {
         else {
             switch(opcode) {
                 case Jalr: if (reg0 != 0) {xregs[reg0] = pc+4;} pc = xregs[reg1] + imm; break;
-                case Lw: xregs[reg0] = memory.at((xregs[reg1] + imm)/4); pc+=4; break;
+                case Lw: 
+                    { int addr = (xregs[reg1] + imm)/4;
+                    if (addr < -1 || addr >= memory_size) {
+                        std::cerr << "error: memory outof range. pc = " << pc << std::endl;
+                        exit(1);
+                    }
+                    xregs[reg0] = memory.at(addr); pc+=4;} break;
                 case Sw: 
                     {int addr = xregs[reg1] + imm;
-                    if (addr == -1) fprintf(fp, "%d\n", xregs[reg0]);
-                    else memory.at(addr/4) = xregs[reg0];
+                    if (addr != -1) {
+                        if (addr/4 < -1 || addr/4 >= memory_size) {
+                            std::cerr << "error: memory outof range. pc = " << pc << std::endl;
+                            exit(1);
+                        }
+                        memory.at(addr/4) = xregs[reg0];
+                    }
+                    else fprintf(fp, "%d\n", xregs[reg0]);
                     pc+=4;} break;
                 default: 
                     std::cerr << "error occurred: line " << line << std::endl;
@@ -339,5 +362,9 @@ inline void Instruction::assemble(FILE *fp, int i) {
     std::string ret_machine_str = ret_machine.to_string();
     fprintf(fp, "%s;\n", ret_machine_str.c_str());
 
+    if (i < 0 || i >= memory_size) {
+        std::cerr << "error: memory outof range. address = " << i << std::endl;
+        exit(1);        
+    }
     memory.at(i) = (int)(ret_machine.to_ullong());
 }
