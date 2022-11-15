@@ -18,6 +18,7 @@ class Program {
     private:
         bool binflag;
         bool brkallflag;
+        bool brknonflag;
 
         int line;
         int pc;
@@ -288,7 +289,7 @@ inline void Program::read_program() {
     entrypoint.imm = labels["min_caml_start"];
     instructions.push_back(entrypoint);
 
-    FILE *fpout = fopen("./output/pcToFilePos.txt", "w");
+    FILE *fpout = fopen("./output/pcToFilepos.txt", "w");
     if (fpout == NULL) {
         std::cerr << "error: an error occurred opening ./output/pcAndInst.txt.\n" << std::endl;
         exit(1);   
@@ -407,19 +408,23 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     // options
     char binoption[] = "--bin";
     char brkalloption[] = "--brkall";
+    char brknonoption[] = "--brknon";
 
     std::cout << "<<< runtime arguments:" << std::endl;
     std::cout << "\t\033[31m--bin:  \toutput register values in binary\033[m" << std::endl;
-    std::cout << "\t\033[31m--brkall:\tassign break-pointer to all instructions\033[m\n" << std::endl;
+    std::cout << "\t\033[31m--brkall:\tassign break-pointer to all instructions\033[m" << std::endl;
+    std::cout << "\t\033[31m--brknon:\tignore all break-pointer\033[m\n" << std::endl;
 
     std::cout << "<<< These are runtime arguments.\n" << std::endl;
 
     binflag = false;
     brkallflag = false;
+    brknonflag = false;
 
     for(int i = 1; i < argc; i++) {
         if (strcmp(argv[i], binoption) == 0) binflag = true;
         else if (strcmp(argv[i], brkalloption) == 0) brkallflag = true;
+        else if (strcmp(argv[i], brknonoption) == 0) brknonflag = true;
         else {
             std::cerr << "<<< runtime parameters are invalid" << std::endl;
             exit(1);
@@ -531,7 +536,7 @@ inline void Program::exec() {
         int prevpc = pc;
         Instruction curinst = instructions[pc/4];
         stats[curinst.opcode]++;
-        pc = curinst.exec(fp, pc, binflag, brkallflag);
+        pc = curinst.exec(fp, pc, binflag, brkallflag, brknonflag);
         counter++;
         if(pc < 0 || pc >= memory_size*4) {
             std::cerr << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
