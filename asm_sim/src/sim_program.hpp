@@ -235,19 +235,28 @@ inline void Program::read_label() {
         }
         
         std::string label = "";
+        line = 0;
         while(feof(fp) == 0) {
             char c = (char)fgetc(fp);
             if ((int)c == -1) {
                 continue;
             }
+            else if (c == ' ') {
+                line++;
+                std::cerr << "error: parse error at " << fn << " line " << line << std::endl;
+                exit(1);
+            }
             else if (c == '.') {
+                line++;
                 Program::read_line(fp);
             }
             else if (c == '\t' || c == '*') {
-                Program::read_line(fp);
+                line++;
                 pc += 4;
+                Program::read_line(fp);
             }   
             else {
+                line++;
                 label = "";
                 label += c;
                 while(feof(fp) == 0) {
