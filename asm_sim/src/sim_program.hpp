@@ -352,7 +352,7 @@ inline void Program::read_sld() {
             else if (c == '\n' || c == ' ') {
                 if (reading) {
                     sld_datacnt++;
-                    memory[addr] = read_float(num);
+                    memory.at(addr) = read_float(num);
 
                     num = "";
                     addr++;
@@ -429,7 +429,7 @@ inline void Program::print_debug() {
     fprintf(fp, "\n<<< sld input: %d\n", sld_datacnt);
     for(int i = inst_num; i < inst_num + sld_datacnt; i++) {
         union { float f; int i; } tempf;
-        tempf.i = memory[i];
+        tempf.i = memory.at(i);
         fprintf(fp, "\t%f\n", tempf.f);
     }
 
