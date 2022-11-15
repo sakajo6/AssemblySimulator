@@ -11,7 +11,7 @@
         heap
         stack
 */
-const int memory_size = 2048;
+const int memory_size = 20000;
 int memory[memory_size];
 
 /*

@@ -84,7 +84,10 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
         }
         // label: reg: x, f 始まりで数字が続かない
         else {
-            if (labels.count(operand) == 0) inst.imm = 1000000; 
+            if (labels.count(operand) == 0) {
+                std::cerr << "error: undefined label" << operand << std::endl;
+                exit(1);
+            } 
             else inst.imm = labels[operand] - pc;
         }
     }
@@ -99,7 +102,10 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
     }
     // label: その他
     else {
-        if (labels.count(operand) == 0) inst.imm = 1000000;
+        if (labels.count(operand) == 0) {
+            std::cerr << "error: undefined label " << operand << std::endl;
+            exit(1);
+        }
         else inst.imm = labels[operand] - pc;
     }
 }
@@ -456,7 +462,7 @@ inline void Program::print_stats() {
 }
 
 inline void Program::init_source() {
-    xregs[2] = 2048;
+    xregs[2] = memory_size;
 
     // regs for input
     xregs[28] = instructions.size();
@@ -485,6 +491,7 @@ inline void Program::exec() {
     long long int counter = 0;
     pc = 0;
     while(pc != endpoint) {
+        std::cout << pc << std::endl;
         int prevpc = pc;
         Instruction curinst = instructions[pc/4];
         stats[curinst.opcode]++;
