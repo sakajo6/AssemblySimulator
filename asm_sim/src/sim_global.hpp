@@ -12,7 +12,7 @@
         stack
 */
 const int memory_size = 20000;
-int memory[memory_size];
+std::vector<int> memory(memory_size);
 
 /*
     register info:
