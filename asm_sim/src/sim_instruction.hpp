@@ -112,7 +112,7 @@ inline int Instruction::exec(FILE *fp, int pc, bool binflag, bool brkallflag) {
         if (opcode < 22) {
             switch(opcode) {          
                 case Feq_s: if (fregs[reg1] == fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
-                case Flt_s: if (fregs[reg1] < fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
+                case Fle_s: if (fregs[reg1] <= fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
                 default: 
                     std::cerr << "error occurred: line " << line << std::endl;
                     std::cerr << "current pc = " << pc << std::endl;
@@ -292,8 +292,8 @@ inline void Instruction::assemble(FILE *fp, int i) {
         switch(opcode) {            
             case Feq_s:
                 ret_machine = feq_machine; set_machine_R(&ret_machine); break;
-            case Flt_s:
-                ret_machine = flt_machine; set_machine_R(&ret_machine); break;
+            case Fle_s:
+                ret_machine = fle_machine; set_machine_R(&ret_machine); break;
             case Flw: 
                 ret_machine = flw_machine; set_machine_I(&ret_machine); break;
             case Fsw: 

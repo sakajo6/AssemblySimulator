@@ -13,7 +13,7 @@ enum Opcode {
     Fdiv_s,
 
     Feq_s = 20,
-    Flt_s,
+    Fle_s,
     Flw,
     Fsw,
     Fsqrt_s,
@@ -50,7 +50,7 @@ std::map<std::string, Opcode> string_to_opcode = {
     {"fdiv", Fdiv_s},
 
     {"feq", Feq_s},
-    {"flt", Flt_s},
+    {"fle", Fle_s},
     {"flw", Flw},
     {"fsw", Fsw},
     {"fsqrt", Fsqrt_s},
@@ -85,7 +85,7 @@ std::map<Opcode, std::string> opcode_to_string = {
     {Fdiv_s, "fdiv"},
 
     {Feq_s, "feq"},
-    {Flt_s, "flt"},
+    {Fle_s, "fle"},
     {Flw, "flw"},   
     {Fsw, "fsw"},
     {Fsqrt_s, "fsqrt"},
