@@ -491,13 +491,12 @@ inline void Program::exec() {
     long long int counter = 0;
     pc = 0;
     while(pc != endpoint) {
-        std::cout << pc << std::endl;
         int prevpc = pc;
         Instruction curinst = instructions[pc/4];
         stats[curinst.opcode]++;
         pc = curinst.exec(fp, pc, binflag, brkallflag);
         counter++;
-        if(pc < 0) {
+        if(pc < 0 || pc >= memory_size*4) {
             std::cerr << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
             exit(1);
         }
