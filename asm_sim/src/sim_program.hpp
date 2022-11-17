@@ -16,11 +16,6 @@
 
 class Program {
     private:
-        bool binflag;
-        bool brkallflag;
-        bool brknonflag;
-        bool veriflag;
-
         int line;
         int pc;
 
@@ -541,15 +536,11 @@ inline void Program::exec() {
         std::cerr << "error: please include `EXIT` in .s" << std::endl;
     }
     while(pc != endpoint) {
-        int prevpc = pc;
         Instruction curinst = instructions[pc/4];
+        pc = curinst.exec(fp, pc);
+
         stats[curinst.opcode]++;
-        pc = curinst.exec(fp, pc, binflag, brkallflag, brknonflag);
         counter++;
-        if(pc < 0 || pc >= memory_size*4) {
-            std::cerr << "error: pc became negative after line " << instructions[prevpc/4].line << std::endl;
-            exit(1);
-        }
     }
 
     clock_gettime(CLOCK_REALTIME, &end);

@@ -42,7 +42,7 @@ class Instruction {
             imm = -1;
         }
         void print_debug(FILE *);
-        int exec(FILE *, int, bool, bool, bool);
+        int exec(FILE *, int);
         void assemble(FILE *, int, bool);
 };
 
@@ -55,7 +55,9 @@ inline void Instruction::print_debug(FILE *fp) {
 }
 
 
-inline int Instruction::exec(FILE *fp, int pc, bool binflag, bool brkallflag, bool brknonflag) {
+inline int Instruction::exec(FILE *fp, int pc) {
+    int prevpc = pc;
+
     if (opcode < 16) {
         // 0 - 7
         if (opcode < 8) {
@@ -237,6 +239,11 @@ inline int Instruction::exec(FILE *fp, int pc, bool binflag, bool brkallflag, bo
         getchar();
     }
 
+    if(pc < 0 || pc >= memory_size*4) {
+        std::cerr << "error: pc became negative after pc " << prevpc << std::endl;
+        exit(1);
+    }
+
     return pc;
 }
 
@@ -280,7 +287,7 @@ inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
     if (veriflag) fprintf(fp, "mem[13'd%d] <= 32'b", i);
     
     std::bitset<32> ret_machine;
-    if (opcode < 10) {
+    if (opcode < 50) {
         switch(opcode) {
             case Add: 
                 ret_machine = add_machine; set_machine_R(&ret_machine); break;
@@ -292,10 +299,6 @@ inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
                 ret_machine = mul_machine; set_machine_R(&ret_machine); break;
             case Div: 
                 ret_machine = div_machine; set_machine_R(&ret_machine); break;
-        }       
-    }
-    else if (opcode < 20) {
-        switch(opcode) {
             case Fadd_s:
                 ret_machine = fadd_machine; set_machine_R(&ret_machine); break;
             case Fsub_s:
@@ -304,10 +307,6 @@ inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
                 ret_machine = fmul_machine; set_machine_R(&ret_machine); break;
             case Fdiv_s:
                 ret_machine = fdiv_machine; set_machine_R(&ret_machine); break;
-        }
-    }
-    else if (opcode < 30) {
-        switch(opcode) {            
             case Feq_s:
                 ret_machine = feq_machine; set_machine_R(&ret_machine); break;
             case Fle_s:
@@ -318,10 +317,6 @@ inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
                 ret_machine = fsw_machine; set_machine_S(&ret_machine); break;
             case Fsqrt_s: 
                 ret_machine = fsqrt_machine; set_machine_R(&ret_machine); break;
-        }
-    }
-    else if (opcode < 40) {
-        switch(opcode) {
             case Addi:
                 ret_machine = addi_machine; set_machine_I(&ret_machine); break;
             case Ori: 
@@ -332,10 +327,6 @@ inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
                 ret_machine = lw_machine; set_machine_I(&ret_machine); break;
             case Sw:
                 ret_machine = sw_machine; set_machine_S(&ret_machine); break;
-        }
-    }
-    else if (opcode < 50) {
-        switch(opcode) {
             case Beq: 
                 ret_machine = beq_machine; set_machine_B(&ret_machine); break;
             case Ble:

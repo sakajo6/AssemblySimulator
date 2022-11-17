@@ -4,6 +4,11 @@
 #include <algorithm>
 #include <bitset>
 
+bool binflag;
+bool brkallflag;
+bool brknonflag;
+bool veriflag;
+
 /*
     memory info:
         text section
