@@ -19,6 +19,7 @@ class Program {
         bool binflag;
         bool brkallflag;
         bool brknonflag;
+        bool veriflag;
 
         int line;
         int pc;
@@ -31,7 +32,6 @@ class Program {
         std::string current_file;
 
         int sld_datacnt;
-
         int endpoint;
 
         void read_line(FILE *);
@@ -55,6 +55,9 @@ class Program {
             pc = 0;
             instructions = {};
             input_files = {};
+
+            endpoint = 0;
+            sld_datacnt = 0;
 
             labels.clear();
             stats.assign(100, 0);
@@ -86,7 +89,7 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
         // label: reg: x, f 始まりで数字が続かない
         else {
             if (labels.count(operand) == 0) {
-                std::cerr << "error: undefined label" << operand << std::endl;
+                std::cerr << "error: undefined label. `" << operand << "`" << std::endl;
                 exit(1);
             } 
             else inst.imm = labels[operand] - pc;
@@ -104,7 +107,7 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
     // label: その他
     else {
         if (labels.count(operand) == 0) {
-            std::cerr << "error: undefined label " << operand << std::endl;
+            std::cerr << "error: undefined label `" << operand << "`" << std::endl;
             exit(1);
         }
         else inst.imm = labels[operand] - pc;
@@ -129,7 +132,7 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
     }
 
     if (string_to_opcode.count(opcode) == 0) {
-        std::cerr << "error: invalid opcode: " << opcode << std::endl;
+        std::cerr << "error: invalid opcode: `" << opcode << "`" << std::endl;
         exit(1);
     }
 
@@ -362,7 +365,6 @@ inline void Program::read_sld() {
         }
         std::string num = "";
         int addr = instructions.size();
-        sld_datacnt = 0;
         bool reading = false;
         while(feof(fp) == 0) {
             char c = fgetc(fp);
@@ -373,7 +375,7 @@ inline void Program::read_sld() {
                 if (reading) {
                     sld_datacnt++;
                     if (addr < 0 || addr > memory_size) {
-                        std::cerr << "error: memory outof range. input data = " << sld_datacnt << std::endl;
+                        std::cerr << "error: memory outof range. sld input data = " << sld_datacnt << std::endl;
                         exit(1);
                     }
                     memory.at(addr) = read_float(num);
@@ -409,22 +411,26 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     char binoption[] = "--bin";
     char brkalloption[] = "--brkall";
     char brknonoption[] = "--brknon";
+    char verioption[] = "--veri";
 
     std::cout << "<<< runtime arguments:" << std::endl;
     std::cout << "\t\033[31m--bin:  \toutput register values in binary\033[m" << std::endl;
     std::cout << "\t\033[31m--brkall:\tassign break-pointer to all instructions\033[m" << std::endl;
-    std::cout << "\t\033[31m--brknon:\tignore all break-pointer\033[m\n" << std::endl;
+    std::cout << "\t\033[31m--brknon:\tignore all break-pointer\033[m" << std::endl;
+    std::cout << "\t\033[31m--veri: \toutput binary in verilog style\033[m\n" << std::endl;
 
     std::cout << "<<< These are runtime arguments.\n" << std::endl;
 
     binflag = false;
     brkallflag = false;
     brknonflag = false;
+    veriflag = false;
 
     for(int i = 1; i < argc; i++) {
         if (strcmp(argv[i], binoption) == 0) binflag = true;
         else if (strcmp(argv[i], brkalloption) == 0) brkallflag = true;
         else if (strcmp(argv[i], brknonoption) == 0) brknonflag = true;
+        else if (strcmp(argv[i], verioption) == 0) veriflag = true;
         else {
             std::cerr << "<<< runtime parameters are invalid" << std::endl;
             exit(1);
@@ -459,7 +465,7 @@ inline void Program::print_debug() {
     for(int i = inst_num; i < inst_num + sld_datacnt; i++) {
         union { float f; int i; } tempf;
         if (i < 0 || i >= memory_size) {
-            std::cerr << "error: memory outof range. input data = " << i << std::endl;
+            std::cerr << "error: memory outof range. sld input data = " << i << std::endl;
             exit(1);
         }
         tempf.i = memory.at(i);
@@ -532,6 +538,9 @@ inline void Program::exec() {
 
     long long int counter = 0;
     pc = 0;
+    if (endpoint == 0) {
+        std::cerr << "error: please include `EXIT` in .s" << std::endl;
+    }
     while(pc != endpoint) {
         int prevpc = pc;
         Instruction curinst = instructions[pc/4];
@@ -570,7 +579,7 @@ inline void Program::assembler() {
 
     int n = instructions.size();
     for (int i = 0; i < n; i++) {
-        instructions[i].assemble(fp, i);
+        instructions[i].assemble(fp, i, veriflag);
     }
 
     fclose(fp);

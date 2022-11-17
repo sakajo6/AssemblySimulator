@@ -43,7 +43,7 @@ class Instruction {
         }
         void print_debug(FILE *);
         int exec(FILE *, int, bool, bool, bool);
-        void assemble(FILE *, int);
+        void assemble(FILE *, int, bool);
 };
 
 inline void Instruction::print_debug(FILE *fp) {
@@ -53,7 +53,6 @@ inline void Instruction::print_debug(FILE *fp) {
     if (reg2 != -1) fprintf(fp, "a%d ", reg2);
     if (imm != -1) fprintf(fp, "%d ", imm);
 }
-
 
 
 inline int Instruction::exec(FILE *fp, int pc, bool binflag, bool brkallflag, bool brknonflag) {
@@ -280,8 +279,8 @@ inline void Instruction::set_machine_J(std::bitset<32> *mcode) {
     *mcode |= std::bitset<32>(reg0) << 7;
 }
 
-inline void Instruction::assemble(FILE *fp, int i) {
-    fprintf(fp, "mem[13'd%d] <= 32'b", i);
+inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
+    if (veriflag) fprintf(fp, "mem[13'd%d] <= 32'b", i);
 
     std::bitset<32> ret_machine;
     if (opcode < 10) {
@@ -359,8 +358,9 @@ inline void Instruction::assemble(FILE *fp, int i) {
         ret_machine = std::bitset<32>(imm);
     }
     std::string ret_machine_str = ret_machine.to_string();
-    fprintf(fp, "%s;\n", ret_machine_str.c_str());
-
+    fprintf(fp, "%s", ret_machine_str.c_str());
+    if (veriflag) fprintf(fp, ";");
+    fprintf(fp, "\n");
     if (i < 0 || i >= memory_size) {
         std::cerr << "error: memory outof range. address = " << i << std::endl;
         exit(1);        
