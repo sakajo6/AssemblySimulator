@@ -36,7 +36,6 @@ class Program {
 
         void read_line(FILE *);
         void read_operand(std::string, int &, Instruction &);
-        int read_float(std::string);
         Instruction read_instruction(FILE *, bool);
         void read_label();
         void read_program();
@@ -114,12 +113,6 @@ inline void Program::read_operand(std::string operand, int &regcnt, Instruction 
     }
 }
 
-inline int Program::read_float(std::string operand) {
-    union { float f; int i; } ftemp;
-    ftemp.f = std::stof(operand);
-    return ftemp.i;
-}
-
 inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
     char c;
 
@@ -156,7 +149,7 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
                     if ((int)c == -1) continue;
                     else if (c == '\n' || c == '\t') {
                         if (c == '\t') Program::read_line(fp);
-                        inst.imm = Program::read_float(operand);
+                        inst.imm = std::stof(operand);
                         flag = true;
                         break;
                     }
@@ -378,7 +371,7 @@ inline void Program::read_sld() {
                         std::cerr << "error: memory outof range. sld input data = " << sld_datacnt << std::endl;
                         exit(1);
                     }
-                    memory.at(addr) = read_float(num);
+                    memory.at(addr).f = std::stof(num);
 
                     num = "";
                     addr++;
@@ -463,13 +456,11 @@ inline void Program::print_debug() {
 
     fprintf(fp, "\n<<< sld input: %d\n", sld_datacnt);
     for(int i = inst_num; i < inst_num + sld_datacnt; i++) {
-        union { float f; int i; } tempf;
         if (i < 0 || i >= memory_size) {
             std::cerr << "error: memory outof range. sld input data = " << i << std::endl;
             exit(1);
         }
-        tempf.i = memory.at(i);
-        fprintf(fp, "\t%f\n", tempf.f);
+        fprintf(fp, "\t%f\n", memory.at(i).f);
     }
 
     fclose(fp);

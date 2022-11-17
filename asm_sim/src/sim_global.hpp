@@ -12,7 +12,11 @@
         stack
 */
 const int memory_size = 20000;
-std::vector<int> memory(memory_size);
+union U {
+  int i;
+  float f;
+};
+std::vector<U> memory(memory_size);
 
 /*
     register info:
