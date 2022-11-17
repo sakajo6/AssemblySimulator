@@ -5,28 +5,28 @@ enum Opcode {
     Sub,
     Slt,
     Mul,
-    Div,
 
-    Fadd_s = 10,
+    Div = 4,
+    Fadd_s,
     Fsub_s,
     Fmul_s,
-    Fdiv_s,
 
-    Feq_s = 20,
+    Fdiv_s = 8,
+    Feq_s,
     Fle_s,
     Flw,
-    Fsw,
+
+    Fsw = 12,
     Fsqrt_s,
-
-
-    Addi = 30,
+    Addi,
     Ori,
-    Jalr,
+
+    Jalr = 16,
     Lw,
     Sw,
+    Beq,
 
-    Beq = 40,
-    Ble,
+    Ble = 20,
     Bge,
     Jal,
     Lui,
