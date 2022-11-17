@@ -43,7 +43,8 @@ class Program {
         void read_inputfiles(int, char const *[]);
         
         void init_source();
-
+        
+        std::string print_int_with_comma(int);
         void print_debug();
         void assembler();
         void print_stats();
@@ -431,6 +432,13 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     }
 }
 
+inline std::string Program::print_int_with_comma(int n) {
+	std::string result=std::to_string(n);
+		for(int i=result.size()-3; i>0;i-=3)
+			result.insert(i,",");
+		return result;		
+}
+
 inline void Program::print_debug() {
     std::cout << "<<< debug started..." << std::endl;
 
@@ -493,7 +501,7 @@ inline void Program::print_stats() {
     }
     std::sort(instr_counter.begin(), instr_counter.end(), std::greater<>());
     for(auto i: instr_counter) {
-        fprintf(fp, "%s: \t%d\n", opcode_to_string[i.second].c_str(), i.first);
+        fprintf(fp, "%s: \t%s\n", opcode_to_string[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
 
     fclose(fp);
@@ -551,7 +559,7 @@ inline void Program::exec() {
     
     std::cout << "\telapsed time: ";
     std::cout << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << std::endl;
-    std::cout << "\tcounter: " << counter << '\n' << std::endl;
+    std::cout << "\tcounter: " << Program::print_int_with_comma(counter) << '\n' << std::endl;
 
     std::cout << "<<< program finished\n" << std::endl;
 
