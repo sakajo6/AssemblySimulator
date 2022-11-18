@@ -27,6 +27,8 @@ class Program {
         std::string current_file;
 
         int sld_datacnt;
+        std::vector<bool> sld_intfloat;
+
         int endpoint;
 
         void read_line(FILE *);
@@ -56,6 +58,8 @@ class Program {
 
             labels.clear();
             stats.assign(100, 0);
+
+            sld_intfloat = {};
         }
         void read_inputs(int, char const *argv[]);
         void exec();
@@ -367,7 +371,14 @@ inline void Program::read_sld() {
                         std::cerr << "error: memory outof range. sld input data = " << sld_datacnt << std::endl;
                         exit(1);
                     }
-                    memory.at(addr).f = std::stof(num);
+                    bool flag = false;
+                    int len = num.size();
+                    for(int i = 0; i < len; i++) if (num[i] == '.') flag = true;
+
+                    sld_intfloat.push_back(flag);
+                    if (flag) memory.at(addr).f = std::stof(num);
+                    else memory.at(addr).i = std::stoi(num);
+                    
 
                     num = "";
                     addr++;
@@ -385,7 +396,13 @@ inline void Program::read_sld() {
                 std::cerr << "error: memory outof range. sld input data = " << sld_datacnt << std::endl;
                 exit(1);
             }
-            memory.at(addr).f = std::stof(num);
+            bool flag = false;
+            int len = num.size();
+            for(int i = 0; i < len; i++) if (num[i] == '.') flag = true;
+            
+            sld_intfloat.push_back(flag);
+            if (flag) memory.at(addr).f = std::stof(num);
+            else memory.at(addr).i = std::stoi(num);
         }
     }
     std::cout << "<<< sld reading finished\n" << std::endl;
@@ -471,7 +488,8 @@ inline void Program::print_debug() {
             std::cerr << "error: memory outof range. sld input data = " << i << std::endl;
             exit(1);
         }
-        fprintf(fp, "\t%f\n", memory.at(i).f);
+        if (sld_intfloat[i - inst_num]) fprintf(fp, "\t%f\n", memory.at(i).f);
+        else fprintf(fp, "\t%d\n", memory.at(i).i);
     }
 
     fclose(fp);
