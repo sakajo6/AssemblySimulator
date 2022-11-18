@@ -216,9 +216,11 @@ inline int Instruction::exec(FILE *fp, int pc) {
     }
     else if (opcode < 60) {
         std::cerr << "this is end-point" << std::endl;
+        exit(1);
     }
     else {
         std::cerr << "this is data section" << std::endl;
+        exit(1);
     }
 
     xregs[0] = 0;

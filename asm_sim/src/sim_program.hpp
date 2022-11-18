@@ -379,6 +379,14 @@ inline void Program::read_sld() {
                 num += c;
             }
         }
+        if (num.size() != 0) {
+            sld_datacnt++;
+            if (addr < 0 || addr > memory_size) {
+                std::cerr << "error: memory outof range. sld input data = " << sld_datacnt << std::endl;
+                exit(1);
+            }
+            memory.at(addr).f = std::stof(num);
+        }
     }
     std::cout << "<<< sld reading finished\n" << std::endl;
 }
