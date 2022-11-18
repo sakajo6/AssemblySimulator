@@ -132,14 +132,11 @@ inline int Instruction::exec(FILE *fp, int pc) {
                         case Fsw: 
                             {
                                 int addr = xregs[reg1] + imm;
-                                if (addr != -1) {
-                                    if (addr/4 < -1 || addr/4 >= memory_size) {
-                                        std::cerr << "error: memory outof range. pc = " << pc << std::endl;
-                                        exit(1);
-                                    }
-                                    memory.at(addr/4).f = fregs[reg0];
+                                if (addr/4 < -1 || addr/4 >= memory_size) {
+                                    std::cerr << "error: memory outof range. pc = " << pc << std::endl;
+                                    exit(1);
                                 }
-                                else fprintf(fp, "%f\n", memory.at(addr/4).f);
+                                memory.at(addr/4).f = fregs[reg0];
                                 pc+=4;
                             } break;
                         case Fsqrt_s: fregs[reg0] = sqrt(fregs[reg1]); pc+=4; break;
@@ -184,14 +181,15 @@ inline int Instruction::exec(FILE *fp, int pc) {
                     case Sw: 
                         {
                             int addr = xregs[reg1] + imm;
-                            if (addr != -1) {
+                            if (addr == -1) fprintf(fp, "%d", xregs[reg0]);
+                            else if (addr == -2) fprintf(fp, "%c", (char)xregs[reg0]);
+                            else {
                                 if (addr/4 < -1 || addr/4 >= memory_size) {
                                     std::cerr << "error: memory outof range. pc = " << pc << std::endl;
                                     exit(1);
                                 }
                                 memory.at(addr/4).i = xregs[reg0];
                             }
-                            else fprintf(fp, "%d\n", xregs[reg0]);
                             pc+=4;
                         } break;
                     case Beq: if (xregs[reg0] == xregs[reg1]) {pc += imm;} else {pc+=4;} break;
