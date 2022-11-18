@@ -16,7 +16,7 @@ bool veriflag;
         heap
         stack
 */
-const int memory_size = 20000;
+const int memory_size = 100000000;
 union U {
   int i;
   float f;
