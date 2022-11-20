@@ -16,6 +16,8 @@
 
 class Program {
     private:
+        bool minrtflag;
+
         int line;
         int pc;
 
@@ -36,6 +38,9 @@ class Program {
         Instruction read_instruction(FILE *, bool);
         void read_label();
         void read_program();
+        void print_segfault(int);
+        void read_sld_int(std::string &, int &);
+        void read_sld_float(std::string &, int &);
         void read_sld();
         void read_inputfiles(int, char const *[]);
         
@@ -48,6 +53,8 @@ class Program {
 
     public:
         Program() {
+            minrtflag = false;
+
             line = 0;
             pc = 0;
             instructions = {};
@@ -345,6 +352,27 @@ inline void Program::read_program() {
     std::cout << "<<< program reading finished\n" << std::endl;
 }
 
+inline void Program::print_segfault(int addr) {
+    if (addr < 0 || addr > memory_size) {
+        std::cerr << "error: memory outof range. tried to access memory[" << addr << "]" << std::endl;
+        exit(1);
+    }
+}
+
+inline void Program::read_sld_int(std::string &num, int &addr) {
+    Program::print_segfault(addr);
+    sld_intfloat.push_back(false);
+    memory.at(addr).i = std::stoi(num);
+    addr++;
+}
+
+inline void Program::read_sld_float(std::string &num, int &addr) {
+    Program::print_segfault(addr);
+    sld_intfloat.push_back(true);
+    memory.at(addr).f = std::stof(num);
+    addr++;
+}
+
 inline void Program::read_sld() {
     std::cout << "<<< sld reading started" << std::endl;
 
@@ -356,8 +384,9 @@ inline void Program::read_sld() {
             std::cerr << "error: an error occurred opening " << fn << ".\n" << std::endl;
             exit(1);
         }
+
+        std::vector<std::string> nums = {};
         std::string num = "";
-        int addr = instructions.size();
         bool reading = false;
         while(feof(fp) == 0) {
             char c = fgetc(fp);
@@ -366,22 +395,8 @@ inline void Program::read_sld() {
             }
             else if (c == '\n' || c == ' ') {
                 if (reading) {
-                    sld_datacnt++;
-                    if (addr < 0 || addr > memory_size) {
-                        std::cerr << "error: memory outof range. sld input data = " << sld_datacnt << std::endl;
-                        exit(1);
-                    }
-                    bool flag = false;
-                    int len = num.size();
-                    for(int i = 0; i < len; i++) if (num[i] == '.') flag = true;
-
-                    sld_intfloat.push_back(flag);
-                    if (flag) memory.at(addr).f = std::stof(num);
-                    else memory.at(addr).i = std::stoi(num);
-                    
-
+                    nums.push_back(num);
                     num = "";
-                    addr++;
                 }
                 reading = false;
             }
@@ -391,18 +406,48 @@ inline void Program::read_sld() {
             }
         }
         if (num.size() != 0) {
-            sld_datacnt++;
-            if (addr < 0 || addr > memory_size) {
-                std::cerr << "error: memory outof range. sld input data = " << sld_datacnt << std::endl;
-                exit(1);
+            nums.push_back(num);
+        }
+
+
+        sld_datacnt = (int)nums.size();
+        int inst_size = instructions.size();
+        int addr = inst_size;
+
+        if (minrtflag) {
+            // line 1
+            for(int i = 0; i < 5; i++) read_sld_float(nums[addr - inst_size], addr);
+
+            // line 2, 3
+            read_sld_int(nums[addr - inst_size], addr);
+            for(int i = 0; i < 3; i++) read_sld_float(nums[addr - inst_size], addr);
+
+            // line 4 ...
+            while(true) {
+                if (nums[addr - inst_size] == "-1") break;
+                for(int i = 0; i < 4; i++) read_sld_int(nums[addr - inst_size], addr);
+                for(int i = 0; i < 12; i++) read_sld_float(nums[addr - inst_size], addr);
             }
-            bool flag = false;
-            int len = num.size();
-            for(int i = 0; i < len; i++) if (num[i] == '.') flag = true;
-            
-            sld_intfloat.push_back(flag);
-            if (flag) memory.at(addr).f = std::stof(num);
-            else memory.at(addr).i = std::stoi(num);
+
+            // til EOF
+            int tilEOF = sld_datacnt - (addr - inst_size);
+            for(int i = 0; i < tilEOF; i++) read_sld_int(nums[addr - inst_size], addr);
+        }
+        else {
+            for(int i = 0; i < sld_datacnt; i++) {
+                std::cout << ":" << nums[i] << ":" << std::endl;
+                Program::print_segfault(addr);
+
+                bool flag = false;
+                int len = nums[i].size();
+                for(int j = 0; j < len; j++) if (nums[i][j] == '.') flag = true;
+                
+                sld_intfloat.push_back(flag);
+                if (flag) memory.at(addr).f = std::stof(nums[i]);
+                else memory.at(addr).i = std::stoi(nums[i]);
+
+                addr++;
+            }
         }
     }
     std::cout << "<<< sld reading finished\n" << std::endl;
@@ -417,6 +462,7 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     std::cout << "<<< input files" << std::endl;
     sort(input_files.begin(), input_files.end());
     for(auto fn: input_files) {
+        if (fn == "./input/minrt.s") minrtflag = true;
         std::cout << "\t\033[32m" << fn << "\033[m" << std::endl;
     }
     std::cout << std::endl;
