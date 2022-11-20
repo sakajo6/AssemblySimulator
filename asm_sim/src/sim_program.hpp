@@ -7,6 +7,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <thread>
+#include <mutex>
 #include <experimental/filesystem>
 
 #include "sim_instruction.hpp"
@@ -576,12 +578,24 @@ inline void Program::print_stats() {
 }
 
 inline void Program::init_source() {
+    for(int i = 0; i < 32; i++) {
+        xregs[i] = 0;
+        fregs[i] = 0.;
+    }
+
     xregs[2] = memory_size;
 
     // regs for input
     xregs[28] = instructions.size();
-    xregs[29] = sld_datacnt;
+    xregs[29] = 0;
     xregs[30] = 0;
+}
+
+void input_thread(int num) {
+    for(int i = 0; i < num; i++) {
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+        xregs[29]++;
+    }
 }
 
 inline void Program::exec() {
@@ -602,6 +616,8 @@ inline void Program::exec() {
 
     clock_gettime(CLOCK_REALTIME, &start);
 
+    std::thread th(input_thread, sld_datacnt);
+
     long long int counter = 0;
     pc = 0;
     if (endpoint == 0) {
@@ -614,6 +630,10 @@ inline void Program::exec() {
         stats[curinst.opcode]++;
         counter++;
     }
+
+
+    std::cout << "\n<<< thread joining..." << std::endl;
+    th.join();
 
     clock_gettime(CLOCK_REALTIME, &end);
 
