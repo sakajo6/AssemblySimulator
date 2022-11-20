@@ -593,7 +593,7 @@ inline void Program::init_source() {
 
 void input_thread(int num) {
     for(int i = 0; i < num; i++) {
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        std::this_thread::sleep_for(std::chrono::microseconds(30));
         xregs[29]++;
     }
 }
