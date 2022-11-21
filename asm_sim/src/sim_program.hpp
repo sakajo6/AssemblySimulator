@@ -48,7 +48,7 @@ class Program {
         
         void init_source();
         
-        std::string print_int_with_comma(int);
+        std::string print_int_with_comma(long long int);
         void print_debug();
         void assembler();
         void print_stats();
@@ -499,7 +499,7 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     }
 }
 
-inline std::string Program::print_int_with_comma(int n) {
+inline std::string Program::print_int_with_comma(long long int n) {
 	std::string result=std::to_string(n);
 		for(int i=result.size()-3; i>0;i-=3)
 			result.insert(i,",");
@@ -628,6 +628,10 @@ inline void Program::exec() {
 
         stats[curinst.opcode]++;
         counter++;
+
+        if (counter%(long long int)100000000 == 0) {
+            std::cout << "<<< executed " << print_int_with_comma(counter) << " instructions" << std::endl;
+        }
     }
 
 
