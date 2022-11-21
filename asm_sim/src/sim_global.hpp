@@ -8,6 +8,7 @@ bool binflag;
 bool brkallflag;
 bool brknonflag;
 bool veriflag;
+bool debugflag;
 
 /*
     memory info:

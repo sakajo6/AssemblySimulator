@@ -6,6 +6,8 @@
 #include <bitset>
 #include <stdlib.h>
 #include <iostream>
+#include <cfloat>
+#include <climits>
 
 #include "sim_opecode.hpp"
 #include "sim_global.hpp"
@@ -37,11 +39,11 @@ class Instruction {
             breakpoint = brkp;
             filename = curfile;
 
-            reg0 = -1;
-            reg1 = -1;
-            reg2 = -1;
-            imm = -1;
-            fimm = -1.;
+            reg0 = INT_MAX;
+            reg1 = INT_MAX;
+            reg2 = INT_MAX;
+            imm = INT_MAX;
+            fimm = FLT_MAX;
         }
         void print_debug(FILE *);
         int exec(FILE *, int);
@@ -50,15 +52,22 @@ class Instruction {
 
 inline void Instruction::print_debug(FILE *fp) {
     fprintf(fp, "%s ", opcode_to_string[opcode].c_str());
-    if (reg0 != -1) fprintf(fp, "a%d ", reg0);
-    if (reg1 != -1) fprintf(fp, "a%d ", reg1);
-    if (reg2 != -1) fprintf(fp, "a%d ", reg2);
-    if (imm != -1) fprintf(fp, "%d ", imm);
-    if (fimm != -1.) fprintf(fp, "%f", fimm);
+    if (reg0 != INT_MAX) fprintf(fp, "a%d ", reg0);
+    if (reg1 != INT_MAX) fprintf(fp, "a%d ", reg1);
+    if (reg2 != INT_MAX) fprintf(fp, "a%d ", reg2);
+    if (imm != INT_MAX) fprintf(fp, "%d ", imm);
+    if (fimm != FLT_MAX) fprintf(fp, "%f", fimm);
 }
 
 
 inline int Instruction::exec(FILE *fp, int pc) {
+    if ((breakpoint || brkallflag || debugflag) && !brknonflag) {
+        std::cout << "\t" << filename << ", line " << line << std::endl;
+        std::cout << "\t";
+        Instruction::print_debug(stdout);
+        std::cout << "\n\n";
+    }
+
     int prevpc = pc;
 
     if (opcode < 16) {
@@ -135,7 +144,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                         case Fsw: 
                             {
                                 int addr = xregs[reg1] + imm;
-                                if (addr/4 < -1 || addr/4 >= memory_size) {
+                                if (addr/4 < 0 || addr/4 >= memory_size) {
                                     std::cerr << "error: memory outof range. pc = " << pc << std::endl;
                                     exit(1);
                                 }
@@ -170,8 +179,8 @@ inline int Instruction::exec(FILE *fp, int pc) {
                     case Lw: 
                         { 
                             int addr = (xregs[reg1] + imm)/4;
-                            if (addr < -1 || addr >= memory_size) {
-                                std::cerr << "error: memory outof range. pc = " << pc << std::endl;
+                            if (addr < 0 || addr >= memory_size) {
+                                std::cerr <<  "error: memory outof range. pc = " << pc << std::endl;
                                 exit(1);
                             }
                             xregs[reg0] = memory.at(addr).i; pc+=4;
@@ -187,7 +196,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                             if (addr == -1) fprintf(fp, "%d", xregs[reg0]);
                             else if (addr == -2) fprintf(fp, "%c", (char)xregs[reg0]);
                             else {
-                                if (addr/4 < -1 || addr/4 >= memory_size) {
+                                if (addr/4 < 0 || addr/4 >= memory_size) {
                                     std::cerr << "error: memory outof range. pc = " << pc << std::endl;
                                     exit(1);
                                 }
@@ -228,18 +237,13 @@ inline int Instruction::exec(FILE *fp, int pc) {
 
     xregs[0] = 0;
 
-    if ((breakpoint || brkallflag) && !brknonflag) {
-        std::cout << "\t" << filename << ", line " << line << std::endl;
-        std::cout << "\t";
-        Instruction::print_debug(stdout);
-        std::cout << "\n\n";
-
+    if ((breakpoint || brkallflag || debugflag) && !brknonflag) {
         globalfun::print_regs(binflag);
 
         std::cout << "\n\tcurrent pc = " << pc << std::endl;
         std::cout << "\n<<< PRESS ENTER" << std::endl;
         
-        getchar();
+        if (!debugflag) getchar();
     }
 
     if(pc < 0 || pc >= memory_size*4) {
