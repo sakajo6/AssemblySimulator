@@ -158,7 +158,7 @@ inline Instruction Program::read_instruction(FILE *fp, bool brkp) {
                     if ((int)c == -1) continue;
                     else if (c == '\n' || c == '\t') {
                         if (c == '\t') Program::read_line(fp);
-                        inst.imm = std::stof(operand);
+                        inst.fimm = std::stof(operand);
                         flag = true;
                         break;
                     }
@@ -437,7 +437,6 @@ inline void Program::read_sld() {
         }
         else {
             for(int i = 0; i < sld_datacnt; i++) {
-                std::cout << ":" << nums[i] << ":" << std::endl;
                 Program::print_segfault(addr);
 
                 bool flag = false;

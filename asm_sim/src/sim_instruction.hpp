@@ -28,6 +28,7 @@ class Instruction {
 
         int reg0, reg1, reg2;
         int imm;
+        float fimm;
 
         Instruction() {}
         Instruction(int ln, Opcode opc, bool brkp, std::string curfile) {
@@ -40,6 +41,7 @@ class Instruction {
             reg1 = -1;
             reg2 = -1;
             imm = -1;
+            fimm = -1.;
         }
         void print_debug(FILE *);
         int exec(FILE *, int);
@@ -52,6 +54,7 @@ inline void Instruction::print_debug(FILE *fp) {
     if (reg1 != -1) fprintf(fp, "a%d ", reg1);
     if (reg2 != -1) fprintf(fp, "a%d ", reg2);
     if (imm != -1) fprintf(fp, "%d ", imm);
+    if (fimm != -1.) fprintf(fp, "%f", fimm);
 }
 
 
@@ -104,13 +107,13 @@ inline int Instruction::exec(FILE *fp, int pc) {
                 if (opcode < 10) {
                     switch(opcode){
                         case Fdiv_s: fregs[reg0] = fregs[reg1] / fregs[reg2]; pc+=4; break;
-                        case Feq_s: if (fregs[reg1] == fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
+                        case Feq_s: if (fregs[reg1] == fregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
                     }
                 }
                 // 10 - 11
                 else {
                     switch(opcode) {
-                        case Fle_s: if (fregs[reg1] <= fregs[reg2]) {fregs[reg0] = 1;} else {fregs[reg0] = 0;}; pc+=4; break;
+                        case Fle_s: if (fregs[reg1] <= fregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
                         case Flw: 
                             {
                                 int addr = (xregs[reg1] + imm)/4;
@@ -118,7 +121,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                                     std::cerr << "error: memory outof range. pc = " << pc << std::endl;
                                     exit(1);
                                 }
-                                fregs[reg0] = memory.at(addr).i; 
+                                fregs[reg0] = memory.at(addr).f; 
                                 pc+=4;
                             } break;
                         }
@@ -343,7 +346,9 @@ inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
         ret_machine = std::bitset<32>(-1);
     }
     else {
-        ret_machine = std::bitset<32>(imm);
+        U u;
+        u.f = fimm;
+        ret_machine = std::bitset<32>(u.i);
     }
 
     if (veriflag) {
@@ -351,12 +356,12 @@ inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
         fprintf(fp, "%s;\n", ret_machine_str.c_str());
     }
     else {
-        fprintf(fp, "%08xd\n", (int)ret_machine.to_ulong());
+        fprintf(fp, "%08x\n", (unsigned int)ret_machine.to_ulong());
     }
 
     if (i < 0 || i >= memory_size) {
         std::cerr << "error: memory outof range. address = " << i << std::endl;
         exit(1);        
     }
-    memory.at(i).i = (int)(ret_machine.to_ulong());
+    memory.at(i).i = (unsigned int)(ret_machine.to_ulong());
 }
