@@ -63,7 +63,7 @@ inline void Instruction::print_debug(FILE *fp) {
 
 inline int Instruction::exec(FILE *fp, int pc) {
     assert(pc >= 0 && pc <= 4*memory_size);
-    if ((breakpoint || brkallflag || debugflag) && !brknonflag) {
+    if (debugflag || ((breakpoint || brkallflag) && !brknonflag)) {
         std::cout << "\t" << filename << ", line " << line << std::endl;
         std::cout << "\t";
         Instruction::print_debug(stdout);
@@ -152,7 +152,9 @@ inline int Instruction::exec(FILE *fp, int pc) {
             // 12 - 16
             else {
                 // 12 - 13
-                if (opcode < 14) {
+                if (opcode < 14) {                    
+                    assert(0 <= reg0 && reg0 < 32);
+                    assert(0 <= reg1 && reg1 < 32);
                     switch(opcode) { 
                         case Fsw: 
                             {
@@ -169,6 +171,8 @@ inline int Instruction::exec(FILE *fp, int pc) {
                 }
                 // 14 - 15
                 else {
+                    assert(0 <= reg0 && reg0 < 32);
+                    assert(0 <= reg1 && reg1 < 32);
                     switch(opcode) {
                         case Addi: xregs[reg0] = xregs[reg1] + imm; pc+=4; break;
                         case Ori: xregs[reg0] = xregs[reg1] | imm; pc+=4; break;
@@ -187,6 +191,8 @@ inline int Instruction::exec(FILE *fp, int pc) {
         if (opcode < 20) {
             // 16 - 17
             if (opcode < 18) {
+                assert(0 <= reg0 && reg0 < 32);
+                assert(0 <= reg1 && reg1 < 32);
                 switch(opcode) {
                     case Jalr: if (reg0 != 0) {xregs[reg0] = pc+4;} pc = xregs[reg1] + imm; break;
                     case Lw: 
@@ -202,6 +208,8 @@ inline int Instruction::exec(FILE *fp, int pc) {
             }
             // 18 - 19
             else {
+                assert(0 <= reg0 && reg0 < 32);
+                assert(0 <= reg1 && reg1 < 32);
                 switch(opcode) {
                     case Sw: 
                         {
@@ -225,6 +233,8 @@ inline int Instruction::exec(FILE *fp, int pc) {
         else {
             // 20 - 21
             if (opcode < 22) {
+                assert(0 <= reg0 && reg0 < 32);
+                assert(0 <= reg1 && reg1 < 32);
                 switch(opcode) {
                     case Ble: if (xregs[reg0] <= xregs[reg1]) { pc += imm; } else {pc+=4;} break;
                     case Bge: if (xregs[reg0] >= xregs[reg1]) {pc += imm;} else {pc+=4;} break;
@@ -232,6 +242,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
             }
             // 22 - 23
             else {
+                assert(0 <= reg0 && reg0 < 32);
                 switch(opcode) {
                     case Jal: xregs[reg0] = pc + 4; pc += imm; break;
                     case Lui: xregs[reg0] = (imm >> 12) << 12; pc+=4; break;
@@ -250,7 +261,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
 
     xregs[0] = 0;
 
-    if ((breakpoint || brkallflag || debugflag) && !brknonflag) {
+    if ((breakpoint || brkallflag) && !brknonflag) {
         globalfun::print_regs(binflag);
 
         std::cout << "\n\tcurrent pc = " << pc << std::endl;
