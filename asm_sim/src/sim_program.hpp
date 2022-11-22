@@ -364,14 +364,14 @@ inline void Program::print_segfault(int addr) {
 inline void Program::read_sld_int(std::string &num, int &addr) {
     Program::print_segfault(addr);
     sld_intfloat.push_back(false);
-    memory.at(addr).i = std::stoi(num);
+    memory.at(addr*4).i = std::stoi(num);
     addr++;
 }
 
 inline void Program::read_sld_float(std::string &num, int &addr) {
     Program::print_segfault(addr);
     sld_intfloat.push_back(true);
-    memory.at(addr).f = std::stof(num);
+    memory.at(addr*4).f = std::stof(num);
     addr++;
 }
 
@@ -437,15 +437,15 @@ inline void Program::read_sld() {
         }
         else {
             for(int i = 0; i < sld_datacnt; i++) {
-                Program::print_segfault(addr);
+                Program::print_segfault(addr*4);
 
                 bool flag = false;
                 int len = nums[i].size();
                 for(int j = 0; j < len; j++) if (nums[i][j] == '.') flag = true;
                 
                 sld_intfloat.push_back(flag);
-                if (flag) memory.at(addr).f = std::stof(nums[i]);
-                else memory.at(addr).i = std::stoi(nums[i]);
+                if (flag) memory.at(addr*4).f = std::stof(nums[i]);
+                else memory.at(addr*4).i = std::stoi(nums[i]);
 
                 addr++;
             }
@@ -539,8 +539,8 @@ inline void Program::print_debug() {
             std::cerr << "error: memory outof range. sld input data = " << i << std::endl;
             exit(1);
         }
-        if (sld_intfloat[i - inst_num]) fprintf(fp, "\t%f\n", memory.at(i).f);
-        else fprintf(fp, "\t%d\n", memory.at(i).i);
+        if (sld_intfloat[i - inst_num]) fprintf(fp, "\t%f\n", memory.at(i*4).f);
+        else fprintf(fp, "\t%d\n", memory.at(i*4).i);
     }
 
     fclose(fp);
