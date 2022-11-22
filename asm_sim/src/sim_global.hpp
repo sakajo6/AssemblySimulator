@@ -17,7 +17,7 @@ bool debugflag;
         heap
         stack
 */
-const int memory_size = 100000000;
+const int memory_size = 400000000; // アドレスなので実際のアドレスの4倍
 union U {
   int i;
   float f;
