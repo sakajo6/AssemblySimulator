@@ -72,6 +72,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
 
     int prevpc = pc;
 
+    // 0 - 15
     if (opcode < 16) {
         // 0 - 7
         if (opcode < 8) {
@@ -95,7 +96,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                     }
                 }
             }
-            // 4 - 8
+            // 4 - 7
             else {
                 // 4 - 5
                 assert(0 <= reg0 && reg0 < 32);
@@ -128,7 +129,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                     switch(opcode){
                         case Fdiv_s: fregs[reg0] = fregs[reg1] / fregs[reg2]; pc+=4; break;
                         case Feq_s: if (fregs[reg1] == fregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
-                        case Fle_s: if (fregs[reg1] <= fregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
+                        case Fle_s: if (fregs[reg1] <= fregs[reg2]) { xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
                     }
                 }
                 // 11
@@ -194,7 +195,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                 assert(0 <= reg0 && reg0 < 32);
                 assert(0 <= reg1 && reg1 < 32);
                 switch(opcode) {
-                    case Jalr: if (reg0 != 0) {xregs[reg0] = pc+4;} pc = xregs[reg1] + imm; break;
+                    case Jalr: xregs[reg0] = pc+4; pc = xregs[reg1] + imm; break;
                     case Lw: 
                         { 
                             int addr = xregs[reg1] + imm;
@@ -391,5 +392,5 @@ inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
         std::cerr << "error: memory outof range. address = " << i << std::endl;
         exit(1);        
     }
-    memory.at(i).i = (unsigned int)(ret_machine.to_ulong());
+    memory.at(i*4).i = (unsigned int)(ret_machine.to_ulong());
 }
