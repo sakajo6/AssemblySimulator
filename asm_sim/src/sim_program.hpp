@@ -630,6 +630,8 @@ inline void Program::exec() {
         Instruction curinst = instructions[pc/4];
         pc = curinst.exec(fp, pc);
 
+        assert(pc != 0);
+
         stats[curinst.opcode]++;
         counter++;
 
