@@ -62,8 +62,6 @@ inline void Instruction::print_debug(FILE *fp) {
 
 
 inline int Instruction::exec(FILE *fp, int pc) {
-    std::cout << pc << std::endl;
-    std::cout << memory[284].f << std::endl;
     assert(pc >= 0 && pc <= memory_size);
     if (debugflag || ((breakpoint || brkallflag) && !brknonflag)) {
         std::cout << "\t" << filename << ", line " << line << std::endl;
