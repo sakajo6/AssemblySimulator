@@ -63,13 +63,6 @@ inline void Instruction::print_debug(FILE *fp) {
 
 inline int Instruction::exec(FILE *fp, int pc) {
     assert(pc >= 0 && pc <= memory_size);
-    if (debugflag || ((breakpoint || brkallflag) && !brknonflag)) {
-        std::cout << "\t" << filename << ", line " << line << std::endl;
-        std::cout << "\t";
-        Instruction::print_debug(stdout);
-        std::cout << "\n\n";
-    }
-
     int prevpc = pc;
 
     // 0 - 15
@@ -165,7 +158,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                         case Fsw: 
                             {   
                                 int addr = xregs[reg1] + imm;
-                                if (addr < 0 || addr >= memory_size) {
+                                if (addr < text_data_section || addr >= memory_size) {
                                     std::cout << "\t" << filename << ", line " << line << std::endl;
                                     std::cout << "\t";
                                     Instruction::print_debug(stdout);
@@ -233,7 +226,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                             if (addr == -1) fprintf(fp, "%d", xregs[reg0]);
                             else if (addr == -2) fprintf(fp, "%c", (char)xregs[reg0]);
                             else {
-                                if (addr < 0 || addr >= memory_size) {
+                                if (addr < text_data_section || addr >= memory_size) {
                                     std::cout << "\t" << filename << ", line " << line << std::endl;
                                     std::cout << "\t";
                                     Instruction::print_debug(stdout);
@@ -283,12 +276,15 @@ inline int Instruction::exec(FILE *fp, int pc) {
     xregs[0] = 0;
 
     if ((breakpoint || brkallflag) && !brknonflag) {
+        std::cout << "\t" << filename << ", line " << line << std::endl;
+        std::cout << "\t";
+        Instruction::print_debug(stdout);
+        std::cout << "\n\n";
         globalfun::print_regs(binflag);
-
         std::cout << "\n\tcurrent pc = " << pc << std::endl;
         std::cout << "\n<<< PRESS ENTER" << std::endl;
-        
-        if (!debugflag) getchar();
+
+        getchar();
     }
 
     if(pc < 0 || pc >= memory_size) {
