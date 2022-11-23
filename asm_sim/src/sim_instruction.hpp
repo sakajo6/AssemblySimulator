@@ -208,7 +208,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                                 Instruction::print_debug(stdout);
                                 std::cout << "\n\n";
                                 globalfun::print_regs(binflag);
-                                std::cerr <<  "error: memory outof range. pc = " << pc << std::endl;
+                                std::cerr <<  "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
                                 exit(1);
                             }
                             xregs[reg0] = memory.at(addr).i; pc+=4;
@@ -232,7 +232,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
                                     Instruction::print_debug(stdout);
                                     std::cout << "\n\n";
                                     globalfun::print_regs(binflag);
-                                    std::cerr << "error: memory outof range. pc = " << pc << std::endl;
+                                    std::cerr << "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
                                     exit(1);
                                 }
                                 memory.at(addr).i = xregs[reg0];
