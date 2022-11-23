@@ -587,9 +587,9 @@ inline void Program::init_source() {
     }
 
     xregs[2] = memory_size;
+    xregs[3] = (instructions.size() + sld_datacnt)*4;
 
     // regs for input
-    xregs[28] = instructions.size();
     xregs[29] = 0;
     xregs[30] = 0;
 }

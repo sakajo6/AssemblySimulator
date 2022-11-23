@@ -138,9 +138,14 @@ inline int Instruction::exec(FILE *fp, int pc) {
                     assert(0 <= reg1 && reg1 < 32);
                     switch(opcode) {
                         case Flw: 
-                            {
+                            {   
                                 int addr = xregs[reg1] + imm;
                                 if (addr < 0 || addr >= memory_size) {
+                                    std::cout << "\t" << filename << ", line " << line << std::endl;
+                                    std::cout << "\t";
+                                    Instruction::print_debug(stdout);
+                                    std::cout << "\n\n";
+                                    globalfun::print_regs(binflag);
                                     std::cerr <<  "error: memory outof range. pc = " << pc << std::endl;
                                     exit(1);
                                 }
@@ -158,9 +163,14 @@ inline int Instruction::exec(FILE *fp, int pc) {
                     assert(0 <= reg1 && reg1 < 32);
                     switch(opcode) { 
                         case Fsw: 
-                            {
+                            {   
                                 int addr = xregs[reg1] + imm;
                                 if (addr < 0 || addr >= memory_size) {
+                                    std::cout << "\t" << filename << ", line " << line << std::endl;
+                                    std::cout << "\t";
+                                    Instruction::print_debug(stdout);
+                                    std::cout << "\n\n";
+                                    globalfun::print_regs(binflag);
                                     std::cerr << "error: memory outof range. pc = " << pc << std::endl;
                                     exit(1);
                                 }
@@ -200,6 +210,11 @@ inline int Instruction::exec(FILE *fp, int pc) {
                         { 
                             int addr = xregs[reg1] + imm;
                             if (addr < 0 || addr >= memory_size) {
+                                std::cout << "\t" << filename << ", line " << line << std::endl;
+                                std::cout << "\t";
+                                Instruction::print_debug(stdout);
+                                std::cout << "\n\n";
+                                globalfun::print_regs(binflag);
                                 std::cerr <<  "error: memory outof range. pc = " << pc << std::endl;
                                 exit(1);
                             }
@@ -219,6 +234,11 @@ inline int Instruction::exec(FILE *fp, int pc) {
                             else if (addr == -2) fprintf(fp, "%c", (char)xregs[reg0]);
                             else {
                                 if (addr < 0 || addr >= memory_size) {
+                                    std::cout << "\t" << filename << ", line " << line << std::endl;
+                                    std::cout << "\t";
+                                    Instruction::print_debug(stdout);
+                                    std::cout << "\n\n";
+                                    globalfun::print_regs(binflag);
                                     std::cerr << "error: memory outof range. pc = " << pc << std::endl;
                                     exit(1);
                                 }
@@ -272,7 +292,12 @@ inline int Instruction::exec(FILE *fp, int pc) {
     }
 
     if(pc < 0 || pc >= memory_size) {
-        std::cerr << "error: pc became negative after pc " << prevpc << std::endl;
+        std::cout << "\t" << filename << ", line " << line << std::endl;
+        std::cout << "\t";
+        Instruction::print_debug(stdout);
+        std::cout << "\n\n";
+        globalfun::print_regs(binflag);
+        std::cerr << "error: pc out of segment. pc = " << prevpc << std::endl;
         exit(1);
     }
 
