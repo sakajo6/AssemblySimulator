@@ -62,6 +62,8 @@ inline void Instruction::print_debug(FILE *fp) {
 
 
 inline int Instruction::exec(FILE *fp, int pc) {
+    std::cout << pc << std::endl;
+    std::cout << memory[284].f << std::endl;
     assert(pc >= 0 && pc <= memory_size);
     if (debugflag || ((breakpoint || brkallflag) && !brknonflag)) {
         std::cout << "\t" << filename << ", line " << line << std::endl;
@@ -405,17 +407,17 @@ inline void Instruction::assemble(FILE *fp, int i, bool veriflag) {
         ret_machine = std::bitset<32>(u.i);
     }
 
+    memory.at(i*4).i = (unsigned int)(ret_machine.to_ulong());
     if (veriflag) {
         std::string ret_machine_str = ret_machine.to_string();
         fprintf(fp, "%s;\n", ret_machine_str.c_str());
     }
     else {
-        fprintf(fp, "%08x\n", (unsigned int)ret_machine.to_ulong());
+        fprintf(fp, "%08x\n", (unsigned int)memory.at(i*4).i);
     }
 
     if (i < 0 || i >= memory_size) {
         std::cerr << "error: memory outof range. address = " << i << std::endl;
         exit(1);        
     }
-    memory.at(i*4).i = (unsigned int)(ret_machine.to_ulong());
 }
