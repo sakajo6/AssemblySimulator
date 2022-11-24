@@ -629,11 +629,6 @@ inline void Program::exec() {
         Instruction curinst = instructions[pc/4];
         pc = curinst.exec(fp, pc);
 
-        if (pc == 0) {
-            globalfun::print_regs(binflag);
-        }
-        assert(pc != 0);
-
         stats[curinst.opcode]++;
         counter++;
 
@@ -672,7 +667,7 @@ inline void Program::assembler() {
 
     int n = instructions.size();
     for (int i = 0; i < n; i++) {
-        instructions[i].assemble(fp, i, veriflag);
+        instructions[i].assemble(fp, i*4, veriflag);
     }
 
     fclose(fp);
