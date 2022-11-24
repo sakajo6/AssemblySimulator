@@ -1,35 +1,35 @@
 #pragma once
 
 enum Opcode {
-    Add = 0,
-    Sub,
-    Slt,
-    Mul,
-
-    Div = 4,
-    Fadd_s,
-    Fsub_s,
-    Fmul_s,
-
-    Fdiv_s = 8,
-    Feq_s,
-    Fle_s,
-    Flw,
-
-    Fsw = 12,
-    Fsqrt_s,
+    Lw = 0,
     Addi,
+    Lui,
     Ori,
 
-    Jalr = 16,
-    Lw,
-    Sw,
-    Beq,
+    Sw = 4,
+    Flw,
+    Jalr,
+    Add,
 
-    Ble = 20,
-    Bge,
+    Mul = 8,
     Jal,
-    Lui,
+    Beq,
+    Fsub_s,
+
+    Fadd_s = 12,
+    Fsw,
+    Fle_s,
+    Fmul_s,
+
+    Ble = 16,
+    Sub,
+    Feq_s,
+    Fdiv_s,
+
+    Fsqrt_s = 20,
+    Div,
+    Slt,
+    Bge,
 
     Exit = 50,
 

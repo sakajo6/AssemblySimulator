@@ -23,6 +23,9 @@ class Instruction {
         void set_machine_U(std::bitset<32> *);
         void set_machine_J(std::bitset<32> *);
 
+        void check_load(int, int);
+        void check_store(int, int);
+
     public:
         int line;
         Opcode opcode;
@@ -60,6 +63,29 @@ inline void Instruction::print_debug(FILE *fp) {
     if (fimm != FLT_MAX) fprintf(fp, "%f", fimm);
 }
 
+inline void Instruction::check_load(int addr, int pc) {
+    if (addr < 0 || addr >= memory_size) {
+        std::cout << "\t" << filename << ", line " << line << std::endl;
+        std::cout << "\t";
+        Instruction::print_debug(stdout);
+        std::cout << "\n\n";
+        globalfun::print_regs(binflag);
+        std::cerr <<  "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
+        exit(1);
+    }
+}
+
+inline void Instruction::check_store(int addr, int pc) {
+    if (addr < text_data_section || addr >= memory_size) {
+        std::cout << "\t" << filename << ", line " << line << std::endl;
+        std::cout << "\t";
+        Instruction::print_debug(stdout);
+        std::cout << "\n\n";
+        globalfun::print_regs(binflag);
+        std::cerr << "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
+        exit(1);
+    }    
+}
 
 inline int Instruction::exec(FILE *fp, int pc) {
     assert(pc >= 0 && pc <= memory_size);
@@ -77,15 +103,20 @@ inline int Instruction::exec(FILE *fp, int pc) {
                 assert(0 <= reg2 && reg2 < 32);
                 if (opcode < 2) {
                     switch(opcode) {
-                        case Add: xregs[reg0] = xregs[reg1] + xregs[reg2]; pc+=4; break;
-                        case Sub: xregs[reg0] = xregs[reg1] - xregs[reg2]; pc+=4; break;
-                    }  
+						case Lw: 
+							{ 
+								int addr = xregs[reg1] + imm;
+								Instruction::check_load(addr, pc);
+								xregs[reg0] = memory.at(addr).i; pc+=4;
+							} break;
+						case Addi: xregs[reg0] = xregs[reg1] + imm; pc+=4; break;
+                    }
                 }
                 // 2 - 3
                 else {
                     switch(opcode) {
-                        case Slt: if (xregs[reg1] < xregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
-                        case Mul: xregs[reg0] = xregs[reg1] * xregs[reg2]; pc+=4; break;
+						case Lui: xregs[reg0] = (imm >> 12) << 12; pc+=4; break;
+                        case Ori: xregs[reg0] = xregs[reg1] | imm; pc+=4; break;
                     }
                 }
             }
@@ -97,15 +128,31 @@ inline int Instruction::exec(FILE *fp, int pc) {
                 assert(0 <= reg2 && reg2 < 32);
                 if (opcode < 6) {
                     switch(opcode) {
-                        case Div: xregs[reg0] = xregs[reg1] / xregs[reg2]; pc+=4; break;
-                        case Fadd_s: fregs[reg0] = fregs[reg1] + fregs[reg2]; pc+=4; break;
+						case Sw: 
+							{
+								int addr = xregs[reg1] + imm;
+								if (addr == -1) fprintf(fp, "%d", xregs[reg0]);
+								else if (addr == -2) fprintf(fp, "%c", (char)xregs[reg0]);
+								else {
+									Instruction::check_store(addr, pc);
+									memory.at(addr).i = xregs[reg0];
+								}
+								pc+=4;
+							} break;
+                        case Flw: 
+                            {   
+                                int addr = xregs[reg1] + imm;
+								Instruction::check_load(addr, pc);
+                                fregs[reg0] = memory.at(addr).f; 
+                                pc+=4;
+                            } break;
                     }
                 }
                 // 6 - 7
                 else {
                     switch(opcode) {
-                        case Fsub_s: fregs[reg0] = fregs[reg1] - fregs[reg2]; pc+=4; break;
-                        case Fmul_s: fregs[reg0] = fregs[reg1] * fregs[reg2]; pc+=4; break;
+                        case Jalr: xregs[reg0] = pc+4; pc = xregs[reg1] + imm; break;
+						case Add: xregs[reg0] = xregs[reg1] + xregs[reg2]; pc+=4; break;
                     }
                 }
             }
@@ -114,39 +161,25 @@ inline int Instruction::exec(FILE *fp, int pc) {
         else {
             // 8 - 11
             if (opcode < 12) {
-                // 8 - 10
-                if (opcode < 11) {
+                // 8 - 9
+                if (opcode < 10) {
                     assert(0 <= reg0 && reg0 < 32);
                     assert(0 <= reg1 && reg1 < 32);
                     assert(0 <= reg2 && reg2 < 32);
                     switch(opcode){
-                        case Fdiv_s: fregs[reg0] = fregs[reg1] / fregs[reg2]; pc+=4; break;
-                        case Feq_s: if (fregs[reg1] == fregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
-                        case Fle_s: if (fregs[reg1] <= fregs[reg2]) { xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
+                        case Mul: xregs[reg0] = xregs[reg1] * xregs[reg2]; pc+=4; break;
+						case Jal: xregs[reg0] = pc + 4; pc += imm; break;
                     }
                 }
-                // 11
+                // 10 - 11
                 else {
                     assert(0 <= reg0 && reg0 < 32);
                     assert(0 <= reg1 && reg1 < 32);
                     switch(opcode) {
-                        case Flw: 
-                            {   
-                                int addr = xregs[reg1] + imm;
-                                if (addr < 0 || addr >= memory_size) {
-                                    std::cout << "\t" << filename << ", line " << line << std::endl;
-                                    std::cout << "\t";
-                                    Instruction::print_debug(stdout);
-                                    std::cout << "\n\n";
-                                    globalfun::print_regs(binflag);
-                                    std::cerr <<  "error: memory outof range. pc = " << pc << std::endl;
-                                    exit(1);
-                                }
-                                fregs[reg0] = memory.at(addr).f; 
-                                pc+=4;
-                            } break;
-                        }
+						case Beq: if (xregs[reg0] == xregs[reg1]) {pc += imm;} else {pc+=4;} break;
+                        case Fsub_s: fregs[reg0] = fregs[reg1] - fregs[reg2]; pc+=4; break;
                     }
+                }
             }
             // 12 - 16
             else {
@@ -155,22 +188,14 @@ inline int Instruction::exec(FILE *fp, int pc) {
                     assert(0 <= reg0 && reg0 < 32);
                     assert(0 <= reg1 && reg1 < 32);
                     switch(opcode) { 
+                        case Fadd_s: fregs[reg0] = fregs[reg1] + fregs[reg2]; pc+=4; break;
                         case Fsw: 
                             {   
                                 int addr = xregs[reg1] + imm;
-                                if (addr < text_data_section || addr >= memory_size) {
-                                    std::cout << "\t" << filename << ", line " << line << std::endl;
-                                    std::cout << "\t";
-                                    Instruction::print_debug(stdout);
-                                    std::cout << "\n\n";
-                                    globalfun::print_regs(binflag);
-                                    std::cerr << "error: memory outof range. pc = " << pc << std::endl;
-                                    exit(1);
-                                }
+								Instruction::check_store(addr, pc);
                                 memory.at(addr).f = fregs[reg0];
                                 pc+=4;
                             } break;
-                        case Fsqrt_s: fregs[reg0] = sqrt(fregs[reg1]); pc+=4; break;
                     }
                 }
                 // 14 - 15
@@ -178,13 +203,8 @@ inline int Instruction::exec(FILE *fp, int pc) {
                     assert(0 <= reg0 && reg0 < 32);
                     assert(0 <= reg1 && reg1 < 32);
                     switch(opcode) {
-                        case Addi: xregs[reg0] = xregs[reg1] + imm; pc+=4; break;
-                        case Ori: xregs[reg0] = xregs[reg1] | imm; pc+=4; break;
-                        default: 
-                            std::cerr << "error occurred: line " << line << std::endl;
-                            std::cerr << "current pc = " << pc << std::endl;
-                            std::cerr << "instruction-execution error" << std::endl;
-                            exit(1);
+                        case Fle_s: if (fregs[reg1] <= fregs[reg2]) { xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
+                        case Fmul_s: fregs[reg0] = fregs[reg1] * fregs[reg2]; pc+=4; break;
                     }
                 }
             }
@@ -198,21 +218,8 @@ inline int Instruction::exec(FILE *fp, int pc) {
                 assert(0 <= reg0 && reg0 < 32);
                 assert(0 <= reg1 && reg1 < 32);
                 switch(opcode) {
-                    case Jalr: xregs[reg0] = pc+4; pc = xregs[reg1] + imm; break;
-                    case Lw: 
-                        { 
-                            int addr = xregs[reg1] + imm;
-                            if (addr < 0 || addr >= memory_size) {
-                                std::cout << "\t" << filename << ", line " << line << std::endl;
-                                std::cout << "\t";
-                                Instruction::print_debug(stdout);
-                                std::cout << "\n\n";
-                                globalfun::print_regs(binflag);
-                                std::cerr <<  "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
-                                exit(1);
-                            }
-                            xregs[reg0] = memory.at(addr).i; pc+=4;
-                        } break;
+                    case Ble: if (xregs[reg0] <= xregs[reg1]) { pc += imm; } else {pc+=4;} break;
+                    case Sub: xregs[reg0] = xregs[reg1] - xregs[reg2]; pc+=4; break;
                 }
             }
             // 18 - 19
@@ -220,26 +227,8 @@ inline int Instruction::exec(FILE *fp, int pc) {
                 assert(0 <= reg0 && reg0 < 32);
                 assert(0 <= reg1 && reg1 < 32);
                 switch(opcode) {
-                    case Sw: 
-                        {
-                            int addr = xregs[reg1] + imm;
-                            if (addr == -1) fprintf(fp, "%d", xregs[reg0]);
-                            else if (addr == -2) fprintf(fp, "%c", (char)xregs[reg0]);
-                            else {
-                                if (addr < text_data_section || addr >= memory_size) {
-                                    std::cout << "\t" << filename << ", line " << line << std::endl;
-                                    std::cout << "\t";
-                                    Instruction::print_debug(stdout);
-                                    std::cout << "\n\n";
-                                    globalfun::print_regs(binflag);
-                                    std::cerr << "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
-                                    exit(1);
-                                }
-                                memory.at(addr).i = xregs[reg0];
-                            }
-                            pc+=4;
-                        } break;
-                    case Beq: if (xregs[reg0] == xregs[reg1]) {pc += imm;} else {pc+=4;} break;
+                    case Feq_s: if (fregs[reg1] == fregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
+                    case Fdiv_s: fregs[reg0] = fregs[reg1] / fregs[reg2]; pc+=4; break;
                 }
             }
         }
@@ -250,16 +239,16 @@ inline int Instruction::exec(FILE *fp, int pc) {
                 assert(0 <= reg0 && reg0 < 32);
                 assert(0 <= reg1 && reg1 < 32);
                 switch(opcode) {
-                    case Ble: if (xregs[reg0] <= xregs[reg1]) { pc += imm; } else {pc+=4;} break;
-                    case Bge: if (xregs[reg0] >= xregs[reg1]) {pc += imm;} else {pc+=4;} break;
+                    case Fsqrt_s: fregs[reg0] = sqrt(fregs[reg1]); pc+=4; break;
+                    case Div: xregs[reg0] = xregs[reg1] / xregs[reg2]; pc+=4; break;
                 }
             }
             // 22 - 23
             else {
                 assert(0 <= reg0 && reg0 < 32);
                 switch(opcode) {
-                    case Jal: xregs[reg0] = pc + 4; pc += imm; break;
-                    case Lui: xregs[reg0] = (imm >> 12) << 12; pc+=4; break;
+                    case Slt: if (xregs[reg1] < xregs[reg2]) {xregs[reg0] = 1;} else {xregs[reg0] = 0;}; pc+=4; break;
+                    case Bge: if (xregs[reg0] >= xregs[reg1]) {pc += imm;} else {pc+=4;} break;
                 }
             }
         } 
@@ -287,15 +276,7 @@ inline int Instruction::exec(FILE *fp, int pc) {
         getchar();
     }
 
-    if(pc < 0 || pc >= memory_size) {
-        std::cout << "\t" << filename << ", line " << line << std::endl;
-        std::cout << "\t";
-        Instruction::print_debug(stdout);
-        std::cout << "\n\n";
-        globalfun::print_regs(binflag);
-        std::cerr << "error: pc out of segment. pc = " << prevpc << std::endl;
-        exit(1);
-    }
+    check_load(pc, pc);
 
     return pc;
 }
