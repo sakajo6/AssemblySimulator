@@ -18,8 +18,6 @@
 
 class Program {
     private:
-        bool minrtflag;
-
         int line;
         int pc;
 
@@ -55,8 +53,6 @@ class Program {
 
     public:
         Program() {
-            minrtflag = false;
-
             line = 0;
             pc = 0;
             instructions = {};
@@ -416,40 +412,23 @@ inline void Program::read_sld() {
         int inst_size = instructions.size();
         int addr = inst_size;
 
-        if (minrtflag) {
-            // line 1
-            for(int i = 0; i < 5; i++) read_sld_float(nums[addr - inst_size], addr);
+        // line 1
+        for(int i = 0; i < 5; i++) read_sld_float(nums[addr - inst_size], addr);
 
-            // line 2, 3
-            read_sld_int(nums[addr - inst_size], addr);
-            for(int i = 0; i < 3; i++) read_sld_float(nums[addr - inst_size], addr);
+        // line 2, 3
+        read_sld_int(nums[addr - inst_size], addr);
+        for(int i = 0; i < 3; i++) read_sld_float(nums[addr - inst_size], addr);
 
-            // line 4 ...
-            while(true) {
-                if (nums[addr - inst_size] == "-1") break;
-                for(int i = 0; i < 4; i++) read_sld_int(nums[addr - inst_size], addr);
-                for(int i = 0; i < 12; i++) read_sld_float(nums[addr - inst_size], addr);
-            }
-
-            // til EOF
-            int tilEOF = sld_datacnt - (addr - inst_size);
-            for(int i = 0; i < tilEOF; i++) read_sld_int(nums[addr - inst_size], addr);
+        // line 4 ...
+        while(true) {
+            if (nums[addr - inst_size] == "-1") break;
+            for(int i = 0; i < 4; i++) read_sld_int(nums[addr - inst_size], addr);
+            for(int i = 0; i < 12; i++) read_sld_float(nums[addr - inst_size], addr);
         }
-        else {
-            for(int i = 0; i < sld_datacnt; i++) {
-                Program::print_segfault(addr*4);
 
-                bool flag = false;
-                int len = nums[i].size();
-                for(int j = 0; j < len; j++) if (nums[i][j] == '.') flag = true;
-                
-                sld_intfloat.push_back(flag);
-                if (flag) memory.at(addr*4).f = std::stof(nums[i]);
-                else memory.at(addr*4).i = std::stoi(nums[i]);
-
-                addr++;
-            }
-        }
+        // til EOF
+        int tilEOF = sld_datacnt - (addr - inst_size);
+        for(int i = 0; i < tilEOF; i++) read_sld_int(nums[addr - inst_size], addr);
     }
     std::cout << "<<< sld reading finished\n" << std::endl;
 }
@@ -462,11 +441,17 @@ inline void Program::read_inputfiles(int argc, char const *argv[]) {
     }
     std::cout << "<<< input files" << std::endl;
     sort(input_files.begin(), input_files.end());
+    bool minrtflag = false;
     for(auto fn: input_files) {
         if (fn == "./input/minrt.s") minrtflag = true;
         std::cout << "\t\033[32m" << fn << "\033[m" << std::endl;
     }
     std::cout << std::endl;
+
+    if (!minrtflag) {
+        std::cerr << "please include 'minrt.s' in input files." << std::endl;
+        exit(1);
+    }
 
     // options
     char binoption[] = "--bin";
