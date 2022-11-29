@@ -5,7 +5,9 @@
 
 ### make
     - `cd asm_sim`
-    - command `make`
+    - command `make`: 単純にsimulatorを実行する実行ファイル生成
+    - command `make debug`: assertionなどdebugのための実行ファイル生成
+    - command `make test`: cache, 分岐予測などtest用の実行ファイル生成
     
 ### execute
     - command `./sim`
@@ -18,6 +20,8 @@
 ### 実行時オプション
     - `--bin`: registerの値をbinary表現で出力
     - `--brkall`: すべての命令でブレークポインタを起動
+    - `--brknon`: すべてのブレークポインタを無視
+    - `--veri`: verilogテスト用machine code生成
 
 ### breakpoint
     - 実行前に実行したいファイルの命令の先頭に'*'を記入して実行
