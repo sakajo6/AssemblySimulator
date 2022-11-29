@@ -37,23 +37,43 @@ class Program {
         void print_stats();
 
     public:
-        Program(int argc, char const *argv[]) {
+        Program() {
             pc = 0;
             counter = 0;
-
-            Reader reader;
-            std::tie(instructions, sld_datacnt, end_point) = reader.read_inputs(argc, argv);
-
-            Assembler assembler;
-            assembler.assemble(instructions);
 
             instCache = Cache(25, 3, 4, 2);
             dataCache = Cache(25, 3, 4, 2);
 
             stats.assign(100, (long long int)0);
         }
+        void callReader(int, char const *[]);
+        void callAssembler();
         void exec();
 };
+
+inline void Program::callReader(int argc, char const *argv[]) {
+    Reader reader;
+    std::tie(instructions, sld_datacnt, end_point) = reader.read_inputs(argc, argv);
+}
+
+inline void Program::callAssembler() {
+    std::cout << "<<< assembler started..." << std::endl;
+
+    FILE *fp = fopen("./output/bin.txt", "w");
+    if (fp == NULL) {
+        std::cerr << "error: an error occurred opening ./output/bin.txt.\n" << std::endl;
+        exit(1);
+    }
+
+    int n = instructions.size();
+    for (int i = 0; i < n; i++) {
+        Assembler tempAsm(instructions[i]);
+        tempAsm.assemble(fp, i*4, veriflag);
+    }
+
+    fclose(fp);
+    std::cout << "<<< assembler finished\n" << std::endl;
+}
 
 inline std::string Program::print_int_with_comma(long long int n) {
 	std::string result=std::to_string(n);
