@@ -104,23 +104,23 @@ inline void Assembler::assemble(FILE *fp, int pc, bool veriflag) {
                 ret_machine = mul_machine; set_machine_R(&ret_machine); break;
             case Div: 
                 ret_machine = div_machine; set_machine_R(&ret_machine); break;
-            case Fadd_s:
+            case Fadd:
                 ret_machine = fadd_machine; set_machine_R(&ret_machine); break;
-            case Fsub_s:
+            case Fsub:
                 ret_machine = fsub_machine; set_machine_R(&ret_machine); break;
-            case Fmul_s:
+            case Fmul:
                 ret_machine = fmul_machine; set_machine_R(&ret_machine); break;
-            case Fdiv_s:
+            case Fdiv:
                 ret_machine = fdiv_machine; set_machine_R(&ret_machine); break;
-            case Feq_s:
+            case Feq:
                 ret_machine = feq_machine; set_machine_R(&ret_machine); break;
-            case Fle_s:
+            case Fle:
                 ret_machine = fle_machine; set_machine_R(&ret_machine); break;
             case Flw: 
                 ret_machine = flw_machine; set_machine_I(&ret_machine); break;
             case Fsw: 
                 ret_machine = fsw_machine; set_machine_S(&ret_machine); break;
-            case Fsqrt_s: 
+            case Fsqrt: 
                 ret_machine = fsqrt_machine; set_machine_sqrt(&ret_machine); break;
             case Addi:
                 ret_machine = addi_machine; set_machine_I(&ret_machine); break;
