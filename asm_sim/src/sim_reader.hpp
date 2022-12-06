@@ -18,7 +18,7 @@ class Reader {
         int sld_datacnt;
         int end_point;
 
-        std::map<std::string, int> labels;
+        std::map<std::string, int> *labels;
         std::vector<std::string> *input_files;
     
         std::vector<bool> sld_intfloat;
@@ -37,7 +37,7 @@ class Reader {
         void print_debug();
 
     public:
-        Reader(std::vector<Instruction> *insts, std::vector<std::string> *inputs) {
+        Reader(std::vector<Instruction> *insts, std::vector<std::string> *inputs, std::map<std::string, int> *labels_addr) {
             line = 0;
             pc = 0;
 
@@ -45,7 +45,7 @@ class Reader {
             sld_datacnt = 0;
             end_point = 0;
 
-            labels = {};
+            labels = labels_addr;
             input_files = inputs;
 
             sld_intfloat = {};
@@ -76,11 +76,11 @@ inline void Reader::read_operand(std::string operand, int &regcnt, Instruction &
         }
         // label: reg: x, f 始まりで数字が続かない
         else {
-            if (labels.count(operand) == 0) {
+            if ((*labels).count(operand) == 0) {
                 std::cerr << "error: undefined label. `" << operand << "`" << std::endl;
                 exit(1);
             } 
-            else inst.imm = labels[operand] - pc;
+            else inst.imm = (*labels)[operand] - pc;
         }
     }
     // imm: [0-9, -] 始まり
@@ -89,16 +89,16 @@ inline void Reader::read_operand(std::string operand, int &regcnt, Instruction &
     }
     // %hi, %lo: % 始まり
     else if (operand[0] == '%') {
-        if (labels.count(operand.substr(1)) == 0) inst.imm = -4;
-        else inst.imm = labels[operand.substr(1)];
+        if ((*labels).count(operand.substr(1)) == 0) inst.imm = -4;
+        else inst.imm = (*labels)[operand.substr(1)];
     }
     // label: その他
     else {
-        if (labels.count(operand) == 0) {
+        if ((*labels).count(operand) == 0) {
             std::cerr << "error: undefined label `" << operand << "`" << std::endl;
             exit(1);
         }
-        else inst.imm = labels[operand] - pc;
+        else inst.imm = (*labels)[operand] - pc;
     }
 }
 
@@ -255,13 +255,13 @@ inline void Reader::read_label() {
                     label += c;
                 }
 
-                labels[label] = pc;
+                (*labels)[label] = pc;
             }
         }
         fclose(fp);
     }
 
-    labels["data"] = pc;
+    (*labels)["data"] = pc;
 
     std::cout << "<<< label reading finished\n" << std::endl;
 }
@@ -271,7 +271,7 @@ inline void Reader::read_program() {
 
     Instruction entrypoint(0, Jal, false, -1);
     entrypoint.reg0 = 0;
-    entrypoint.imm = labels["min_caml_start"];
+    entrypoint.imm = (*labels)["min_caml_start"];
     (*instructions).push_back(entrypoint);
 
     FILE *fpout = fopen("./output/pcToFilepos.txt", "w");
@@ -494,7 +494,7 @@ inline void Reader::print_debug() {
     }
 
     fprintf(fp, "\n<<< labels\n");
-    for(auto i: labels) {
+    for(auto i: *labels) {
         fprintf(fp, "\t%s: %d\n", i.first.c_str(), i.second);
     }
 

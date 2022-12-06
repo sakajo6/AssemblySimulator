@@ -28,7 +28,10 @@ class Program {
         std::vector<Instruction> instructions;
         Instruction curinst;
         std::vector<std::string> input_files;
+        std::map<std::string, int> labels;
+
         std::vector<long long int> stats; 
+        std::vector<long long int> pc_counter;
 
         Cache instCache;
         Cache dataCache;
@@ -52,6 +55,7 @@ class Program {
             dataCache = Cache(20, 7, 5, 2);
 
             stats.assign(100, (long long int)0);
+            pc_counter = {};
         }
         void callReader(int, char const *[]);
         void callAssembler();
@@ -59,7 +63,7 @@ class Program {
 };
 
 inline void Program::callReader(int argc, char const *argv[]) {
-    Reader reader(&instructions, &input_files);
+    Reader reader(&instructions, &input_files, &labels);
     std::tie(sld_datacnt, end_point) = reader.read_inputs(argc, argv);
 }
 
@@ -111,6 +115,23 @@ inline void Program::print_stats() {
         fprintf(fp, "\t%s: \t%s\n", opcode_to_string[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
 
+    std::vector<std::pair<long long int, std::string>> pc_counter_sorted;
+    for(auto i: labels) {
+        pc_counter_sorted.push_back({pc_counter[i.second], i.first});
+    }
+    // std::sort(pc_counter_sorted.begin(), pc_counter_sorted.end(), 
+    // [](std::pair<long long int, std::string> a, std::pair<long long int, std::string> b) {
+    //     if (a.first > b.first) return true;
+    //     else {
+    //         if (a.second.compare(b.second) < 0) return true;
+    //         else return false;
+    //     }
+    // });
+    fprintf(fp, "\n<<< label stats\n");
+    for(auto i: pc_counter_sorted) {
+        fprintf(fp, "\t%s: \t%s\n", i.second.c_str(), Program::print_int_with_comma(i.first).c_str());
+    }
+
     #ifdef TEST
     fprintf(fp, "\n<<< cache stats\n");
     // inst-cache
@@ -153,6 +174,7 @@ inline void Program::exec() {
 
     // initialization
     Program::init_source();
+    pc_counter.assign(instructions.size()*4, (long long int)0);
 
     FILE *fp = fopen("./output/output.ppm", "w");
     if (fp == NULL) {
@@ -190,6 +212,7 @@ inline void Program::exec() {
         pc = exec_inst(fp);
 
         stats[curinst.opcode]++;
+        pc_counter[pc]++;
         counter++;
 
         if (counter%(long long int)100000000 == 0) {
