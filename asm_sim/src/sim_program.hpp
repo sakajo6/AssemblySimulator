@@ -48,8 +48,8 @@ class Program {
             instructions = {};
             input_files = {};
 
-            instCache = Cache(25, 3, 4, 2);
-            dataCache = Cache(25, 3, 4, 2);
+            instCache = Cache(20, 7, 5, 2);
+            dataCache = Cache(20, 7, 5, 2);
 
             stats.assign(100, (long long int)0);
         }

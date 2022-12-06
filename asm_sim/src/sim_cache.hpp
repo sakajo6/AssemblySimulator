@@ -25,7 +25,6 @@ class Cache {
         unsigned int storeCnt;
         unsigned int storeHit;
 
-        std::tuple<unsigned int, unsigned int, unsigned int> bitExtraction(unsigned int);
         void updateAccessed(unsigned int idx);
         unsigned int pseudoLRU(unsigned int idx);
 
@@ -49,18 +48,6 @@ class Cache {
         double printHitRate();
 };
 
-inline std::tuple<unsigned int, unsigned int, unsigned int> Cache::bitExtraction(unsigned int bits) {
-    unsigned int tag = 0;
-    unsigned int index = 0;
-    unsigned int offset = 0;
-
-    tag = bits >> (indexSiz + offsetSiz);
-    index = (bits >> offsetSiz) % (1 << indexSiz);
-    offset = bits % (1 << offsetSiz);
-
-    return std::forward_as_tuple(tag, index, offset);
-}
-
 inline void Cache::updateAccessed(unsigned int idx) {
     for(int i = 0; i < waySiz; i++) {
         if (!cache[idx + i].accessed) return;
@@ -83,7 +70,10 @@ inline unsigned int Cache::pseudoLRU(unsigned int index) {
 
 inline void Cache::cacheAccess(unsigned int pc, bool flag) {
     unsigned int tag, index, offset;
-    std::tie(tag, index, offset) = Cache::bitExtraction(pc);
+    tag = pc >> (indexSiz + offsetSiz);
+    index = (pc >> offsetSiz) % (1 << indexSiz);
+    offset = pc % (1 << offsetSiz);
+
     index *= waySiz;
     
     // load
