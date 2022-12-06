@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <bitset>
 
+#include "sim_instruction.hpp"
+
 bool binflag;
 bool brkallflag;
 bool brknonflag;
@@ -40,6 +42,14 @@ const int fregs_size = 32;
 float fregs[fregs_size];
 
 namespace globalfun {
+    void print_inst(FILE *fp, Instruction inst) {
+        fprintf(fp, "%s ", opcode_to_string[inst.opcode].c_str());
+        if (inst.reg0 != INT_MAX) fprintf(fp, "a%d ", inst.reg0);
+        if (inst.reg1 != INT_MAX) fprintf(fp, "a%d ", inst.reg1);
+        if (inst.reg2 != INT_MAX) fprintf(fp, "a%d ", inst.reg2);
+        if (inst.imm != INT_MAX) fprintf(fp, "%d ", inst.imm);
+        if (inst.fimm != FLT_MAX) fprintf(fp, "%f", inst.fimm);
+    }
     std::string print_int(int x) {
         std::string retstr = "";
 

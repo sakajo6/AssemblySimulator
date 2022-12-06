@@ -14,13 +14,12 @@ class Reader {
         int line;
         int pc;
 
-        std::vector<Instruction> instructions;
+        std::vector<Instruction> *instructions;
         int sld_datacnt;
         int end_point;
 
         std::map<std::string, int> labels;
-        std::vector<std::string> input_files;
-        std::string current_file;
+        std::vector<std::string> *input_files;
     
         std::vector<bool> sld_intfloat;
 
@@ -36,22 +35,22 @@ class Reader {
         void read_inputfiles(int, char const *[]);
 
         void print_debug();
+
     public:
-        Reader() {
+        Reader(std::vector<Instruction> *insts, std::vector<std::string> *inputs) {
             line = 0;
             pc = 0;
 
-            instructions = {};
+            instructions = insts;
             sld_datacnt = 0;
             end_point = 0;
 
             labels = {};
-            input_files = {};
-            current_file = "";
+            input_files = inputs;
 
             sld_intfloat = {};
         };
-        std::tuple<std::vector<Instruction>, int, int> read_inputs(int, char const *[]);
+        std::tuple<int, int> read_inputs(int, char const *[]);
 };
 
 
@@ -120,7 +119,7 @@ inline Instruction Reader::read_instruction(FILE *fp, bool brkp) {
     }
 
     Opcode op = string_to_opcode[opcode];
-    Instruction inst(line, op, brkp, current_file);
+    Instruction inst(line, op, brkp, -1);
     
     if (op == Exit) {
         end_point = pc;
@@ -212,7 +211,7 @@ inline void Reader::read_label() {
     std::cout << "<<< label reading started..." << std::endl;
 
     pc = 4;
-    for(auto fn: input_files) {
+    for(auto fn: *input_files) {
         if (fn.substr(fn.size() - 2) != ".s") continue;
 
         FILE *fp = fopen(fn.c_str(), "r");
@@ -270,10 +269,10 @@ inline void Reader::read_label() {
 inline void Reader::read_program() {
     std::cout << "<<< program reading started..." << std::endl;
 
-    Instruction entrypoint(0, Jal, false, "entrypoint");
+    Instruction entrypoint(0, Jal, false, -1);
     entrypoint.reg0 = 0;
     entrypoint.imm = labels["min_caml_start"];
-    instructions.push_back(entrypoint);
+    (*instructions).push_back(entrypoint);
 
     FILE *fpout = fopen("./output/pcToFilepos.txt", "w");
     if (fpout == NULL) {
@@ -281,7 +280,8 @@ inline void Reader::read_program() {
         exit(1);   
     }
     pc = 4;
-    for(auto fn: input_files) {
+    for(int i = 0; i < (*input_files).size(); i++) {
+        std::string fn = (*input_files)[i];
         if (fn.substr(fn.size() - 2) != ".s") continue;
 
         FILE *fp = fopen(fn.c_str(), "r");
@@ -290,7 +290,6 @@ inline void Reader::read_program() {
             exit(1);
         }
 
-        current_file = fn.substr(8);
         line = 0;
         while(feof(fp) == 0) {
             char c = fgetc(fp);
@@ -306,10 +305,10 @@ inline void Reader::read_program() {
                 Instruction tempinst = read_instruction(fp, false);
 
                 fprintf(fpout, "\t%d:  \t", pc - 4);
-                tempinst.print_debug(fpout);
+                globalfun::print_inst(fpout, tempinst);
                 fprintf(fpout, "\t\t%s:%d\n", fn.c_str(), line);
 
-                instructions.push_back(tempinst);
+                (*instructions).push_back(tempinst);
             }   
             else if (c == '*') {
                 line++;
@@ -317,10 +316,10 @@ inline void Reader::read_program() {
                 Instruction tempinst = read_instruction(fp, true);
 
                 fprintf(fpout, "\t%d:  \t", pc - 4);
-                tempinst.print_debug(fpout);
+                globalfun::print_inst(fpout, tempinst);
                 fprintf(fpout, "\t\t%s:%d\n", fn.c_str(), line);
 
-                instructions.push_back(tempinst);
+                (*instructions).push_back(tempinst);
             }
             else {
                 line++;
@@ -364,7 +363,7 @@ inline void Reader::read_sld_float(std::string &num, int &addr) {
 inline void Reader::read_sld() {
     std::cout << "<<< sld reading started" << std::endl;
 
-    for(auto fn: input_files) {
+    for(auto fn: *input_files) {
         if (fn.substr(fn.size() - 2) == ".s") continue;
 
         FILE *fp = fopen(fn.c_str(), "r");
@@ -399,7 +398,7 @@ inline void Reader::read_sld() {
 
 
         sld_datacnt = (int)nums.size();
-        int inst_size = instructions.size();
+        int inst_size = (*instructions).size();
         int addr = inst_size;
 
         // line 1
@@ -457,13 +456,13 @@ inline void Reader::read_inputfiles(int argc, char const *argv[]) {
     // input files
     std::string path = "./input";
     for(const auto &file: std::experimental::filesystem::directory_iterator(path)) {
-        input_files.push_back(file.path());
+        (*input_files).push_back(file.path());
     }
     std::cout << "<<< input files" << std::endl;
-    sort(input_files.begin(), input_files.end());
+    sort((*input_files).begin(), (*input_files).end());
 
     bool minrtflag = false;
-    for(auto fn: input_files) {
+    for(auto fn: *input_files) {
         if (fn == "./input/minrt.s") minrtflag = true;
         std::cout << "\t\033[32m" << fn << "\033[m" << std::endl;
     }
@@ -485,12 +484,12 @@ inline void Reader::print_debug() {
         exit(1);
     }    
 
-    int inst_num = (int)instructions.size();
+    int inst_num = (int)(*instructions).size();
     fprintf(fp, "<<< instruction counter: %d\n", inst_num);
     for(int i = 0; i < inst_num; i++) {
-        Instruction tmp_inst = instructions[i];
+        Instruction tmp_inst = (*instructions)[i];
         fprintf(fp, "\t%d:  \t", i*4);
-        tmp_inst.print_debug(fp);
+        globalfun::print_inst(fp, tmp_inst);
         fprintf(fp, "\n");
     }
 
@@ -514,7 +513,7 @@ inline void Reader::print_debug() {
 }
 
 
-inline std::tuple<std::vector<Instruction>, int, int> Reader::read_inputs(int argc, char const *argv[]) {
+inline std::tuple<int, int> Reader::read_inputs(int argc, char const *argv[]) {
     Reader::read_inputfiles(argc, argv);
     Reader::read_label();
     Reader::read_program();
@@ -522,5 +521,5 @@ inline std::tuple<std::vector<Instruction>, int, int> Reader::read_inputs(int ar
 
     Reader::print_debug();
 
-    return std::forward_as_tuple(instructions, sld_datacnt, end_point);
+    return std::forward_as_tuple(sld_datacnt, end_point);
 }
