@@ -102,6 +102,7 @@ inline void Program::print_stats() {
         exit(1);
     }    
 
+    #ifdef STATS
     std::vector<std::pair<long long int, Opcode>> instr_counter;
     for(int i = 0; i < 100; i++) {
         if (opcode_to_string.count((Opcode)i)) {
@@ -131,8 +132,9 @@ inline void Program::print_stats() {
     for(auto i: pc_counter_sorted) {
         fprintf(fp, "\t%s: \t%s\n", i.second.c_str(), Program::print_int_with_comma(i.first).c_str());
     }
+    #endif 
 
-    #ifdef TEST
+    #ifdef HARD
     fprintf(fp, "\n<<< cache stats\n");
     // inst-cache
     fprintf(fp, "\tinst-cache: \t%lf\n", instCache.printHitRate());
@@ -174,7 +176,10 @@ inline void Program::exec() {
 
     // initialization
     Program::init_source();
+
+    #ifdef STATS
     pc_counter.assign(instructions.size()*4, (long long int)0);
+    #endif
 
     FILE *fp = fopen("./output/output.ppm", "w");
     if (fp == NULL) {
@@ -192,7 +197,7 @@ inline void Program::exec() {
     while(pc != end_point) {
         curinst = instructions[pc/4];
 
-        #ifdef TEST
+        #ifdef HARD
         // inst-cache
         instCache.cacheAccess(pc, true);
         // data-cache
@@ -211,8 +216,11 @@ inline void Program::exec() {
 
         pc = exec_inst(fp);
 
+        #ifdef STATS
         stats[curinst.opcode]++;
         pc_counter[pc]++;
+        #endif 
+
         counter++;
 
         if (counter%(long long int)100000000 == 0) {
@@ -235,8 +243,9 @@ inline void Program::exec() {
 
     std::cout << "<<< program finished\n" << std::endl;
 
-
+    #if defined STATS || defined HARD
     Program::print_stats();
+    #endif
 }
 
 

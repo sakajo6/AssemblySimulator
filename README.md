@@ -5,9 +5,10 @@
 
 ### make
     - `cd asm_sim`
-    - command `make`: 単純にsimulatorを実行する実行ファイル生成
+    - command `make`: simulatorを実行する実行ファイル生成
     - command `make debug`: assertionなどdebugのための実行ファイル生成
-    - command `make test`: cache, 分岐予測などtest用の実行ファイル生成
+    - command `make hard`: cache, 分岐予測などhardware用の実行ファイル生成
+    - command `make stats`: stats(命令実行回数、labelアクセス回数)を表示するための実行ファイル生成
     
 ### execute
     - command `./sim`
