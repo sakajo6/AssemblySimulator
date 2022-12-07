@@ -195,8 +195,8 @@ inline void Program::check_load(int addr, int pc) {
         globalfun::print_inst(stdout, curinst);
         std::cout << "\n\n";
         globalfun::print_regs(binflag);
-        if (addr == 0) std::cerr <<  "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
-        else std::cerr << "error: this is entry-point. pc = " << pc << std::endl;
+        if (addr == 0) std::cerr << "error: this is entry-point. pc = " << pc << std::endl;
+        else std::cerr <<  "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
         exit(1);
     }
 }

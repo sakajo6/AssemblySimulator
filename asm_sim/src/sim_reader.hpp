@@ -25,7 +25,7 @@ class Reader {
 
         void read_line(FILE *);
         void read_operand(std::string, int &, Instruction &);
-        Instruction read_instruction(FILE *, bool);
+        Instruction read_instruction(FILE *, bool, int);
         void read_label();
         void read_program();
         void print_segfault(int);
@@ -102,7 +102,7 @@ inline void Reader::read_operand(std::string operand, int &regcnt, Instruction &
     }
 }
 
-inline Instruction Reader::read_instruction(FILE *fp, bool brkp) {
+inline Instruction Reader::read_instruction(FILE *fp, bool brkp, int i) {
     char c;
 
     std::string opcode = "";
@@ -119,7 +119,7 @@ inline Instruction Reader::read_instruction(FILE *fp, bool brkp) {
     }
 
     Opcode op = string_to_opcode[opcode];
-    Instruction inst(line, op, brkp, -1);
+    Instruction inst(line, op, brkp, i);
     
     if (op == Exit) {
         end_point = pc;
@@ -302,7 +302,7 @@ inline void Reader::read_program() {
             }
             else if (c == '\t') {
                 line++;
-                Instruction tempinst = read_instruction(fp, false);
+                Instruction tempinst = read_instruction(fp, false, i);
 
                 fprintf(fpout, "\t%d:  \t", pc - 4);
                 globalfun::print_inst(fpout, tempinst);
@@ -313,7 +313,7 @@ inline void Reader::read_program() {
             else if (c == '*') {
                 line++;
                 fgetc(fp);
-                Instruction tempinst = read_instruction(fp, true);
+                Instruction tempinst = read_instruction(fp, true, i);
 
                 fprintf(fpout, "\t%d:  \t", pc - 4);
                 globalfun::print_inst(fpout, tempinst);
