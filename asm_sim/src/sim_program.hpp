@@ -47,11 +47,12 @@ class Program {
         void print_stats();
         #endif
         
-
+        #ifdef DEBUG
         void check_load(int, int);
-        void check_store(int, int);     
+        void check_store(int, int);    
+        #endif
+         
         void init_source();
-        int exec_inst(FILE *);
 
     public:
         Program() {
@@ -185,7 +186,34 @@ void input_thread(int num) {
         xregs[29] += 4;
     }
 }
+#ifdef DEBUG
+inline void Program::check_load(int addr, int pc) {
+    if (addr <= 0 || addr >= memory_size) {
+        if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
+        else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
+        std::cout << "\t";
+        globalfun::print_inst(stdout, curinst);
+        std::cout << "\n\n";
+        globalfun::print_regs(binflag);
+        if (addr == 0) std::cerr <<  "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
+        else std::cerr << "error: this is entry-point. pc = " << pc << std::endl;
+        exit(1);
+    }
+}
 
+inline void Program::check_store(int addr, int pc) {
+    if (addr < text_data_section || addr >= memory_size) {
+        if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
+        else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
+        std::cout << "\t";
+        globalfun::print_inst(stdout, curinst);
+        std::cout << "\n\n";
+        globalfun::print_regs(binflag);
+        std::cerr << "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
+        exit(1);
+    }    
+}
+#endif
 inline void Program::exec() {
     std::cout << "<<< program execution started..." << std::endl; 
 
@@ -229,7 +257,182 @@ inline void Program::exec() {
         // branch prediction
         #endif
 
-        pc = exec_inst(fp);
+        Opcode opcode = curinst.opcode;
+        // 0 - 15
+        if (opcode < 16) {
+            // 0 - 7
+            if (opcode < 8) {
+                // 0 - 3
+                if (opcode < 4) {
+                    // 0 - 1
+                    if (opcode < 2) {
+                        switch(opcode) {
+                            case Lw: 
+                                { 
+                                    int addr = xregs[curinst.reg1] + curinst.imm;
+                                    #ifdef DEBUG
+                                    Program::check_load(addr, pc);
+                                    #endif
+                                    xregs[curinst.reg0] = memory.at(addr).i; pc+=4;
+                                } break;
+                            case Addi: xregs[curinst.reg0] = xregs[curinst.reg1] + curinst.imm; pc+=4; break;
+                        }
+                    }
+                    // 2 - 3
+                    else {
+                        switch(opcode) {
+                            case Lui: xregs[curinst.reg0] = (curinst.imm >> 12) << 12; pc+=4; break;
+                            case Ori: xregs[curinst.reg0] = xregs[curinst.reg1] | curinst.imm; pc+=4; break;
+                        }
+                    }
+                }
+                // 4 - 7
+                else {
+                    // 4 - 5
+                    if (opcode < 6) {
+                        switch(opcode) {
+                            case Sw: 
+                                {
+                                    int addr = xregs[curinst.reg1] + curinst.imm;
+                                    if (addr == -1) fprintf(fp, "%d", xregs[curinst.reg0]);
+                                    else if (addr == -2) fprintf(fp, "%c", (char)xregs[curinst.reg0]);
+                                    else {
+                                        #ifdef DEBUG
+                                        Program::check_store(addr, pc);
+                                        #endif
+                                        memory.at(addr).i = xregs[curinst.reg0];
+                                    }
+                                    pc+=4;
+                                } break;
+                            case Flw: 
+                                {   
+                                    int addr = xregs[curinst.reg1] + curinst.imm;
+                                    #ifdef DEBUG
+                                    Program::check_load(addr, pc);
+                                    #endif
+                                    fregs[curinst.reg0] = memory.at(addr).f; 
+                                    pc+=4;
+                                } break;
+                        }
+                    }
+                    // 6 - 7
+                    else {
+                        switch(opcode) {
+                            case Jalr: xregs[curinst.reg0] = pc+4; pc = xregs[curinst.reg1] + curinst.imm; break;
+                            case Add: xregs[curinst.reg0] = xregs[curinst.reg1] + xregs[curinst.reg2]; pc+=4; break;
+                        }
+                    }
+                }
+            }
+            // 8 - 15
+            else {
+                // 8 - 11
+                if (opcode < 12) {
+                    // 8 - 9
+                    if (opcode < 10) {
+                        switch(opcode){
+                            case Mul: xregs[curinst.reg0] = xregs[curinst.reg1] * xregs[curinst.reg2]; pc+=4; break;
+                            case Jal: xregs[curinst.reg0] = pc + 4; pc += curinst.imm; break;
+                        }
+                    }
+                    // 10 - 11
+                    else {
+                        switch(opcode) {
+                            case Beq: if (xregs[curinst.reg0] == xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+                            case Fsub: fregs[curinst.reg0] = fregs[curinst.reg1] - fregs[curinst.reg2]; pc+=4; break;
+                        }
+                    }
+                }
+                // 12 - 16
+                else {
+                    // 12 - 13
+                    if (opcode < 14) {                  
+                        switch(opcode) { 
+                            case Fadd: fregs[curinst.reg0] = fregs[curinst.reg1] + fregs[curinst.reg2]; pc+=4; break;
+                            case Fsw: 
+                                {   
+                                    int addr = xregs[curinst.reg1] + curinst.imm;
+                                    #ifdef DEBUG
+                                    Program::check_store(addr, pc);
+                                    #endif
+                                    memory.at(addr).f = fregs[curinst.reg0];
+                                    pc+=4;
+                                } break;
+                        }
+                    }
+                    // 14 - 15
+                    else {
+                        switch(opcode) {
+                            case Fle: if (fregs[curinst.reg1] <= fregs[curinst.reg2]) { xregs[curinst.reg0] = 1;} else {xregs[curinst.reg0] = 0;}; pc+=4; break;
+                            case Fmul: fregs[curinst.reg0] = fregs[curinst.reg1] * fregs[curinst.reg2]; pc+=4; break;
+                        }
+                    }
+                }
+            }
+        }
+        else if (opcode < 50) {
+            // 16 - 19
+            if (opcode < 20) {
+                // 16 - 17
+                if (opcode < 18) {
+                    switch(opcode) {
+                        case Ble: if (xregs[curinst.reg0] <= xregs[curinst.reg1]) { pc += curinst.imm; } else {pc+=4;} break;
+                        case Sub: xregs[curinst.reg0] = xregs[curinst.reg1] - xregs[curinst.reg2]; pc+=4; break;
+                    }
+                }
+                // 18 - 19
+                else {
+                    switch(opcode) {
+                        case Feq: if (fregs[curinst.reg1] == fregs[curinst.reg2]) {xregs[curinst.reg0] = 1;} else {xregs[curinst.reg0] = 0;}; pc+=4; break;
+                        case Fdiv: fregs[curinst.reg0] = fregs[curinst.reg1] / fregs[curinst.reg2]; pc+=4; break;
+                    }
+                }
+            }
+            // 20 - 23
+            else {
+                // 20 - 21
+                if (opcode < 22) {
+                    switch(opcode) {
+                        case Fsqrt: fregs[curinst.reg0] = sqrt(fregs[curinst.reg1]); pc+=4; break;
+                        case Div: xregs[curinst.reg0] = xregs[curinst.reg1] / xregs[curinst.reg2]; pc+=4; break;
+                    }
+                }
+                // 22 - 23
+                else {
+                    switch(opcode) {
+                        case Slt: if (xregs[curinst.reg1] < xregs[curinst.reg2]) {xregs[curinst.reg0] = 1;} else {xregs[curinst.reg0] = 0;}; pc+=4; break;
+                        case Bge: if (xregs[curinst.reg0] >= xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+                    }
+                }
+            } 
+        }
+        else if (opcode < 60) {
+            std::cerr << "this is end-point" << std::endl;
+            exit(1);
+        }
+        else {
+            std::cerr << "this is data section" << std::endl;
+            exit(1);
+        }
+
+        xregs[0] = 0;
+
+        #ifdef DEBUG
+        if ((curinst.breakpoint || brkallflag) && !brknonflag) {
+            if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
+            else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
+            std::cout << "\t";
+            globalfun::print_inst(stdout, curinst);
+            std::cout << "\n\n";
+            globalfun::print_regs(binflag);
+            std::cout << "\n\tcurrent pc = " << pc << std::endl;
+            std::cout << "\n<<< PRESS ENTER" << std::endl;
+
+            getchar();
+        }
+        // check next pc
+        check_load(pc, pc);
+        #endif
 
         #ifdef STATS
         stats[curinst.opcode]++;
@@ -261,215 +464,4 @@ inline void Program::exec() {
     #if defined STATS || defined HARD
     Program::print_stats();
     #endif
-}
-
-#ifdef DEBUG
-inline void Program::check_load(int addr, int pc) {
-    if (addr <= 0 || addr >= memory_size) {
-        if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
-        else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
-        std::cout << "\t";
-        globalfun::print_inst(stdout, curinst);
-        std::cout << "\n\n";
-        globalfun::print_regs(binflag);
-        if (addr == 0) std::cerr <<  "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
-        else std::cerr << "error: this is entry-point. pc = " << pc << std::endl;
-        exit(1);
-    }
-}
-
-inline void Program::check_store(int addr, int pc) {
-    if (addr < text_data_section || addr >= memory_size) {
-        if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
-        else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
-        std::cout << "\t";
-        globalfun::print_inst(stdout, curinst);
-        std::cout << "\n\n";
-        globalfun::print_regs(binflag);
-        std::cerr << "error: memory outof range or accessing text/data section. pc = " << pc << std::endl;
-        exit(1);
-    }    
-}
-#endif
-
-inline int Program::exec_inst(FILE *fp) {
-    Opcode opcode = curinst.opcode;
-
-    // 0 - 15
-    if (opcode < 16) {
-        // 0 - 7
-        if (opcode < 8) {
-            // 0 - 3
-            if (opcode < 4) {
-                // 0 - 1
-                if (opcode < 2) {
-                    switch(opcode) {
-						case Lw: 
-							{ 
-								int addr = xregs[curinst.reg1] + curinst.imm;
-                                #ifdef DEBUG
-								Program::check_load(addr, pc);
-                                #endif
-								xregs[curinst.reg0] = memory.at(addr).i; pc+=4;
-							} break;
-						case Addi: xregs[curinst.reg0] = xregs[curinst.reg1] + curinst.imm; pc+=4; break;
-                    }
-                }
-                // 2 - 3
-                else {
-                    switch(opcode) {
-						case Lui: xregs[curinst.reg0] = (curinst.imm >> 12) << 12; pc+=4; break;
-                        case Ori: xregs[curinst.reg0] = xregs[curinst.reg1] | curinst.imm; pc+=4; break;
-                    }
-                }
-            }
-            // 4 - 7
-            else {
-                // 4 - 5
-                if (opcode < 6) {
-                    switch(opcode) {
-						case Sw: 
-							{
-								int addr = xregs[curinst.reg1] + curinst.imm;
-								if (addr == -1) fprintf(fp, "%d", xregs[curinst.reg0]);
-								else if (addr == -2) fprintf(fp, "%c", (char)xregs[curinst.reg0]);
-								else {
-                                    #ifdef DEBUG
-									Program::check_store(addr, pc);
-                                    #endif
-									memory.at(addr).i = xregs[curinst.reg0];
-								}
-								pc+=4;
-							} break;
-                        case Flw: 
-                            {   
-                                int addr = xregs[curinst.reg1] + curinst.imm;
-                                #ifdef DEBUG
-								Program::check_load(addr, pc);
-                                #endif
-                                fregs[curinst.reg0] = memory.at(addr).f; 
-                                pc+=4;
-                            } break;
-                    }
-                }
-                // 6 - 7
-                else {
-                    switch(opcode) {
-                        case Jalr: xregs[curinst.reg0] = pc+4; pc = xregs[curinst.reg1] + curinst.imm; break;
-						case Add: xregs[curinst.reg0] = xregs[curinst.reg1] + xregs[curinst.reg2]; pc+=4; break;
-                    }
-                }
-            }
-        }
-        // 8 - 15
-        else {
-            // 8 - 11
-            if (opcode < 12) {
-                // 8 - 9
-                if (opcode < 10) {
-                    switch(opcode){
-                        case Mul: xregs[curinst.reg0] = xregs[curinst.reg1] * xregs[curinst.reg2]; pc+=4; break;
-						case Jal: xregs[curinst.reg0] = pc + 4; pc += curinst.imm; break;
-                    }
-                }
-                // 10 - 11
-                else {
-                    switch(opcode) {
-						case Beq: if (xregs[curinst.reg0] == xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
-                        case Fsub: fregs[curinst.reg0] = fregs[curinst.reg1] - fregs[curinst.reg2]; pc+=4; break;
-                    }
-                }
-            }
-            // 12 - 16
-            else {
-                // 12 - 13
-                if (opcode < 14) {                  
-                    switch(opcode) { 
-                        case Fadd: fregs[curinst.reg0] = fregs[curinst.reg1] + fregs[curinst.reg2]; pc+=4; break;
-                        case Fsw: 
-                            {   
-                                int addr = xregs[curinst.reg1] + curinst.imm;
-                                #ifdef DEBUG
-								Program::check_store(addr, pc);
-                                #endif
-                                memory.at(addr).f = fregs[curinst.reg0];
-                                pc+=4;
-                            } break;
-                    }
-                }
-                // 14 - 15
-                else {
-                    switch(opcode) {
-                        case Fle: if (fregs[curinst.reg1] <= fregs[curinst.reg2]) { xregs[curinst.reg0] = 1;} else {xregs[curinst.reg0] = 0;}; pc+=4; break;
-                        case Fmul: fregs[curinst.reg0] = fregs[curinst.reg1] * fregs[curinst.reg2]; pc+=4; break;
-                    }
-                }
-            }
-        }
-    }
-    else if (opcode < 50) {
-        // 16 - 19
-        if (opcode < 20) {
-            // 16 - 17
-            if (opcode < 18) {
-                switch(opcode) {
-                    case Ble: if (xregs[curinst.reg0] <= xregs[curinst.reg1]) { pc += curinst.imm; } else {pc+=4;} break;
-                    case Sub: xregs[curinst.reg0] = xregs[curinst.reg1] - xregs[curinst.reg2]; pc+=4; break;
-                }
-            }
-            // 18 - 19
-            else {
-                switch(opcode) {
-                    case Feq: if (fregs[curinst.reg1] == fregs[curinst.reg2]) {xregs[curinst.reg0] = 1;} else {xregs[curinst.reg0] = 0;}; pc+=4; break;
-                    case Fdiv: fregs[curinst.reg0] = fregs[curinst.reg1] / fregs[curinst.reg2]; pc+=4; break;
-                }
-            }
-        }
-        // 20 - 23
-        else {
-            // 20 - 21
-            if (opcode < 22) {
-                switch(opcode) {
-                    case Fsqrt: fregs[curinst.reg0] = sqrt(fregs[curinst.reg1]); pc+=4; break;
-                    case Div: xregs[curinst.reg0] = xregs[curinst.reg1] / xregs[curinst.reg2]; pc+=4; break;
-                }
-            }
-            // 22 - 23
-            else {
-                switch(opcode) {
-                    case Slt: if (xregs[curinst.reg1] < xregs[curinst.reg2]) {xregs[curinst.reg0] = 1;} else {xregs[curinst.reg0] = 0;}; pc+=4; break;
-                    case Bge: if (xregs[curinst.reg0] >= xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
-                }
-            }
-        } 
-    }
-    else if (opcode < 60) {
-        std::cerr << "this is end-point" << std::endl;
-        exit(1);
-    }
-    else {
-        std::cerr << "this is data section" << std::endl;
-        exit(1);
-    }
-
-    xregs[0] = 0;
-
-    #ifdef DEBUG
-    if ((curinst.breakpoint || brkallflag) && !brknonflag) {
-        if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
-        else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
-        std::cout << "\t";
-        globalfun::print_inst(stdout, curinst);
-        std::cout << "\n\n";
-        globalfun::print_regs(binflag);
-        std::cout << "\n\tcurrent pc = " << pc << std::endl;
-        std::cout << "\n<<< PRESS ENTER" << std::endl;
-
-        getchar();
-    }
-    // check next pc
-    check_load(pc, pc);
-    #endif
-
-    return pc;
 }
