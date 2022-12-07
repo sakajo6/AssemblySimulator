@@ -21,27 +21,36 @@
 class Program {
     private:
         int pc;
+        Instruction curinst;
+
         long long int counter;
         int sld_datacnt;
         int end_point;
 
         std::vector<Instruction> instructions;
-        Instruction curinst;
         std::vector<std::string> input_files;
         std::map<std::string, int> labels;
 
+        #ifdef STATS
         std::vector<long long int> stats; 
         std::vector<long long int> pc_counter;
+        #endif
 
+        #ifdef HARD
         Cache instCache;
         Cache dataCache;
+        #endif
 
-        void init_source();
         std::string print_int_with_comma(long long int);
+
+        #if defined STATS || defined HARD
         void print_stats();
+        #endif
+        
 
         void check_load(int, int);
         void check_store(int, int);     
+        void init_source();
         int exec_inst(FILE *);
 
     public:
@@ -51,11 +60,15 @@ class Program {
             instructions = {};
             input_files = {};
 
+            #ifdef HARD
             instCache = Cache(20, 7, 5, 2);
             dataCache = Cache(20, 7, 5, 2);
+            #endif
 
+            #ifdef STATS
             stats.assign(100, (long long int)0);
             pc_counter = {};
+            #endif
         }
         void callReader(int, char const *[]);
         void callAssembler();
@@ -93,6 +106,7 @@ inline std::string Program::print_int_with_comma(long long int n) {
 		return result;		
 }
 
+#if defined STATS || defined HARD
 inline void Program::print_stats() {
     std::cout << "<<< stats printing started..." << std::endl;
 
@@ -147,6 +161,7 @@ inline void Program::print_stats() {
     fclose(fp);
     std::cout << "<<< stats printing finished\n" << std::endl;
 }
+#endif
 
 inline void Program::init_source() {
     for(int i = 0; i < 32; i++) {
@@ -248,7 +263,7 @@ inline void Program::exec() {
     #endif
 }
 
-
+#ifdef DEBUG
 inline void Program::check_load(int addr, int pc) {
     if (addr <= 0 || addr >= memory_size) {
         if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
@@ -275,6 +290,7 @@ inline void Program::check_store(int addr, int pc) {
         exit(1);
     }    
 }
+#endif
 
 inline int Program::exec_inst(FILE *fp) {
     Opcode opcode = curinst.opcode;
