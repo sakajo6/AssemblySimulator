@@ -33,7 +33,8 @@ class Program {
 
         #ifdef STATS
         std::vector<long long int> stats; 
-        std::vector<long long int> pc_counter;
+        std::vector<long long int> jump_counter;
+        std::vector<long long int> luiori_counter;
         #endif
 
         #ifdef HARD
@@ -68,7 +69,8 @@ class Program {
 
             #ifdef STATS
             stats.assign(100, (long long int)0);
-            pc_counter = {};
+            jump_counter = {};
+            luiori_counter = {};
             #endif
         }
         void callReader(int, char const *[]);
@@ -118,6 +120,7 @@ inline void Program::print_stats() {
     }    
 
     #ifdef STATS
+    // instruction stats
     std::vector<std::pair<long long int, Opcode>> instr_counter;
     for(int i = 0; i < 100; i++) {
         if (opcode_to_string.count((Opcode)i)) {
@@ -131,20 +134,32 @@ inline void Program::print_stats() {
         fprintf(fp, "\t%s: \t%s\n", opcode_to_string[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
 
-    std::vector<std::pair<long long int, std::string>> pc_counter_sorted;
+    // jump stats
+    std::vector<std::pair<long long int, std::string>> jump_counter_sorted;
     for(auto i: labels) {
-        pc_counter_sorted.push_back({pc_counter[i.second], i.first});
+        jump_counter_sorted.push_back({jump_counter[i.second], i.first});
     }
-    // std::sort(pc_counter_sorted.begin(), pc_counter_sorted.end(), 
-    // [](std::pair<long long int, std::string> a, std::pair<long long int, std::string> b) {
-    //     if (a.first > b.first) return true;
-    //     else {
-    //         if (a.second.compare(b.second) < 0) return true;
-    //         else return false;
-    //     }
+    // std::sort(jump_counter_sorted.begin(), jump_counter_sorted.end(), 
+    // [](std::pair<long long int, std::string> &a, std::pair<long long int, std::string> &b) {
+    //     // if (a.first > b.first) return true;
+    //     // else {
+    //     //     if (a.second.compare(b.second) < 0) return true;
+    //     //     else return false;
+    //     // }
+    //     return a.first >= b.first;
     // });
-    fprintf(fp, "\n<<< label stats\n");
-    for(auto i: pc_counter_sorted) {
+    fprintf(fp, "\n<<< jump stats\n");
+    for(auto i: jump_counter_sorted) {
+        fprintf(fp, "\t%s: \t%s\n", i.second.c_str(), Program::print_int_with_comma(i.first).c_str());
+    }
+
+    // lui/ori stats
+    std::vector<std::pair<long long int, std::string>> luiori_counter_sorted;
+    for(auto i: labels) {
+        luiori_counter_sorted.push_back({luiori_counter[i.second], i.first});
+    }
+    fprintf(fp, "\n<<< lui/ori stats\n");
+    for(auto i: luiori_counter_sorted) {
         fprintf(fp, "\t%s: \t%s\n", i.second.c_str(), Program::print_int_with_comma(i.first).c_str());
     }
     #endif 
@@ -221,7 +236,9 @@ inline void Program::exec() {
     Program::init_source();
 
     #ifdef STATS
-    pc_counter.assign(instructions.size()*4, (long long int)0);
+    long long int counter_size = instructions.size()*4;
+    jump_counter.assign(counter_size, (long long int)0);
+    luiori_counter.assign(counter_size, (long long int)0);
     #endif
 
     FILE *fp = fopen("./output/output.ppm", "w");
@@ -281,8 +298,16 @@ inline void Program::exec() {
                     // 2 - 3
                     else {
                         switch(opcode) {
-                            case Lui: xregs[curinst.reg0] = (curinst.imm >> 12) << 12; pc+=4; break;
-                            case Ori: xregs[curinst.reg0] = xregs[curinst.reg1] | curinst.imm; pc+=4; break;
+                            case Lui: 
+                                #ifdef STATS
+                                if (curinst.luioriFlag && 0LL <= curinst.imm && curinst.imm < counter_size) luiori_counter[curinst.imm]++;
+                                #endif
+                                xregs[curinst.reg0] = (curinst.imm >> 12) << 12; pc+=4; break;
+                            case Ori: 
+                                #ifdef STATS
+                                if (curinst.luioriFlag && 0LL <= curinst.imm && curinst.imm < counter_size) luiori_counter[curinst.imm]++;
+                                #endif
+                                xregs[curinst.reg0] = xregs[curinst.reg1] | curinst.imm; pc+=4; break;
                         }
                     }
                 }
@@ -436,7 +461,7 @@ inline void Program::exec() {
 
         #ifdef STATS
         stats[curinst.opcode]++;
-        pc_counter[pc]++;
+        jump_counter[pc]++;
         #endif 
 
         counter++;

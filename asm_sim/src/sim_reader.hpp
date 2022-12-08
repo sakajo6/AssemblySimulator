@@ -90,7 +90,12 @@ inline void Reader::read_operand(std::string operand, int &regcnt, Instruction &
     // %hi, %lo: % 始まり
     else if (operand[0] == '%') {
         if ((*labels).count(operand.substr(1)) == 0) inst.imm = -4;
-        else inst.imm = (*labels)[operand.substr(1)];
+        else {
+            #ifdef STATS
+            inst.luioriFlag = true;
+            #endif
+            inst.imm = (*labels)[operand.substr(1)];
+        }
     }
     // label: その他
     else {
