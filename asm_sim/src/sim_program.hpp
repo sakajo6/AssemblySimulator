@@ -134,33 +134,45 @@ inline void Program::print_stats() {
         fprintf(fp, "\t%s: \t%s\n", opcode_to_string[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
 
-    // jump stats
-    std::vector<std::pair<long long int, std::string>> jump_counter_sorted;
+    // labels
+    std::vector<std::string> labelvector;
     for(auto i: labels) {
-        jump_counter_sorted.push_back({jump_counter[i.second], i.first});
+        labelvector.emplace_back(i.first);
     }
-    // std::sort(jump_counter_sorted.begin(), jump_counter_sorted.end(), 
-    // [](std::pair<long long int, std::string> &a, std::pair<long long int, std::string> &b) {
-    //     // if (a.first > b.first) return true;
-    //     // else {
-    //     //     if (a.second.compare(b.second) < 0) return true;
-    //     //     else return false;
-    //     // }
-    //     return a.first >= b.first;
-    // });
+    // jump stats
+    std::vector<std::pair<long long int, int>> jump_counter_sorted;
+    for(int i = 0; i < labelvector.size(); i++) {
+        jump_counter_sorted.push_back({jump_counter[labels[labelvector[i]]], i});
+    }
+    std::sort(jump_counter_sorted.begin(), jump_counter_sorted.end(), 
+    [](std::pair<long long int, int> a, std::pair<long long int, int> b) {
+        if (a.first > b.first) return true;
+        else if (a.first == b.first) {
+            return a.first < b.first;
+        }
+        return false;
+    });
     fprintf(fp, "\n<<< jump stats\n");
     for(auto i: jump_counter_sorted) {
-        fprintf(fp, "\t%s: \t%s\n", i.second.c_str(), Program::print_int_with_comma(i.first).c_str());
+        fprintf(fp, "\t%s: \t%s\n", labelvector[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
 
     // lui/ori stats
-    std::vector<std::pair<long long int, std::string>> luiori_counter_sorted;
-    for(auto i: labels) {
-        luiori_counter_sorted.push_back({luiori_counter[i.second], i.first});
+    std::vector<std::pair<long long int, int>> luiori_counter_sorted;
+    for(int i = 0; i < labelvector.size(); i++) {
+        luiori_counter_sorted.push_back({luiori_counter[labels[labelvector[i]]], i});
     }
+    std::sort(luiori_counter_sorted.begin(), luiori_counter_sorted.end(), 
+    [](std::pair<long long int, int> a, std::pair<long long int, int> b) {
+        if (a.first > b.first) return true;
+        else if (a.first == b.first) {
+            return a.first < b.first;
+        }
+        return false;
+    });
     fprintf(fp, "\n<<< lui/ori stats\n");
     for(auto i: luiori_counter_sorted) {
-        fprintf(fp, "\t%s: \t%s\n", i.second.c_str(), Program::print_int_with_comma(i.first).c_str());
+        fprintf(fp, "\t%s: \t%s\n", labelvector[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
     #endif 
 
