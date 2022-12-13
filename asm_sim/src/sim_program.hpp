@@ -15,8 +15,11 @@
 #include "sim_global.hpp"
 #include "sim_reader.hpp"
 #include "sim_assembler.hpp"
-#include "sim_cache.hpp"
 
+#ifdef HARD
+#include "sim_cache.hpp"
+#include "sim_branch_prediction.hpp"
+#endif
 
 class Program {
     private:
@@ -40,6 +43,7 @@ class Program {
         #ifdef HARD
         Cache instCache;
         Cache dataCache;
+        BranchPrediction bp;
         #endif
 
         std::string print_int_with_comma(long long int);
@@ -65,6 +69,7 @@ class Program {
             #ifdef HARD
             instCache = Cache(20, 7, 5, 2);
             dataCache = Cache(20, 7, 5, 2);
+            bp = BranchPrediction(10);
             #endif
 
             #ifdef STATS
@@ -177,13 +182,18 @@ inline void Program::print_stats() {
     #endif 
 
     #ifdef HARD
+    // cache
     fprintf(fp, "\n<<< cache stats\n");
     // inst-cache
-    fprintf(fp, "\tinst-cache: \t%lf\n", instCache.printHitRate());
+    fprintf(fp, "\tinst-cache:\n");
+    instCache.printStats(fp);
     // data-cache
-    fprintf(fp, "\tdata-cache: \t%lf\n", dataCache.printHitRate());
+    fprintf(fp, "\tdata-cache:\n");
+    dataCache.printStats(fp);
 
     // branch prediction
+    fprintf(fp, "\n<<< branch prediction stats\n");
+    bp.printStats(fp);
     #endif
 
     fclose(fp);
@@ -284,6 +294,7 @@ inline void Program::exec() {
         }
 
         // branch prediction
+        int pc_prev = pc;
         #endif
 
         Opcode opcode = curinst.opcode;
@@ -475,6 +486,10 @@ inline void Program::exec() {
         stats[curinst.opcode]++;
         jump_counter[pc]++;
         #endif 
+
+        #ifdef HARD
+        bp.branchUpdate(pc_prev, pc);
+        #endif
 
         counter++;
 
