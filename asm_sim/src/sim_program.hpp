@@ -7,7 +7,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <thread>
 #include <tuple>
 
 #include "sim_instruction.hpp"
@@ -27,7 +26,7 @@ class Program {
         Instruction curinst;
 
         long long int counter;
-        int sld_datacnt;
+        int std_cnt;
         int end_point;
 
         std::vector<Instruction> instructions;
@@ -85,7 +84,7 @@ class Program {
 
 inline void Program::callReader(int argc, char const *argv[]) {
     Reader reader(&instructions, &input_files, &labels);
-    std::tie(sld_datacnt, end_point) = reader.read_inputs(argc, argv);
+    end_point = reader.read_inputs(argc, argv);
 }
 
 inline void Program::callAssembler() {
@@ -208,21 +207,17 @@ inline void Program::init_source() {
     }
 
     xregs[2] = memory_size;
-    xregs[3] = (instructions.size() + sld_datacnt)*4;
+    xregs[3] = instructions.size()*4;
 
     // regs for input
     xregs[29] = 0;
     xregs[30] = 0;
 
-    text_data_section = (instructions.size() + sld_datacnt)*4;
+    text_data_section = instructions.size()*4;
+    pc = 0;
+    std_cnt = 0;
 }
 
-void input_thread(int num) {
-    for(int i = 0; i < num; i++) {
-        std::this_thread::sleep_for(std::chrono::microseconds(30));
-        xregs[29] += 4;
-    }
-}
 #ifdef DEBUG
 inline void Program::check_load(int addr, int pc) {
     if (addr <= 0 || addr >= memory_size) {
@@ -254,8 +249,6 @@ inline void Program::check_store(int addr, int pc) {
 inline void Program::exec() {
     std::cout << "<<< program execution started..." << std::endl; 
 
-    // initialization
-    Program::init_source();
 
     #ifdef STATS
     long long int counter_size = instructions.size()*4;
@@ -271,11 +264,12 @@ inline void Program::exec() {
 
     struct timespec start, end;
 
+    // initialization
+    Program::init_source();
+
     clock_gettime(CLOCK_REALTIME, &start);
 
-    std::thread th(input_thread, sld_datacnt);
-
-    pc = 0;
+    // exec
     while(pc != end_point) {
         curinst = instructions[pc/4];
 
@@ -310,10 +304,17 @@ inline void Program::exec() {
                             case Lw: 
                                 { 
                                     int addr = xregs[curinst.reg1] + curinst.imm;
-                                    #ifdef DEBUG
-                                    Program::check_load(addr, pc);
-                                    #endif
-                                    xregs[curinst.reg0] = memory.at(addr).i; pc+=4;
+                                    if (addr == -1) {
+                                        xregs[curinst.reg0] = std_input.at(std_cnt).i;
+                                        std_cnt++;
+                                    }
+                                    else {
+                                        #ifdef DEBUG
+                                        Program::check_load(addr, pc);
+                                        #endif
+                                        xregs[curinst.reg0] = memory.at(addr).i;
+                                    }
+                                    pc += 4;
                                 } break;
                             case Addi: xregs[curinst.reg0] = xregs[curinst.reg1] + curinst.imm; pc+=4; break;
                         }
@@ -355,10 +356,16 @@ inline void Program::exec() {
                             case Flw: 
                                 {   
                                     int addr = xregs[curinst.reg1] + curinst.imm;
-                                    #ifdef DEBUG
-                                    Program::check_load(addr, pc);
-                                    #endif
-                                    fregs[curinst.reg0] = memory.at(addr).f; 
+                                    if (addr == -1) {
+                                        fregs[curinst.reg0] = std_input.at(std_cnt).f;
+                                        std_cnt++;
+                                    }
+                                    else {
+                                        #ifdef DEBUG
+                                        Program::check_load(addr, pc);
+                                        #endif
+                                        fregs[curinst.reg0] = memory.at(addr).f; 
+                                    }
                                     pc+=4;
                                 } break;
                         }
@@ -500,7 +507,6 @@ inline void Program::exec() {
 
 
     std::cout << "\n<<< thread joining..." << std::endl;
-    th.join();
 
     clock_gettime(CLOCK_REALTIME, &end);
 

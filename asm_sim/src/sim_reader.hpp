@@ -14,9 +14,9 @@ class Reader {
         int line;
         int pc;
 
-        std::vector<Instruction> *instructions;
-        int sld_datacnt;
+        int std_cnt;
         int end_point;
+        std::vector<Instruction> *instructions;
 
         std::map<std::string, int> *labels;
         std::vector<std::string> *input_files;
@@ -42,15 +42,15 @@ class Reader {
             pc = 0;
 
             instructions = insts;
-            sld_datacnt = 0;
             end_point = 0;
 
             labels = labels_addr;
             input_files = inputs;
 
             sld_intfloat = {};
+            std_input = {};
         };
-        std::tuple<int, int> read_inputs(int, char const *[]);
+        int read_inputs(int, char const *[]);
 };
 
 
@@ -352,16 +352,18 @@ inline void Reader::print_segfault(int addr) {
 }
 
 inline void Reader::read_sld_int(std::string &num, int &addr) {
-    Reader::print_segfault(addr);
     sld_intfloat.push_back(false);
-    memory.at(addr*4).i = std::stoi(num);
+    U u;
+    u.i = std::stoi(num);
+    std_input.push_back(u);
     addr++;
 }
 
 inline void Reader::read_sld_float(std::string &num, int &addr) {
-    Reader::print_segfault(addr);
     sld_intfloat.push_back(true);
-    memory.at(addr*4).f = std::stof(num);
+    U u;
+    u.f = std::stof(num);
+    std_input.push_back(u);
     addr++;
 }
 
@@ -402,27 +404,26 @@ inline void Reader::read_sld() {
         }
 
 
-        sld_datacnt = (int)nums.size();
-        int inst_size = (*instructions).size();
-        int addr = inst_size;
+        std_cnt = (int)nums.size();
+        int addr = 0;
 
         // line 1
-        for(int i = 0; i < 5; i++) read_sld_float(nums[addr - inst_size], addr);
+        for(int i = 0; i < 5; i++) read_sld_float(nums[addr], addr);
 
         // line 2, 3
-        read_sld_int(nums[addr - inst_size], addr);
-        for(int i = 0; i < 3; i++) read_sld_float(nums[addr - inst_size], addr);
+        read_sld_int(nums[addr], addr);
+        for(int i = 0; i < 3; i++) read_sld_float(nums[addr], addr);
 
         // line 4 ...
         while(true) {
-            if (nums[addr - inst_size] == "-1") break;
-            for(int i = 0; i < 4; i++) read_sld_int(nums[addr - inst_size], addr);
-            for(int i = 0; i < 12; i++) read_sld_float(nums[addr - inst_size], addr);
+            if (nums[addr] == "-1") break;
+            for(int i = 0; i < 4; i++) read_sld_int(nums[addr], addr);
+            for(int i = 0; i < 12; i++) read_sld_float(nums[addr], addr);
         }
 
         // til EOF
-        int tilEOF = sld_datacnt - (addr - inst_size);
-        for(int i = 0; i < tilEOF; i++) read_sld_int(nums[addr - inst_size], addr);
+        int tilEOF = std_cnt - addr;
+        for(int i = 0; i < tilEOF; i++) read_sld_int(nums[addr], addr);
     }
     std::cout << "<<< sld reading finished\n" << std::endl;
 }
@@ -503,14 +504,10 @@ inline void Reader::print_debug() {
         fprintf(fp, "\t%s: %d\n", i.first.c_str(), i.second);
     }
 
-    fprintf(fp, "\n<<< sld input: %d\n", sld_datacnt);
-    for(int i = inst_num; i < inst_num + sld_datacnt; i++) {
-        if (i < 0 || i >= memory_size) {
-            std::cerr << "error: memory outof range. sld input data = " << i << std::endl;
-            exit(1);
-        }
-        if (sld_intfloat[i - inst_num]) fprintf(fp, "\t%f\n", memory.at(i*4).f);
-        else fprintf(fp, "\t%d\n", memory.at(i*4).i);
+    fprintf(fp, "\n<<< sld input: %d\n", std_cnt);
+    for(int i = 0; i < std_cnt; i++) {
+        if (sld_intfloat[i]) fprintf(fp, "\t%f\n", std_input.at(i).f);
+        else fprintf(fp, "\t%d\n", std_input.at(i).i);
     }
 
     fclose(fp);
@@ -518,7 +515,7 @@ inline void Reader::print_debug() {
 }
 
 
-inline std::tuple<int, int> Reader::read_inputs(int argc, char const *argv[]) {
+inline int Reader::read_inputs(int argc, char const *argv[]) {
     Reader::read_inputfiles(argc, argv);
     Reader::read_label();
     Reader::read_program();
@@ -526,5 +523,5 @@ inline std::tuple<int, int> Reader::read_inputs(int argc, char const *argv[]) {
 
     Reader::print_debug();
 
-    return std::forward_as_tuple(sld_datacnt, end_point);
+    return end_point;
 }
