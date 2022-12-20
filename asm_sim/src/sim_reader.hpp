@@ -141,8 +141,8 @@ inline Instruction Reader::read_instruction(FILE *fp, bool brkp, int i) {
                 while(feof(fp) == 0) {
                     c = (char)fgetc(fp);
                     if ((int)c == -1) continue;
-                    else if (c == '\n' || c == '\t') {
-                        if (c == '\t') Reader::read_line(fp);
+                    else if (c == '\n' || c == '\t' || c == 13) {
+                        if (c == '\t' || c == 13) Reader::read_line(fp);
                         inst.fimm = std::stof(operand);
                         flag = true;
                         break;
@@ -186,8 +186,8 @@ inline Instruction Reader::read_instruction(FILE *fp, bool brkp, int i) {
                             }
                             break;
                         }
-                        else if (c == '\n' || c == '\t' || c == ')') {
-                            if (c == '\t' || c == ')') Reader::read_line(fp);
+                        else if (c == '\n' || c == '\t' || c == ')' || c == 13) {
+                            if (c == '\t' || c == ')' || c == 13) Reader::read_line(fp);
                             flag = true;
                             read_operand(operand, regcnt, inst);
                             break;

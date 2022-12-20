@@ -209,10 +209,6 @@ inline void Program::init_source() {
     xregs[2] = memory_size;
     xregs[3] = instructions.size()*4;
 
-    // regs for input
-    xregs[29] = 0;
-    xregs[30] = 0;
-
     text_data_section = instructions.size()*4;
     pc = 0;
     std_cnt = 0;
@@ -462,11 +458,25 @@ inline void Program::exec() {
             } 
         }
         else if (opcode < 60) {
-            std::cerr << "this is end-point" << std::endl;
+            if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
+            else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
+            std::cout << "\t";
+            globalfun::print_inst(stdout, curinst);
+            std::cout << "\n\n";
+            globalfun::print_regs(binflag);
+            std::cout << "\n\tcurrent pc = " << pc << std::endl;
+            std::cerr << "error: this is end-point" << std::endl;
             exit(1);
         }
         else {
-            std::cerr << "this is data section" << std::endl;
+            if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
+            else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
+            std::cout << "\t";
+            globalfun::print_inst(stdout, curinst);
+            std::cout << "\n\n";
+            globalfun::print_regs(binflag);
+            std::cout << "\n\tcurrent pc = " << pc << std::endl;
+            std::cerr << "error: this is data section" << std::endl;
             exit(1);
         }
 
