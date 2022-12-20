@@ -45,7 +45,7 @@ class Cache {
             storeHit = 0;
         };  
         void cacheAccess(unsigned int, bool);
-        double printHitRate();
+        void printStats(FILE *);
 };
 
 inline void Cache::updateAccessed(unsigned int idx) {
@@ -122,8 +122,12 @@ inline void Cache::cacheAccess(unsigned int pc, bool flag) {
     return;
 }
 
-inline double Cache::printHitRate() {
+inline void Cache::printStats(FILE *fp) {
+    // size
+    fprintf(fp, "\t\tCache size -> %d byte\n", (1 << indexSiz) * (1 << offsetSiz) * waySiz);
+
+    // hit rate
     double hit = loadHit + storeHit;
     double total = loadCnt + storeCnt;
-    return hit/total;
+    fprintf(fp, "\t\tHit rate -> %lf\n", hit/total);
 }

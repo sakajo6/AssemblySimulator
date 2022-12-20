@@ -23,6 +23,10 @@ class Instruction {
         int imm;
         float fimm;
 
+        #ifdef STATS
+        bool luioriFlag;
+        #endif
+
         Instruction() {}
         Instruction(int ln, Opcode opc, bool brkp, int idx) {
             line = ln;
@@ -35,5 +39,9 @@ class Instruction {
             reg2 = INT_MAX;
             imm = INT_MAX;
             fimm = FLT_MAX;
+
+            #ifdef STATS
+            luioriFlag = false;
+            #endif
         }
 };

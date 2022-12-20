@@ -7,7 +7,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <thread>
 #include <tuple>
 
 #include "sim_instruction.hpp"
@@ -15,8 +14,11 @@
 #include "sim_global.hpp"
 #include "sim_reader.hpp"
 #include "sim_assembler.hpp"
-#include "sim_cache.hpp"
 
+#ifdef HARD
+#include "sim_cache.hpp"
+#include "sim_branch_prediction.hpp"
+#endif
 
 class Program {
     private:
@@ -24,7 +26,7 @@ class Program {
         Instruction curinst;
 
         long long int counter;
-        int sld_datacnt;
+        int std_cnt;
         int end_point;
 
         std::vector<Instruction> instructions;
@@ -33,12 +35,14 @@ class Program {
 
         #ifdef STATS
         std::vector<long long int> stats; 
-        std::vector<long long int> pc_counter;
+        std::vector<long long int> jump_counter;
+        std::vector<long long int> luiori_counter;
         #endif
 
         #ifdef HARD
         Cache instCache;
         Cache dataCache;
+        BranchPrediction bp;
         #endif
 
         std::string print_int_with_comma(long long int);
@@ -64,11 +68,13 @@ class Program {
             #ifdef HARD
             instCache = Cache(20, 7, 5, 2);
             dataCache = Cache(20, 7, 5, 2);
+            bp = BranchPrediction(10);
             #endif
 
             #ifdef STATS
             stats.assign(100, (long long int)0);
-            pc_counter = {};
+            jump_counter = {};
+            luiori_counter = {};
             #endif
         }
         void callReader(int, char const *[]);
@@ -78,7 +84,7 @@ class Program {
 
 inline void Program::callReader(int argc, char const *argv[]) {
     Reader reader(&instructions, &input_files, &labels);
-    std::tie(sld_datacnt, end_point) = reader.read_inputs(argc, argv);
+    end_point = reader.read_inputs(argc, argv);
 }
 
 inline void Program::callAssembler() {
@@ -118,6 +124,7 @@ inline void Program::print_stats() {
     }    
 
     #ifdef STATS
+    // instruction stats
     std::vector<std::pair<long long int, Opcode>> instr_counter;
     for(int i = 0; i < 100; i++) {
         if (opcode_to_string.count((Opcode)i)) {
@@ -131,32 +138,61 @@ inline void Program::print_stats() {
         fprintf(fp, "\t%s: \t%s\n", opcode_to_string[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
 
-    std::vector<std::pair<long long int, std::string>> pc_counter_sorted;
+    // labels
+    std::vector<std::string> labelvector;
     for(auto i: labels) {
-        pc_counter_sorted.push_back({pc_counter[i.second], i.first});
+        labelvector.emplace_back(i.first);
     }
-    // std::sort(pc_counter_sorted.begin(), pc_counter_sorted.end(), 
-    // [](std::pair<long long int, std::string> a, std::pair<long long int, std::string> b) {
-    //     if (a.first > b.first) return true;
-    //     else {
-    //         if (a.second.compare(b.second) < 0) return true;
-    //         else return false;
-    //     }
-    // });
-    fprintf(fp, "\n<<< label stats\n");
-    for(auto i: pc_counter_sorted) {
-        fprintf(fp, "\t%s: \t%s\n", i.second.c_str(), Program::print_int_with_comma(i.first).c_str());
+    // jump stats
+    std::vector<std::pair<long long int, int>> jump_counter_sorted;
+    for(int i = 0; i < labelvector.size(); i++) {
+        jump_counter_sorted.push_back({jump_counter[labels[labelvector[i]]], i});
+    }
+    std::sort(jump_counter_sorted.begin(), jump_counter_sorted.end(), 
+    [](std::pair<long long int, int> a, std::pair<long long int, int> b) {
+        if (a.first > b.first) return true;
+        else if (a.first == b.first) {
+            return a.first < b.first;
+        }
+        return false;
+    });
+    fprintf(fp, "\n<<< jump stats\n");
+    for(auto i: jump_counter_sorted) {
+        fprintf(fp, "\t%s: \t%s\n", labelvector[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
+    }
+
+    // lui/ori stats
+    std::vector<std::pair<long long int, int>> luiori_counter_sorted;
+    for(int i = 0; i < labelvector.size(); i++) {
+        luiori_counter_sorted.push_back({luiori_counter[labels[labelvector[i]]], i});
+    }
+    std::sort(luiori_counter_sorted.begin(), luiori_counter_sorted.end(), 
+    [](std::pair<long long int, int> a, std::pair<long long int, int> b) {
+        if (a.first > b.first) return true;
+        else if (a.first == b.first) {
+            return a.first < b.first;
+        }
+        return false;
+    });
+    fprintf(fp, "\n<<< lui/ori stats\n");
+    for(auto i: luiori_counter_sorted) {
+        fprintf(fp, "\t%s: \t%s\n", labelvector[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
     #endif 
 
     #ifdef HARD
+    // cache
     fprintf(fp, "\n<<< cache stats\n");
     // inst-cache
-    fprintf(fp, "\tinst-cache: \t%lf\n", instCache.printHitRate());
+    fprintf(fp, "\tinst-cache:\n");
+    instCache.printStats(fp);
     // data-cache
-    fprintf(fp, "\tdata-cache: \t%lf\n", dataCache.printHitRate());
+    fprintf(fp, "\tdata-cache:\n");
+    dataCache.printStats(fp);
 
     // branch prediction
+    fprintf(fp, "\n<<< branch prediction stats\n");
+    bp.printStats(fp);
     #endif
 
     fclose(fp);
@@ -171,21 +207,17 @@ inline void Program::init_source() {
     }
 
     xregs[2] = memory_size;
-    xregs[3] = (instructions.size() + sld_datacnt)*4;
+    xregs[3] = instructions.size()*4;
 
     // regs for input
     xregs[29] = 0;
     xregs[30] = 0;
 
-    text_data_section = (instructions.size() + sld_datacnt)*4;
+    text_data_section = instructions.size()*4;
+    pc = 0;
+    std_cnt = 0;
 }
 
-void input_thread(int num) {
-    for(int i = 0; i < num; i++) {
-        std::this_thread::sleep_for(std::chrono::microseconds(30));
-        xregs[29] += 4;
-    }
-}
 #ifdef DEBUG
 inline void Program::check_load(int addr, int pc) {
     if (addr <= 0 || addr >= memory_size) {
@@ -217,11 +249,11 @@ inline void Program::check_store(int addr, int pc) {
 inline void Program::exec() {
     std::cout << "<<< program execution started..." << std::endl; 
 
-    // initialization
-    Program::init_source();
 
     #ifdef STATS
-    pc_counter.assign(instructions.size()*4, (long long int)0);
+    long long int counter_size = instructions.size()*4;
+    jump_counter.assign(counter_size, (long long int)0);
+    luiori_counter.assign(counter_size, (long long int)0);
     #endif
 
     FILE *fp = fopen("./output/output.ppm", "w");
@@ -232,11 +264,12 @@ inline void Program::exec() {
 
     struct timespec start, end;
 
+    // initialization
+    Program::init_source();
+
     clock_gettime(CLOCK_REALTIME, &start);
 
-    std::thread th(input_thread, sld_datacnt);
-
-    pc = 0;
+    // exec
     while(pc != end_point) {
         curinst = instructions[pc/4];
 
@@ -255,6 +288,7 @@ inline void Program::exec() {
         }
 
         // branch prediction
+        int pc_prev = pc;
         #endif
 
         Opcode opcode = curinst.opcode;
@@ -270,10 +304,17 @@ inline void Program::exec() {
                             case Lw: 
                                 { 
                                     int addr = xregs[curinst.reg1] + curinst.imm;
-                                    #ifdef DEBUG
-                                    Program::check_load(addr, pc);
-                                    #endif
-                                    xregs[curinst.reg0] = memory.at(addr).i; pc+=4;
+                                    if (addr == -1) {
+                                        xregs[curinst.reg0] = std_input.at(std_cnt).i;
+                                        std_cnt++;
+                                    }
+                                    else {
+                                        #ifdef DEBUG
+                                        Program::check_load(addr, pc);
+                                        #endif
+                                        xregs[curinst.reg0] = memory.at(addr).i;
+                                    }
+                                    pc += 4;
                                 } break;
                             case Addi: xregs[curinst.reg0] = xregs[curinst.reg1] + curinst.imm; pc+=4; break;
                         }
@@ -281,8 +322,16 @@ inline void Program::exec() {
                     // 2 - 3
                     else {
                         switch(opcode) {
-                            case Lui: xregs[curinst.reg0] = (curinst.imm >> 12) << 12; pc+=4; break;
-                            case Ori: xregs[curinst.reg0] = xregs[curinst.reg1] | curinst.imm; pc+=4; break;
+                            case Lui: 
+                                #ifdef STATS
+                                if (curinst.luioriFlag && 0LL <= curinst.imm && curinst.imm < counter_size) luiori_counter[curinst.imm]++;
+                                #endif
+                                xregs[curinst.reg0] = (curinst.imm >> 12) << 12; pc+=4; break;
+                            case Ori: 
+                                #ifdef STATS
+                                if (curinst.luioriFlag && 0LL <= curinst.imm && curinst.imm < counter_size) luiori_counter[curinst.imm]++;
+                                #endif
+                                xregs[curinst.reg0] = xregs[curinst.reg1] | curinst.imm; pc+=4; break;
                         }
                     }
                 }
@@ -307,10 +356,16 @@ inline void Program::exec() {
                             case Flw: 
                                 {   
                                     int addr = xregs[curinst.reg1] + curinst.imm;
-                                    #ifdef DEBUG
-                                    Program::check_load(addr, pc);
-                                    #endif
-                                    fregs[curinst.reg0] = memory.at(addr).f; 
+                                    if (addr == -1) {
+                                        fregs[curinst.reg0] = std_input.at(std_cnt).f;
+                                        std_cnt++;
+                                    }
+                                    else {
+                                        #ifdef DEBUG
+                                        Program::check_load(addr, pc);
+                                        #endif
+                                        fregs[curinst.reg0] = memory.at(addr).f; 
+                                    }
                                     pc+=4;
                                 } break;
                         }
@@ -436,8 +491,12 @@ inline void Program::exec() {
 
         #ifdef STATS
         stats[curinst.opcode]++;
-        pc_counter[pc]++;
+        jump_counter[pc]++;
         #endif 
+
+        #ifdef HARD
+        bp.branchUpdate(pc_prev, pc);
+        #endif
 
         counter++;
 
@@ -445,11 +504,7 @@ inline void Program::exec() {
             std::cout << "<<< executed " << print_int_with_comma(counter) << " instructions" << std::endl;
         }
     }
-
-
-    std::cout << "\n<<< thread joining..." << std::endl;
-    th.join();
-
+    
     clock_gettime(CLOCK_REALTIME, &end);
 
 

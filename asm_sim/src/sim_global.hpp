@@ -25,6 +25,7 @@ union U {
   float f;
 };
 std::vector<U> memory(memory_size);
+std::vector<U> std_input;
 
 /*
     register info:
