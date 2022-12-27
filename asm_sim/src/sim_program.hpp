@@ -82,6 +82,20 @@ class Program {
         void exec();
 };
 
+inline void Program::init_source() {
+    for(int i = 0; i < 32; i++) {
+        xregs[i] = 0;
+        fregs[i] = 0.;
+    }
+
+    xregs[2] = memory_size;
+    xregs[3] = instructions.size()*4;
+
+    text_data_section = instructions.size()*4;
+    pc = 0;
+    std_cnt = 0;
+}
+
 inline void Program::callReader(int argc, char const *argv[]) {
     Reader reader(&instructions, &input_files, &labels);
     end_point = reader.read_inputs(argc, argv);
@@ -199,20 +213,6 @@ inline void Program::print_stats() {
     std::cout << "<<< stats printing finished\n" << std::endl;
 }
 #endif
-
-inline void Program::init_source() {
-    for(int i = 0; i < 32; i++) {
-        xregs[i] = 0;
-        fregs[i] = 0.;
-    }
-
-    xregs[2] = memory_size;
-    xregs[3] = instructions.size()*4;
-
-    text_data_section = instructions.size()*4;
-    pc = 0;
-    std_cnt = 0;
-}
 
 #ifdef DEBUG
 inline void Program::check_load(int addr, int pc) {
