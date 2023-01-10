@@ -110,13 +110,20 @@ inline void Program::callAssembler() {
         exit(1);
     }
 
+    FILE *fpdebug = fopen("./output/bin_debug.txt", "w");
+    if (fpdebug == NULL) {
+        std::cerr << "error: an error occurred opening ./output/bin_debug.txt.\n" << std::endl;
+        exit(1);
+    }
+
     int n = instructions.size();
     for (int i = 0; i < n; i++) {
-        Assembler tempAsm(instructions[i]);
-        tempAsm.assemble(fp, i*4, veriflag);
+        Assembler tempAsm(instructions[i], fp, fpdebug);
+        tempAsm.assemble(i*4, veriflag);
     }
 
     fclose(fp);
+    fclose(fpdebug);
     std::cout << "<<< assembler finished\n" << std::endl;
 }
 
