@@ -88,7 +88,10 @@ inline void Program::init_source() {
         fregs[i] = 0.;
     }
 
+    // stack pointer
     xregs[2] = memory_size;
+    
+    // heap pointer
     xregs[3] = instructions.size()*4;
 
     text_data_section = instructions.size()*4;

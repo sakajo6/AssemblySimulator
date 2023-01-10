@@ -6,8 +6,8 @@
 class BranchPrediction {
     private: 
         int siz;
-        int branchCnt;
-        int branchHit;
+        unsigned long long branchCnt;
+        unsigned long long branchHit;
 
         std::bitset<32> globalhistory;
         std::vector<int> BranchHistoryTable;
