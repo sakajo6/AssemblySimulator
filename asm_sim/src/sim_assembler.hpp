@@ -8,15 +8,24 @@
 #include "sim_instruction.hpp"
 #include "sim_machinecode.hpp"
 
+enum OpeAssert {
+    OK,
+    Reg0Err,
+    Reg1Err,
+    Reg2Err,
+    ImmErr,
+    MemoryOutOfRange,
+};
+
 class Assembler {
     private:
-        void set_machine_R(std::bitset<32> *);
-        void set_machine_sqrt(std::bitset<32> *);
-        void set_machine_I(std::bitset<32> *);
-        void set_machine_S(std::bitset<32> *);
-        void set_machine_B(std::bitset<32> *);
-        void set_machine_U(std::bitset<32> *);
-        void set_machine_J(std::bitset<32> *);
+        OpeAssert set_machine_R(std::bitset<32> *);
+        OpeAssert set_machine_sqrt(std::bitset<32> *);
+        OpeAssert set_machine_I(std::bitset<32> *);
+        OpeAssert set_machine_S(std::bitset<32> *);
+        OpeAssert set_machine_B(std::bitset<32> *);
+        OpeAssert set_machine_U(std::bitset<32> *);
+        OpeAssert set_machine_J(std::bitset<32> *);
 
         Opcode opcode;
         int reg0, reg1, reg2, imm;
@@ -40,7 +49,7 @@ class Assembler {
             fp = fp_;
             fpdebug = fpdebug_;
         }
-        void assemble(int, bool);
+        OpeAssert assemble(int, bool);
 };
 
 inline void Assembler::assemble_debug(std::bitset<32> mcode){
@@ -64,10 +73,10 @@ inline void Assembler::assemble_debug(std::bitset<32> mcode){
     fprintf(fpdebug, "%s\n", s.substr(30, 2).c_str());
 }
 
-inline void Assembler::set_machine_R(std::bitset<32> *mcode){
-    assert(reg0 >= 0 && reg0 < 32);
-    assert(reg1 >= 0 && reg1 < 32);
-    assert(reg2 >= 0 && reg2 < 32);
+inline OpeAssert Assembler::set_machine_R(std::bitset<32> *mcode){
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
+    if (reg2 < 0 || reg2 >= 32) return Reg2Err;
 
     fprintf(fpdebug, "\nR: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
@@ -89,11 +98,13 @@ inline void Assembler::set_machine_R(std::bitset<32> *mcode){
     *mcode |= std::bitset<32>(reg0) << 7;
 
     assemble_debug(*mcode);
+
+    return OK;
 }
 
-inline void Assembler::set_machine_sqrt(std::bitset<32> *mcode) {
-    assert(reg0 >= 0 && reg0 < 32);
-    assert(reg1 >= 0 && reg1 < 32);
+inline OpeAssert Assembler::set_machine_sqrt(std::bitset<32> *mcode) {
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
 
     fprintf(fpdebug, "\nsqrt: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
@@ -110,11 +121,14 @@ inline void Assembler::set_machine_sqrt(std::bitset<32> *mcode) {
     *mcode |= std::bitset<32>(reg0) << 7;
 
     assemble_debug(*mcode);
+
+    return OK;
 }
 
-inline void Assembler::set_machine_I(std::bitset<32> *mcode) { 
-    assert(reg0 >= 0 && reg0 < 32);
-    assert(reg1 >= 0 && reg1 < 32);
+inline OpeAssert Assembler::set_machine_I(std::bitset<32> *mcode) { 
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
+    if (imm < -(1 << 11) || imm > (1 << 11) - 1) return ImmErr;
 
     fprintf(fpdebug, "\nI: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
@@ -136,11 +150,14 @@ inline void Assembler::set_machine_I(std::bitset<32> *mcode) {
     *mcode |= std::bitset<32>(reg0) << 7;
 
     assemble_debug(*mcode);
+
+    return OK;
 }
 
-inline void Assembler::set_machine_S(std::bitset<32> *mcode) {
-    assert(reg0 >= 0 && reg0 < 32);
-    assert(reg1 >= 0 && reg1 < 32);
+inline OpeAssert Assembler::set_machine_S(std::bitset<32> *mcode) {
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
+    if (imm < -(1 << 11) || imm > (1 << 11) - 1) return ImmErr;
 
     fprintf(fpdebug, "\nS: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
@@ -167,11 +184,14 @@ inline void Assembler::set_machine_S(std::bitset<32> *mcode) {
     *mcode |= (std::bitset<32>(imm % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1);
 
     assemble_debug(*mcode);
+
+    return OK;
 }
 
-inline void Assembler::set_machine_B(std::bitset<32> *mcode) {
-    assert(reg0 >= 0 && reg0 < 32);
-    assert(reg1 >= 0 && reg1 < 32);
+inline OpeAssert Assembler::set_machine_B(std::bitset<32> *mcode) {
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
+    if (imm < -(1 << 12) || imm > (1 << 12) - 1) return ImmErr;
 
     fprintf(fpdebug, "\nB: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
@@ -198,10 +218,13 @@ inline void Assembler::set_machine_B(std::bitset<32> *mcode) {
     *mcode |= (std::bitset<32>((imm >> 1) % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1);  
 
     assemble_debug(*mcode);
+
+    return OK;
 }
 
-inline void Assembler::set_machine_U(std::bitset<32> *mcode) {
-    assert(reg0 >= 0 && reg0 < 32);
+inline OpeAssert Assembler::set_machine_U(std::bitset<32> *mcode) {
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if ((long int)imm < -((long int)1 << 31) || (long int)imm > ((long int)1 << 31) - 1) return ImmErr;
 
     fprintf(fpdebug, "\nU: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
@@ -218,10 +241,13 @@ inline void Assembler::set_machine_U(std::bitset<32> *mcode) {
     *mcode |= std::bitset<32>(reg0) << 7;
 
     assemble_debug(*mcode);
+
+    return OK;
 }
 
-inline void Assembler::set_machine_J(std::bitset<32> *mcode) {
-    assert(reg0 >= 0 && reg0 < 32);
+inline OpeAssert Assembler::set_machine_J(std::bitset<32> *mcode) {
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (imm < -(1 << 20) || imm > (1 << 20) - 1) return ImmErr;
 
     fprintf(fpdebug, "\nJ: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
@@ -238,62 +264,65 @@ inline void Assembler::set_machine_J(std::bitset<32> *mcode) {
     *mcode |= std::bitset<32>(reg0) << 7;
 
     assemble_debug(*mcode);
+
+    return OK;
 }
 
-inline void Assembler::assemble(int pc, bool veriflag) {
+inline OpeAssert Assembler::assemble(int pc, bool veriflag) {
     if (veriflag) fprintf(fp, "mem[13'd%d] <= 32'b", pc/4);
     
     std::bitset<32> ret_machine;
+    OpeAssert ret = OK;
     if (opcode < 50) {
         switch(opcode) {
             case Add: 
-                ret_machine = add_machine; set_machine_R(&ret_machine); break;
+                ret_machine = add_machine; ret = set_machine_R(&ret_machine); break;
             case Sub:
-                ret_machine = sub_machine; set_machine_R(&ret_machine); break;
+                ret_machine = sub_machine; ret = set_machine_R(&ret_machine); break;
             case Slt: 
-                ret_machine = slt_machine; set_machine_R(&ret_machine); break;
+                ret_machine = slt_machine; ret = set_machine_R(&ret_machine); break;
             case Mul: 
-                ret_machine = mul_machine; set_machine_R(&ret_machine); break;
+                ret_machine = mul_machine; ret = set_machine_R(&ret_machine); break;
             case Div: 
-                ret_machine = div_machine; set_machine_R(&ret_machine); break;
+                ret_machine = div_machine; ret = set_machine_R(&ret_machine); break;
             case Fadd:
-                ret_machine = fadd_machine; set_machine_R(&ret_machine); break;
+                ret_machine = fadd_machine; ret = set_machine_R(&ret_machine); break;
             case Fsub:
-                ret_machine = fsub_machine; set_machine_R(&ret_machine); break;
+                ret_machine = fsub_machine; ret = set_machine_R(&ret_machine); break;
             case Fmul:
-                ret_machine = fmul_machine; set_machine_R(&ret_machine); break;
+                ret_machine = fmul_machine; ret = set_machine_R(&ret_machine); break;
             case Fdiv:
-                ret_machine = fdiv_machine; set_machine_R(&ret_machine); break;
+                ret_machine = fdiv_machine; ret = set_machine_R(&ret_machine); break;
             case Feq:
-                ret_machine = feq_machine; set_machine_R(&ret_machine); break;
+                ret_machine = feq_machine; ret = set_machine_R(&ret_machine); break;
             case Fle:
-                ret_machine = fle_machine; set_machine_R(&ret_machine); break;
+                ret_machine = fle_machine; ret = set_machine_R(&ret_machine); break;
             case Flw: 
-                ret_machine = flw_machine; set_machine_I(&ret_machine); break;
+                ret_machine = flw_machine; ret = set_machine_I(&ret_machine); break;
             case Fsw: 
-                ret_machine = fsw_machine; set_machine_S(&ret_machine); break;
+                ret_machine = fsw_machine; ret = set_machine_S(&ret_machine); break;
             case Fsqrt: 
-                ret_machine = fsqrt_machine; set_machine_sqrt(&ret_machine); break;
+                ret_machine = fsqrt_machine; ret = set_machine_sqrt(&ret_machine); break;
             case Addi:
-                ret_machine = addi_machine; set_machine_I(&ret_machine); break;
+                ret_machine = addi_machine; ret = set_machine_I(&ret_machine); break;
             case Ori: 
-                ret_machine = ori_machine; set_machine_I(&ret_machine); break;
+                ret_machine = ori_machine; ret = set_machine_I(&ret_machine); break;
             case Jalr: 
-                ret_machine = jalr_machine; set_machine_I(&ret_machine); break;
+                ret_machine = jalr_machine; ret = set_machine_I(&ret_machine); break;
             case Lw:     
-                ret_machine = lw_machine; set_machine_I(&ret_machine); break;
+                ret_machine = lw_machine; ret = set_machine_I(&ret_machine); break;
             case Sw:
-                ret_machine = sw_machine; set_machine_S(&ret_machine); break;
+                ret_machine = sw_machine; ret = set_machine_S(&ret_machine); break;
             case Beq: 
-                ret_machine = beq_machine; set_machine_B(&ret_machine); break;
+                ret_machine = beq_machine; ret = set_machine_B(&ret_machine); break;
             case Ble:
-                ret_machine = ble_machine; set_machine_B(&ret_machine); break;
+                ret_machine = ble_machine; ret = set_machine_B(&ret_machine); break;
             case Bge: 
-                ret_machine = bge_machine; set_machine_B(&ret_machine); break;            
+                ret_machine = bge_machine; ret = set_machine_B(&ret_machine); break;            
             case Jal:
-                ret_machine = jal_machine; set_machine_J(&ret_machine); break;
+                ret_machine = jal_machine; ret = set_machine_J(&ret_machine); break;
             case Lui: 
-                ret_machine = lui_machine; set_machine_U(&ret_machine); break;
+                ret_machine = lui_machine; ret = set_machine_U(&ret_machine); break;
         }
     }
     else if (opcode < 60) {
@@ -306,8 +335,7 @@ inline void Assembler::assemble(int pc, bool veriflag) {
     }
 
     if (pc < 0 || pc >= memory_size) {
-        std::cerr << "error: memory outof range. address = " << pc << std::endl;
-        exit(1);        
+        return MemoryOutOfRange;
     }
     memory.at(pc).i = (unsigned int)(ret_machine.to_ulong());
     if (veriflag) {
@@ -317,4 +345,6 @@ inline void Assembler::assemble(int pc, bool veriflag) {
     else {
         fprintf(fp, "%08x\n", (unsigned int)memory.at(pc).i);
     }
+
+    return ret;
 }

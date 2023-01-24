@@ -21,7 +21,7 @@ bool veriflag;
 const int memory_size = 400000000; // アドレスなので実際のアドレスの4倍
 int text_data_section = 0;
 union U {
-  int i;
+  unsigned int i;
   float f;
 };
 std::vector<U> memory(memory_size);
