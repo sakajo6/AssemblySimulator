@@ -124,17 +124,29 @@ inline void Program::callAssembler() {
         Instruction curinst = instructions[i];
         Assembler tempAsm(curinst, fp, fpdebug);
         OpeAssert asmRet = tempAsm.assemble(i*4, veriflag);
-        if (asmRet != OK) {
-            std::cout << "\t\033[33m[warning]\033[m ";
-            if (curinst.filenameIdx == -1) std::cout << "entrypoint, line " << curinst.line << "\t";
-            else std::cout << input_files[curinst.filenameIdx] << ", line " << curinst.line << "\t";
-            globalfun::print_inst(stdout, curinst);
-            std::cout << "\t";
-            if (asmRet == Reg0Err) std::cout << "Reg0 is not between 0 - 31" << std::endl;
-            else if (asmRet == Reg1Err) std::cout << "Reg1 is not between 0 - 31" << std::endl;
-            else if (asmRet == Reg2Err) std::cout << "Reg2 is not between 0 - 31" << std::endl;
-            else if (asmRet == ImmErr) std::cout << "Immediate value is out of range" << std::endl;
-            else if (asmRet == MemoryOutOfRange) std::cout << "PC is out of memory" << std::endl;
+        
+        // Operand assertion
+        if (asmRet != OK && curinst.opcode != Lui && curinst.opcode != Ori) {
+            if (asmRet == ImmOverflow || asmRet == ImmOmission) {
+                std::cout << "\t\033[33m[warning]\033[m ";
+                if (curinst.filenameIdx == -1) std::cout << "entrypoint, line " << curinst.line << "\t";
+                else std::cout << input_files[curinst.filenameIdx] << ", line " << curinst.line << "\t";
+                globalfun::print_inst(stdout, curinst);
+                std::cout << "\t";
+                if (asmRet == ImmOverflow) std::cout << "Immediate value is out of range" << std::endl;
+                else if (asmRet == ImmOmission) std::cout << "Immediate value is ommitted during assembling" << std::endl;
+            }
+            else {
+                std::cout << "\t\033[31m[error]\033[m ";
+                if (curinst.filenameIdx == -1) std::cout << "entrypoint, line " << curinst.line << "\t";
+                else std::cout << input_files[curinst.filenameIdx] << ", line " << curinst.line << "\t";
+                globalfun::print_inst(stdout, curinst);
+                std::cout << "\t";
+                if (asmRet == Reg0Err) std::cout << "Reg0 is not between 0 - 31" << std::endl;
+                else if (asmRet == Reg1Err) std::cout << "Reg1 is not between 0 - 31" << std::endl;
+                else if (asmRet == Reg2Err) std::cout << "Reg2 is not between 0 - 31" << std::endl;
+                else if (asmRet == MemoryOutOfRange) std::cout << "PC is out of memory" << std::endl;
+            }
         }
     }
 

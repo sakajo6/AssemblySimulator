@@ -13,7 +13,8 @@ enum OpeAssert {
     Reg0Err,
     Reg1Err,
     Reg2Err,
-    ImmErr,
+    ImmOverflow,
+    ImmOmission,
     MemoryOutOfRange,
 };
 
@@ -74,10 +75,6 @@ inline void Assembler::assemble_debug(std::bitset<32> mcode){
 }
 
 inline OpeAssert Assembler::set_machine_R(std::bitset<32> *mcode){
-    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
-    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
-    if (reg2 < 0 || reg2 >= 32) return Reg2Err;
-
     fprintf(fpdebug, "\nR: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
@@ -99,13 +96,13 @@ inline OpeAssert Assembler::set_machine_R(std::bitset<32> *mcode){
 
     assemble_debug(*mcode);
 
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
+    if (reg2 < 0 || reg2 >= 32) return Reg2Err;
     return OK;
 }
 
 inline OpeAssert Assembler::set_machine_sqrt(std::bitset<32> *mcode) {
-    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
-    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
-
     fprintf(fpdebug, "\nsqrt: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
@@ -122,14 +119,12 @@ inline OpeAssert Assembler::set_machine_sqrt(std::bitset<32> *mcode) {
 
     assemble_debug(*mcode);
 
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
     return OK;
 }
 
 inline OpeAssert Assembler::set_machine_I(std::bitset<32> *mcode) { 
-    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
-    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
-    if (imm < -(1 << 11) || imm > (1 << 11) - 1) return ImmErr;
-
     fprintf(fpdebug, "\nI: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
@@ -151,14 +146,13 @@ inline OpeAssert Assembler::set_machine_I(std::bitset<32> *mcode) {
 
     assemble_debug(*mcode);
 
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
+    if (imm < -(1 << 11) || imm > (1 << 11) - 1) return ImmOverflow;
     return OK;
 }
 
 inline OpeAssert Assembler::set_machine_S(std::bitset<32> *mcode) {
-    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
-    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
-    if (imm < -(1 << 11) || imm > (1 << 11) - 1) return ImmErr;
-
     fprintf(fpdebug, "\nS: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
@@ -185,14 +179,13 @@ inline OpeAssert Assembler::set_machine_S(std::bitset<32> *mcode) {
 
     assemble_debug(*mcode);
 
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
+    if (imm < -(1 << 11) || imm > (1 << 11) - 1) return ImmOverflow;
     return OK;
 }
 
 inline OpeAssert Assembler::set_machine_B(std::bitset<32> *mcode) {
-    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
-    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
-    if (imm < -(1 << 12) || imm > (1 << 12) - 1) return ImmErr;
-
     fprintf(fpdebug, "\nB: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
@@ -219,13 +212,14 @@ inline OpeAssert Assembler::set_machine_B(std::bitset<32> *mcode) {
 
     assemble_debug(*mcode);
 
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
+    if (imm < -(1 << 12) || imm > (1 << 12) - 1) return ImmOverflow;
+    if (imm % 2 != 0) return ImmOmission;
     return OK;
 }
 
 inline OpeAssert Assembler::set_machine_U(std::bitset<32> *mcode) {
-    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
-    if ((long int)imm < -((long int)1 << 31) || (long int)imm > ((long int)1 << 31) - 1) return ImmErr;
-
     fprintf(fpdebug, "\nU: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
@@ -242,13 +236,13 @@ inline OpeAssert Assembler::set_machine_U(std::bitset<32> *mcode) {
 
     assemble_debug(*mcode);
 
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if ((long int)imm < -((long int)1 << 31) || (long int)imm > ((long int)1 << 31) - 1) return ImmOverflow;
+    if (imm % (1 << 12) != 0) return ImmOmission;
     return OK;
 }
 
 inline OpeAssert Assembler::set_machine_J(std::bitset<32> *mcode) {
-    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
-    if (imm < -(1 << 20) || imm > (1 << 20) - 1) return ImmErr;
-
     fprintf(fpdebug, "\nJ: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
@@ -265,6 +259,9 @@ inline OpeAssert Assembler::set_machine_J(std::bitset<32> *mcode) {
 
     assemble_debug(*mcode);
 
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (imm < -(1 << 20) || imm > (1 << 20) - 1) return ImmOverflow;
+    if (imm % 2 != 0) return ImmOmission;
     return OK;
 }
 
