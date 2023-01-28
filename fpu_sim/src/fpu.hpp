@@ -25,8 +25,8 @@ class FPU {
 
 inline ull FPU::bit(ull d, ull m, ull l) {
     ull ret = d;
-    ret <<= 63 - m;
-    ret >>= 63 + l - m;
+    ret <<= (63 - m);
+    ret >>= (63 + l - m);
 
     return ret;
 }
@@ -159,7 +159,6 @@ inline U FPU::fadd(U x1_u, U x2_u) {
         (bit(myd, 2, 2) == 1) ? 23 :
         (bit(myd, 1, 1) == 1) ? 24 :
         (bit(myd, 0, 0) == 1) ? 25 : 26;
-
     se = bit(se, 4, 0);
 
     // #17

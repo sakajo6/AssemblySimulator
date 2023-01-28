@@ -1,14 +1,15 @@
-#include "./fpu_check.hpp"
+#include "./fpu_test.hpp"
 
 int main() {
     int N;
     std::cin >> N;
 
-    FPU_check fpu_check;
+    FPU_test fpu_test;
 
-    fpu_check.fadd(N);
-    fpu_check.fsub(N);
-    fpu_check.fmul(N);
-    fpu_check.finv();
-    fpu_check.fsqrt();
+    fpu_test.fadd(N);
+    fpu_test.fsub(N);
+    fpu_test.fmul(N);
+    // fpu_test.finv();
+    // fpu_test.fdiv(N);
+    // fpu_test.fsqrt();
 }
