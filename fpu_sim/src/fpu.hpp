@@ -13,20 +13,20 @@ typedef long long int sll;
 
 class FPU {
     private:
-        U finv(U);
+        ull bit(ull, ull, ull); // done
     public:
-        ull bit(ull, ull, ull);
-        U fadd(U, U);
-        U fsub(U, U);
-        U fmul(U, U);
-        U fdiv(U, U);
-        U fsqrt(U);
+        U finv(U);      // new
+        U fadd(U, U);   // done
+        U fsub(U, U);   // done
+        U fmul(U, U);   // done
+        U fdiv(U, U);   // new
+        U fsqrt(U);     // new
 };
 
 inline ull FPU::bit(ull d, ull m, ull l) {
     ull ret = d;
-    ret /= ((ull)1 << l);
-    ret %= ((ull)1 << (m + 1));
+    ret <<= 63 - m;
+    ret >>= 63 + l - m;
 
     return ret;
 }
@@ -222,7 +222,7 @@ inline U FPU::fadd(U x1_u, U x2_u) {
 
 inline U FPU::fsub(U x1_u, U x2_u) {
     // yの符号反転. faddで計算
-    ull x2 = x2_u;
+    ull x2 = x2_u.i;
 
     ull minus_x2_31 = ~bit(x2, 31, 31);
     ull minus_x2_30_0 = bit(x2, 30, 0);
@@ -230,13 +230,66 @@ inline U FPU::fsub(U x1_u, U x2_u) {
     ull minus_x2 = bit((minus_x2_31 << 31) + minus_x2_30_0, 31, 0);
     x2_u.i = (unsigned int)minus_x2;
 
-    return fadd(x1, x2);
+    return fadd(x1_u, x2_u);
 }
 
-inline U FPU::fmul(U x, U y) {
-    // 頑張ってエミュレート
+inline U FPU::fmul(U x1_u, U x2_u) {
+    ull x1 = x1_u.i;
+    ull x2 = x2_u.i;
+
+    ull s1, s2;
+    ull e1, e2; // 7:0
+    ull mh1, mh2; // 12:0
+    ull ml1, ml2; // 10:0
+
+    s1 = bit(x1, 31, 31);
+    s2 = bit(x2, 31, 31);
+    e1 = bit(x1, 30, 23);
+    e2 = bit(x2, 30, 23);
+    mh1 = ((ull)1 << 12) + bit(x1, 22, 11);
+    mh2 = ((ull)1 << 12) + bit(x2, 22, 11);
+    ml1 = bit(x1, 10, 0);
+    ml2 = bit(x2, 10, 0);
+
+    ull hh; // 26:0
+    ull hl; // 24:0
+    ull lh; // 24:0
+    hh = bit(mh1 * mh2, 26, 0);
+    hl = bit(mh1 * ml2, 24, 0);
+    lh = bit(ml1 * mh2, 24, 0);
+
+    ull sy;
+    sy = s1 ^ s2;
+
+    ull ey_sub; // 8:0
+    ey_sub = bit(e1 + e2 + 129, 8, 0);
+
+    ull my_sub; // 27:0
+    ull hl_2, lh_2; // 13:0
+    hl_2 = bit(hl >> 11, 13, 0);
+    lh_2 = bit(lh >> 11, 13, 0);
+    my_sub = bit(hh + hl_2 + lh_2, 27, 0);   // 精度の都合上 +2 が必要かも
+
+    ull ey_sub_2; // 8:0
+    ey_sub_2 = bit(ey_sub + 1, 8, 0);
+
+    ull ey; // 7:0
+    ey = bit(~ey_sub, 8, 8)   ? 0 : 
+        bit(bit(my_sub, 25, 25), 0, 0)   ? bit(ey_sub_2, 7, 0) : bit(ey_sub, 7, 0);
+    ey = bit(ey, 7, 0);
+
+    ull my; // 22:0
+    my = bit(my_sub, 27, 27) ? bit(my_sub, 26, 4) :
+        bit(my_sub, 26, 26) ? bit(my_sub, 25, 3) :
+        bit(my_sub, 25, 25) ? bit(my_sub, 24, 2) : bit(my_sub, 23, 1);
+
+    ull y;  // 31:0
+    y = (e1 == 0 || e2 == 0) ? 0 : (sy << 31) + (ey << 23) + my;
+    y = bit(y, 31, 0);
 
     U ret;
+    ret.i = (unsigned int)y;
+
     return ret;
 }
 
