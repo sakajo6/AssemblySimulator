@@ -205,16 +205,21 @@ inline OpeAssert Assembler::set_machine_B(std::bitset<32> *mcode) {
     assemble_debug(std::bitset<32>(imm));
     assemble_debug((std::bitset<32>((imm >> 1) % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1));
 
+    fprintf(fpdebug, "%d\n", imm);
+    assemble_debug(std::bitset<32>(imm));
+    assemble_debug((std::bitset<32>(imm) >> 13) & std::bitset<32>((1 << 2) - 1));
+
     *mcode |= std::bitset<32>(imm >> 6) << 25;
     *mcode |= std::bitset<32>(reg1) << 20;
     *mcode |= std::bitset<32>(reg0) << 15;
     *mcode |= (std::bitset<32>((imm >> 1) % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1);  
+    *mcode |= (std::bitset<32>(imm) >> 13) & std::bitset<32>((1 << 2) - 1);
 
     assemble_debug(*mcode);
 
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
     if (reg1 < 0 || reg1 >= 32) return Reg1Err;
-    if (imm < -(1 << 12) || imm > (1 << 12) - 1) return ImmOverflow;
+    if (imm < -(1 << 14) || imm > (1 << 14) - 1) return ImmOverflow;
     if (imm % 2 != 0) return ImmOmission;
     return OK;
 }
