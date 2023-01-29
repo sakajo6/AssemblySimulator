@@ -23,6 +23,7 @@ class Assembler {
         OpeAssert set_machine_R(std::bitset<32> *);
         OpeAssert set_machine_sqrt(std::bitset<32> *);
         OpeAssert set_machine_I(std::bitset<32> *);
+        OpeAssert set_machine_addi(std::bitset<32> *);
         OpeAssert set_machine_S(std::bitset<32> *);
         OpeAssert set_machine_B(std::bitset<32> *);
         OpeAssert set_machine_U(std::bitset<32> *);
@@ -149,6 +150,46 @@ inline OpeAssert Assembler::set_machine_I(std::bitset<32> *mcode) {
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
     if (reg1 < 0 || reg1 >= 32) return Reg1Err;
     if (imm < -(1 << 11) || imm > (1 << 11) - 1) return ImmOverflow;
+    return OK;
+}
+
+inline OpeAssert Assembler::set_machine_addi(std::bitset<32> *mcode) { 
+    fprintf(fpdebug, "\naddi: %s\n", opcode_to_string[opcode].c_str());
+    assemble_debug(*mcode);
+
+    fprintf(fpdebug, "%d\n", imm);
+    assemble_debug(std::bitset<32>(imm));
+    assemble_debug(std::bitset<32>(imm) << 20);
+
+    fprintf(fpdebug, "%d\n", reg1);
+    assemble_debug(std::bitset<32>(reg1));
+    assemble_debug(std::bitset<32>(reg1) << 15);
+
+    fprintf(fpdebug, "%d\n", reg0);
+    assemble_debug(std::bitset<32>(reg0));
+    assemble_debug(std::bitset<32>(reg0) << 7);
+
+    // imm[16:15] -> [6:5]
+    fprintf(fpdebug, "%d\n", imm);
+    assemble_debug(std::bitset<32>(imm));
+    assemble_debug((std::bitset<32>((imm >> 15) % (1 << 2)) << 5) & std::bitset<32>((1 << 7) - 1));
+
+    // imm[14:12] -> [2:0]
+    fprintf(fpdebug, "%d\n", imm);
+    assemble_debug(std::bitset<32>(imm));
+    assemble_debug(std::bitset<32>((imm >> 12) % (1 << 3)) & std::bitset<32>((1 << 3) - 1));
+
+    *mcode |= std::bitset<32>(imm) << 20;
+    *mcode |= std::bitset<32>(reg1) << 15;
+    *mcode |= std::bitset<32>(reg0) << 7;
+    *mcode |= (std::bitset<32>((imm >> 15) % (1 << 2)) << 5) & std::bitset<32>((1 << 7) - 1);
+    *mcode |= std::bitset<32>((imm >> 12) % (1 << 3)) & std::bitset<32>((1 << 3) - 1);
+
+    assemble_debug(*mcode);
+
+    if (reg0 < 0 || reg0 >= 32) return Reg0Err;
+    if (reg1 < 0 || reg1 >= 32) return Reg1Err;
+    if (imm < -(1 << 16) || imm > (1 << 16) - 1) return ImmOverflow;
     return OK;
 }
 
@@ -306,7 +347,7 @@ inline OpeAssert Assembler::assemble(int pc, bool veriflag) {
             case Fsqrt: 
                 ret_machine = fsqrt_machine; ret = set_machine_sqrt(&ret_machine); break;
             case Addi:
-                ret_machine = addi_machine; ret = set_machine_I(&ret_machine); break;
+                ret_machine = addi_machine; ret = set_machine_addi(&ret_machine); break;
             case Ori: 
                 ret_machine = ori_machine; ret = set_machine_I(&ret_machine); break;
             case Jalr: 
