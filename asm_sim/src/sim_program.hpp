@@ -20,6 +20,10 @@
 #include "sim_branch_prediction.hpp"
 #endif
 
+#ifdef PROD
+#include "sim_fpu.hpp"
+#endif
+
 class Program {
     private:
         int pc;
@@ -43,6 +47,10 @@ class Program {
         Cache instCache;
         Cache dataCache;
         BranchPrediction bp;
+        #endif
+
+        #ifdef PROD
+        FPU fpu;
         #endif
 
         std::string print_int_with_comma(long long int);
@@ -425,7 +433,16 @@ inline void Program::exec() {
                     else {
                         switch(opcode) {
                             case Beq: if (xregs[curinst.reg0] == xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
-                            case Fsub: fregs[curinst.reg0] = fregs[curinst.reg1] - fregs[curinst.reg2]; pc+=4; break;
+                            case Fsub: {
+                                #ifdef PROD
+                                U f1, f2;
+                                f1.f = fregs[curinst.reg1];
+                                f2.f = fregs[curinst.reg2];
+                                fregs[curinst.reg0] = fpu.fsub(f1, f2).f; pc += 4; break;
+                                #else
+                                fregs[curinst.reg0] = fregs[curinst.reg1] - fregs[curinst.reg2]; pc+=4; break;
+                                #endif
+                            }
                         }
                     }
                 }
@@ -434,7 +451,16 @@ inline void Program::exec() {
                     // 12 - 13
                     if (opcode < 14) {                  
                         switch(opcode) { 
-                            case Fadd: fregs[curinst.reg0] = fregs[curinst.reg1] + fregs[curinst.reg2]; pc+=4; break;
+                            case Fadd: {
+                                #ifdef PROD
+                                U f1, f2;
+                                f1.f = fregs[curinst.reg1];
+                                f2.f = fregs[curinst.reg2];
+                                fregs[curinst.reg0] = fpu.fadd(f1, f2).f; pc += 4; break;
+                                #else
+                                fregs[curinst.reg0] = fregs[curinst.reg1] + fregs[curinst.reg2]; pc+=4; break;
+                                #endif
+                            }
                             case Fsw: 
                                 {   
                                     int addr = xregs[curinst.reg1] + curinst.imm;
@@ -450,7 +476,16 @@ inline void Program::exec() {
                     else {
                         switch(opcode) {
                             case Fle: if (fregs[curinst.reg1] <= fregs[curinst.reg2]) { xregs[curinst.reg0] = 1;} else {xregs[curinst.reg0] = 0;}; pc+=4; break;
-                            case Fmul: fregs[curinst.reg0] = fregs[curinst.reg1] * fregs[curinst.reg2]; pc+=4; break;
+                            case Fmul: {
+                                #ifdef PROD
+                                U f1, f2;
+                                f1.f = fregs[curinst.reg1];
+                                f2.f = fregs[curinst.reg2];
+                                fregs[curinst.reg0] = fpu.fmul(f1, f2).f; pc += 4; break;
+                                #else
+                                fregs[curinst.reg0] = fregs[curinst.reg1] * fregs[curinst.reg2]; pc+=4; break;
+                                #endif
+                            }
                         }
                     }
                 }
