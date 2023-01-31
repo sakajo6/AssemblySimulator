@@ -475,7 +475,7 @@ inline void Program::exec() {
                     // 14 - 15
                     else {
                         switch(opcode) {
-                            case Fle: if (fregs[curinst.reg1] <= fregs[curinst.reg2]) {pc += curinst.imm;} else {pc+=4;} break;
+                            case Fle: if (fregs[curinst.reg0] <= fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
                             case Fmul: {
                                 #ifdef PROD
                                 U f1, f2;
@@ -504,7 +504,7 @@ inline void Program::exec() {
                 // 18 - 19
                 else {
                     switch(opcode) {
-                        case Feq: if (fregs[curinst.reg1] == fregs[curinst.reg2]) {pc += curinst.imm;} else {pc+=4;} break;
+                        case Feq: if (fregs[curinst.reg0] == fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
                         case Fdiv: fregs[curinst.reg0] = fregs[curinst.reg1] / fregs[curinst.reg2]; pc+=4; break;
                     }
                 }
