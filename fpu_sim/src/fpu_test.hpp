@@ -26,12 +26,12 @@ class FPU_test {
         void error1(std::string, U, U, U);     
         void error2(std::string, U, U, U, U);     
 
-        std::pair<bool, U> spec_fadd(U, U, U);
-        std::pair<bool, U> spec_fsub(U, U, U);
-        std::pair<bool, U> spec_fmul(U, U, U);
-        std::pair<bool, U> spec_fdiv(U, U, U);
-        // std::pair<bool, U> spec_finv(U, U);    
-        std::pair<bool, U> spec_fsqrt(U, U);   
+        void spec_fadd(U, U, U);
+        void spec_fsub(U, U, U);
+        void spec_fmul(U, U, U);
+        void spec_fdiv(U, U, U);
+        // void spec_finv(U, U);    
+        void spec_fsqrt(U, U);   
 
     public: 
         FPU_test() {
@@ -95,7 +95,7 @@ inline U FPU_test::float_gen() {
     return ret;
 }
 
-inline std::pair<bool, U> FPU_test::spec_fadd(U x_u, U y_u, U z_u) {
+inline void FPU_test::spec_fadd(U x_u, U y_u, U z_u) {
     long double x = (long double)x_u.f;
     long double y = (long double)y_u.f;
 
@@ -108,18 +108,21 @@ inline std::pair<bool, U> FPU_test::spec_fadd(U x_u, U y_u, U z_u) {
 
     if (x <= -bin_p_127 || bin_p_127 <= x
         || y <= -bin_p_127 || bin_p_127 <= y
-        || r <= -bin_p_127 || bin_p_127 <= r) return std::make_pair(true, w);
+        || r <= -bin_p_127 || bin_p_127 <= r) return;
 
     long double d = fabs(z - r);
     if (d < fabs(x)*bin_m_23 
         || d < fabs(y)*bin_m_23
         || d < fabs(r)*bin_m_23
-        || d < bin_m_126) return std::make_pair(true, w);
+        || d < bin_m_126) return;
 
-    return std::make_pair(false, w);
+
+    error2("fadd:", x_u, y_u, z_u, w);
+
+    return;
 }
 
-inline std::pair<bool, U> FPU_test::spec_fsub(U x_u, U y_u, U z_u) {
+inline void FPU_test::spec_fsub(U x_u, U y_u, U z_u) {
     long double x = (long double)x_u.f;
     long double y = (long double)y_u.f;
 
@@ -132,18 +135,20 @@ inline std::pair<bool, U> FPU_test::spec_fsub(U x_u, U y_u, U z_u) {
 
     if (x <= -bin_p_127 || bin_p_127 <= x
         || y <= -bin_p_127 || bin_p_127 <= y
-        || r <= -bin_p_127 || bin_p_127 <= r) return std::make_pair(true, w);
+        || r <= -bin_p_127 || bin_p_127 <= r) return;
 
     long double d = fabs(z - r);
     if (d < fabs(x)*bin_m_23 
         || d < fabs(y)*bin_m_23
         || d < fabs(r)*bin_m_23
-        || d < bin_m_126) return std::make_pair(true, w);
+        || d < bin_m_126) return;
 
-    return std::make_pair(false, w);
+    error2("fsub: ", x_u, y_u, z_u, w);    
+
+    return;
 }
 
-inline std::pair<bool, U> FPU_test::spec_fmul(U x_u, U y_u, U z_u) {
+inline void FPU_test::spec_fmul(U x_u, U y_u, U z_u) {
     long double x = (long double)x_u.f;
     long double y = (long double)y_u.f;
 
@@ -156,16 +161,18 @@ inline std::pair<bool, U> FPU_test::spec_fmul(U x_u, U y_u, U z_u) {
 
     if (x <= -bin_p_127 || bin_p_127 <= x
         || y <= -bin_p_127 || bin_p_127 <= y
-        || r <= -bin_p_127 || bin_p_127 <= r) return std::make_pair(true, w);
+        || r <= -bin_p_127 || bin_p_127 <= r) return;
 
     long double d = fabs(z - r);
     if (d < fabs(r)*bin_m_22
-        || d < bin_m_126) return std::make_pair(true, w);
+        || d < bin_m_126) return;
 
-    return std::make_pair(false, w);
+    error2("fmul: ", x_u, y_u, z_u, w);
+
+    return;
 }
 
-// inline std::pair<bool, U> FPU_test::spec_finv(U x_u, U z_u) {
+// inline void FPU_test::spec_finv(U x_u, U z_u) {
 //     long double x = (long double)x_u.f;
 
 //     long double z = (long double)z_u.f;
@@ -176,16 +183,18 @@ inline std::pair<bool, U> FPU_test::spec_fmul(U x_u, U y_u, U z_u) {
 //     w.f = (float)r;
 
 //     if (x <= -bin_p_127 || bin_p_127 <= x
-//         || r <= -bin_p_127 || bin_p_127 <= r) return std::make_pair(true, w);
+//         || r <= -bin_p_127 || bin_p_127 <= r) return;
 
 //     long double d = fabs(z - r);
 //     if (d < fabs(r)*bin_m_20
-//         || d < bin_m_126) return std::make_pair(true, w);
+//         || d < bin_m_126) return;
 
-//     return std::make_pair(false, w);
+//     error1("finv: ", x_u, z_u, w);
+
+//     return;
 // }
 
-inline std::pair<bool, U> FPU_test::spec_fdiv(U x_u, U y_u, U z_u) {
+inline void FPU_test::spec_fdiv(U x_u, U y_u, U z_u) {
     long double x = (long double)x_u.f;
     long double y = (long double)y_u.f;
 
@@ -198,16 +207,18 @@ inline std::pair<bool, U> FPU_test::spec_fdiv(U x_u, U y_u, U z_u) {
 
     if (x <= -bin_p_127 || bin_p_127 <= x
         || y <= -bin_p_127 || bin_p_127 <= y
-        || r <= -bin_p_127 || bin_p_127 <= r) return std::make_pair(true, w);
+        || r <= -bin_p_127 || bin_p_127 <= r) return;
 
     long double d = fabs(z - r);
     if (d < fabs(r)*bin_m_20
-        || d < bin_m_126) return std::make_pair(true, w);
+        || d < bin_m_126) return;
 
-    return std::make_pair(false, w);
+    error2("fdiv: ", x_u, y_u, z_u, w);
+
+    return;
 }
 
-inline std::pair<bool, U> FPU_test::spec_fsqrt(U x_u, U z_u) {
+inline void FPU_test::spec_fsqrt(U x_u, U z_u) {
     long double x = (long double)x_u.f;
 
     long double z = (long double)z_u.f;
@@ -218,13 +229,15 @@ inline std::pair<bool, U> FPU_test::spec_fsqrt(U x_u, U z_u) {
     w.f = (float)r;
 
     if (x <= -bin_p_127 || bin_p_127 <= x
-        || r <= -bin_p_127 || bin_p_127 <= r) return std::make_pair(true, w);
+        || r <= -bin_p_127 || bin_p_127 <= r) return;
 
     long double d = fabs(z - r);
     if (d < fabs(r)*bin_m_20
-        || d < bin_m_126) return std::make_pair(true, w);
+        || d < bin_m_126) return;
 
-    return std::make_pair(false, w);
+    error1("fsqrt: ", x_u, z_u, w);
+
+    return;
 }
 
 inline void FPU_test::fadd_test(int N) {
@@ -240,12 +253,7 @@ inline void FPU_test::fadd_test(int N) {
         y = float_gen();
         z = fpu.fadd(x, y);
 
-        ret = spec_fadd(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fadd: 0", x, y, z, w);
-        }
+        spec_fadd(x, y, z);
     }
 
     // x == 0 && y != 0
@@ -254,12 +262,7 @@ inline void FPU_test::fadd_test(int N) {
         y = float_gen();
         z = fpu.fadd(x, y);
 
-        ret = spec_fadd(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fadd: 1", x, y, z, w);
-        }
+        spec_fadd(x, y, z);
     }
 
     // x != 0 && y == 0
@@ -268,12 +271,7 @@ inline void FPU_test::fadd_test(int N) {
         y.i = 0;
         z = fpu.fadd(x, y);
 
-        ret = spec_fadd(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fadd: 2", x, y, z, w);
-        }
+        spec_fadd(x, y, z);
     }
 
     std::cout << "[log] fadd test passed!!" << std::endl;
@@ -292,12 +290,7 @@ inline void FPU_test::fsub_test(int N) {
         y = float_gen();
         z = fpu.fsub(x, y);
 
-        ret = spec_fsub(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fsub: 0", x, y, z, w);
-        }
+        spec_fsub(x, y, z);
     }
 
     // x == 0 && y != 0
@@ -306,12 +299,7 @@ inline void FPU_test::fsub_test(int N) {
         y = float_gen();
         z = fpu.fsub(x, y);
 
-        ret = spec_fsub(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fsub: 1", x, y, z, w);
-        }
+        spec_fsub(x, y, z);
     }
 
     // x != 0 && y == 0
@@ -320,12 +308,7 @@ inline void FPU_test::fsub_test(int N) {
         y.i = 0;
         z = fpu.fsub(x, y);
 
-        ret = spec_fsub(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fsub: 2", x, y, z, w);
-        }
+        spec_fsub(x, y, z);
     }
 
     std::cout << "[log] fsub test passed!!" << std::endl;
@@ -344,12 +327,7 @@ inline void FPU_test::fmul_test(int N) {
         y = float_gen();
         z = fpu.fmul(x, y);
 
-        ret = spec_fmul(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fmul: 0", x, y, z, w);
-        }
+        spec_fmul(x, y, z);
     }
 
     // x == 0 && y != 0
@@ -358,12 +336,7 @@ inline void FPU_test::fmul_test(int N) {
         y = float_gen();
         z = fpu.fmul(x, y);
 
-        ret = spec_fmul(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fmul: 1", x, y, z, w);
-        }
+        spec_fmul(x, y, z);
     }
 
     // x != 0 && y == 0
@@ -372,12 +345,7 @@ inline void FPU_test::fmul_test(int N) {
         y.i = 0;
         z = fpu.fmul(x, y);
 
-        ret = spec_fmul(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fmul: 2", x, y, z, w);
-        }
+        spec_fmul(x, y, z);
     }
 
     std::cout << "[log] fmul test passed!!" << std::endl;
@@ -398,12 +366,7 @@ inline void FPU_test::fmul_test(int N) {
 //                 x.i = (s << 31) + (e << 23) + m;
 //                 z = fpu.finv(x);
 
-//                 ret = spec_finv(x, z);
-//                 flag = ret.first;
-//                 w = ret.second;
-//                 if (!flag) {
-//                     error1("finv", x, z, w);
-//                 }
+//                 spec_finv(x, z);
 //             }
 //         }
 //     }
@@ -424,12 +387,7 @@ inline void FPU_test::fdiv_test(int N) {
         y = float_gen();
         z = fpu.fdiv(x, y);
 
-        ret = spec_fdiv(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fdiv: 0", x, y, z, w);
-        }
+        spec_fdiv(x, y, z);
     }
 
     // x == 0 && y != 0
@@ -438,12 +396,7 @@ inline void FPU_test::fdiv_test(int N) {
         y = float_gen();
         z = fpu.fdiv(x, y);
 
-        ret = spec_fdiv(x, y, z);
-        flag = ret.first;
-        w = ret.second;
-        if (!flag) {
-            error2("fdiv: 1", x, y, z, w);
-        }
+        spec_fdiv(x, y, z);
     }
 
     std::cout << "[log] fdiv test passed" << std::endl;
@@ -464,12 +417,7 @@ inline void FPU_test::fsqrt_test() {
             x.i = (s << 31) + (e << 23) + m;
             z = fpu.fsqrt(x);
 
-            ret = spec_fsqrt(x, z);
-            flag = ret.first;
-            w = ret.second;
-            if (!flag) {
-                error1("fsqrt: 0", x, z, w);
-            }
+            spec_fsqrt(x, z);
         }
     }
 
@@ -477,12 +425,7 @@ inline void FPU_test::fsqrt_test() {
     x.i = 0;
     z = fpu.fsqrt(x);
 
-    ret = spec_fsqrt(x, z);
-    flag = ret.first;
-    w = ret.second;
-    if (!flag) {
-        error1("fsqrt: 1", x, z, w);
-    }
+    spec_fsqrt(x, z);
 
     std::cout << "[log] fsqrt test passed" << std::endl;
 }
