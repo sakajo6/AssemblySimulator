@@ -323,15 +323,13 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
     ull y_s = bit(x1, 31, 31) ^ bit(x2, 31, 31);
 
     ull x1_f = ((ull)0b01111111 << 23) + bit(x1, 22, 0);
-    ull x2_f = ((ull)0b01111111 << 23) + bit(x2, 22, 0);
 
     ull y_e = bit(x1, 30, 23) - bit(x2, 30, 23);
 
-    U x1_f_u, x2_f_u;
+    U x1_f_u;
     x1_f_u.i = (unsigned int)x1_f;
-    x2_f_u.i = (unsigned int)x2_f;
 
-    U x3_u = finv(x2_f_u);
+    U x3_u = finv(x2_u);
     ull x4 = fmul(x1_f_u, x3_u).i;
 
     ull y = (y_s << 31) + (bit((y_e + bit(x4, 30, 23)), 7, 0) << 23) + bit(x4, 22, 0);
