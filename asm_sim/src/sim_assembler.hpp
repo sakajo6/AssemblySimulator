@@ -337,9 +337,9 @@ inline OpeAssert Assembler::assemble(int pc, bool veriflag) {
             case Fdiv:
                 ret_machine = fdiv_machine; ret = set_machine_R(&ret_machine); break;
             case Feq:
-                ret_machine = feq_machine; ret = set_machine_R(&ret_machine); break;
+                ret_machine = feq_machine; ret = set_machine_B(&ret_machine); break;
             case Fle:
-                ret_machine = fle_machine; ret = set_machine_R(&ret_machine); break;
+                ret_machine = fle_machine; ret = set_machine_B(&ret_machine); break;
             case Flw: 
                 ret_machine = flw_machine; ret = set_machine_I(&ret_machine); break;
             case Fsw: 
