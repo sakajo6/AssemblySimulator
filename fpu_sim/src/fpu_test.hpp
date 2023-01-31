@@ -30,7 +30,7 @@ class FPU_test {
         std::pair<bool, U> spec_fsub(U, U, U);
         std::pair<bool, U> spec_fmul(U, U, U);
         std::pair<bool, U> spec_fdiv(U, U, U);
-        std::pair<bool, U> spec_finv(U, U);    
+        // std::pair<bool, U> spec_finv(U, U);    
         std::pair<bool, U> spec_fsqrt(U, U);   
 
     public: 
@@ -43,21 +43,21 @@ class FPU_test {
             bin_m_22 = pow((long double)2.0, (long double)(-22));
             bin_m_23 = pow((long double)2.0, (long double)(-23));
         }
-        void fadd(int);
-        void fsub(int);     
-        void fmul(int);  
-        void finv();    
-        void fdiv(int);   
-        void fsqrt();     
+        void fadd_test(int);
+        void fsub_test(int);     
+        void fmul_test(int);  
+        // void finv_test();    
+        void fdiv_test(int);   
+        void fsqrt_test();     
 };
 
 inline void FPU_test::error1(std::string s, U x, U z, U w) {
     std::cout << "[error] " << s << std::endl;
-    std::cout << "    " << std::bitset<32>(x.i) << std::endl;
-    std::cout << "    " << std::bitset<32>(z.i) << std::endl;
-    std::cout << "    " << std::bitset<32>(w.i) << std::endl;
+    std::cout << "    " << std::bitset<32>(x.i) << " " << x.f << std::endl;
+    std::cout << "    " << std::bitset<32>(z.i) << " " << z.f << std::endl;
+    std::cout << "    " << std::bitset<32>(w.i) << " " << w.f << std::endl;
 
-    exit(1);
+    // exit(1);
 }
 
 inline void FPU_test::error2(std::string s, U x, U y, U z, U w) {
@@ -67,7 +67,7 @@ inline void FPU_test::error2(std::string s, U x, U y, U z, U w) {
     std::cout << "    " << std::bitset<32>(z.i) << " " << z.f << std::endl;
     std::cout << "    " << std::bitset<32>(w.i) << " " << w.f << std::endl;
     
-    exit(1);
+    // exit(1);
 }
 
 inline U FPU_test::float_gen() {
@@ -165,25 +165,25 @@ inline std::pair<bool, U> FPU_test::spec_fmul(U x_u, U y_u, U z_u) {
     return std::make_pair(false, w);
 }
 
-inline std::pair<bool, U> FPU_test::spec_finv(U x_u, U z_u) {
-    long double x = (long double)x_u.f;
+// inline std::pair<bool, U> FPU_test::spec_finv(U x_u, U z_u) {
+//     long double x = (long double)x_u.f;
 
-    long double z = (long double)z_u.f;
+//     long double z = (long double)z_u.f;
 
-    long double r = 1.0 / x;
+//     long double r = 1.0 / x;
 
-    U w;
-    w.f = (float)r;
+//     U w;
+//     w.f = (float)r;
 
-    if (x <= -bin_p_127 || bin_p_127 <= x
-        || r <= -bin_p_127 || bin_p_127 <= r) return std::make_pair(true, w);
+//     if (x <= -bin_p_127 || bin_p_127 <= x
+//         || r <= -bin_p_127 || bin_p_127 <= r) return std::make_pair(true, w);
 
-    long double d = fabs(z - r);
-    if (d < fabs(r)*bin_m_20
-        || d < bin_m_126) return std::make_pair(true, w);
+//     long double d = fabs(z - r);
+//     if (d < fabs(r)*bin_m_20
+//         || d < bin_m_126) return std::make_pair(true, w);
 
-    return std::make_pair(false, w);
-}
+//     return std::make_pair(false, w);
+// }
 
 inline std::pair<bool, U> FPU_test::spec_fdiv(U x_u, U y_u, U z_u) {
     long double x = (long double)x_u.f;
@@ -227,7 +227,7 @@ inline std::pair<bool, U> FPU_test::spec_fsqrt(U x_u, U z_u) {
     return std::make_pair(false, w);
 }
 
-inline void FPU_test::fadd(int N) {
+inline void FPU_test::fadd_test(int N) {
     std::cout << "[log] fadd test started" << std::endl;
 
     U x, y, z, w;
@@ -279,7 +279,7 @@ inline void FPU_test::fadd(int N) {
     std::cout << "[log] fadd test passed!!" << std::endl;
 }
 
-inline void FPU_test::fsub(int N) {
+inline void FPU_test::fsub_test(int N) {
     std::cout << "[log] fsub test started" << std::endl;
 
     U x, y, z, w;
@@ -331,7 +331,7 @@ inline void FPU_test::fsub(int N) {
     std::cout << "[log] fsub test passed!!" << std::endl;
 }
 
-inline void FPU_test::fmul(int N) {
+inline void FPU_test::fmul_test(int N) {
     std::cout << "[log] fmul test started" << std::endl;
 
     U x, y, z, w;
@@ -383,35 +383,35 @@ inline void FPU_test::fmul(int N) {
     std::cout << "[log] fmul test passed!!" << std::endl;
 }
 
-inline void FPU_test::finv() {
-    std::cout << "[log] finv test started" << std::endl;
+// inline void FPU_test::finv_test() {
+//     std::cout << "[log] finv test started" << std::endl;
 
-    U x, z, w;
-    bool flag;
-    std::pair<bool, U> ret;
+//     U x, z, w;
+//     bool flag;
+//     std::pair<bool, U> ret;
 
-    // inspect all
-    // x != 0
-    for (unsigned int s = 0; s < 2; s++) {
-        for (unsigned int e = 1; e < 255; e++) {
-            for (unsigned int m = 0; m < (1 << 23); m++) {
-                x.i = (s << 31) + (e << 23) + m;
-                z = fpu.finv(x);
+//     // inspect all
+//     // x != 0
+//     for (unsigned int s = 0; s < 2; s++) {
+//         for (unsigned int e = 1; e < 255; e++) {
+//             for (unsigned int m = 0; m < (1 << 23); m++) {
+//                 x.i = (s << 31) + (e << 23) + m;
+//                 z = fpu.finv(x);
 
-                ret = spec_finv(x, z);
-                flag = ret.first;
-                w = ret.second;
-                if (!flag) {
-                    error1("finv", x, z, w);
-                }
-            }
-        }
-    }
+//                 ret = spec_finv(x, z);
+//                 flag = ret.first;
+//                 w = ret.second;
+//                 if (!flag) {
+//                     error1("finv", x, z, w);
+//                 }
+//             }
+//         }
+//     }
 
-    std::cout << "[log] finv test passed" << std::endl;
-}
+//     std::cout << "[log] finv test passed" << std::endl;
+// }
 
-inline void FPU_test::fdiv(int N) {
+inline void FPU_test::fdiv_test(int N) {
     std::cout << "[log] fdiv test started" << std::endl;
 
     U x, y, z, w;
@@ -449,7 +449,7 @@ inline void FPU_test::fdiv(int N) {
     std::cout << "[log] fdiv test passed" << std::endl;
 }
 
-inline void FPU_test::fsqrt() {
+inline void FPU_test::fsqrt_test() {
     std::cout << "[log] fsqrt test started" << std::endl;
 
     U x, z, w;

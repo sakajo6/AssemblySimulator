@@ -351,7 +351,7 @@ inline void Program::exec() {
                                         #ifdef DEBUG
                                         Program::check_load(addr, pc);
                                         #endif
-                                        xregs[curinst.reg0] = memory.at(addr).i;
+                                        xregs[curinst.reg0] = (int)memory.at(addr).i;
                                     }
                                     pc += 4;
                                 } break;
@@ -388,7 +388,7 @@ inline void Program::exec() {
                                         #ifdef DEBUG
                                         Program::check_store(addr, pc);
                                         #endif
-                                        memory.at(addr).i = xregs[curinst.reg0];
+                                        memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
                                     }
                                     pc+=4;
                                 } break;

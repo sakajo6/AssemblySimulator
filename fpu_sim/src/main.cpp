@@ -6,10 +6,10 @@ int main() {
 
     FPU_test fpu_test;
 
-    fpu_test.fadd(N);
-    fpu_test.fsub(N);
-    fpu_test.fmul(N);
-    // fpu_test.finv();
-    // fpu_test.fdiv(N);
-    // fpu_test.fsqrt();
+    fpu_test.fadd_test(N);
+    fpu_test.fsub_test(N);
+    fpu_test.fmul_test(N);
+    // fpu_test.finv_test();
+    fpu_test.fdiv_test(N);
+    // fpu_test.fsqrt_test();
 }

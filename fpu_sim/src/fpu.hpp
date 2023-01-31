@@ -3,24 +3,25 @@
 #include <iostream>
 #include <bitset>
 
-union U {
-    unsigned int i;
-    float f;
-};
+#include "fpu_init.hpp"
 
 typedef unsigned long long int ull;
 typedef long long int sll;
 
 class FPU {
     private:
-        ull bit(ull, ull, ull); // done
+        ull bit(ull, ull, ull);
     public:
-        U finv(U);      // new
-        U fadd(U, U);   // done
-        U fsub(U, U);   // done
-        U fmul(U, U);   // done
-        U fdiv(U, U);   // new
-        U fsqrt(U);     // new
+        FPU() {
+            initfun::finv_init();
+            initfun::fsqrt_init();
+        }
+        U fadd(U, U);
+        U fsub(U, U);
+        U fmul(U, U);
+        U finv(U);
+        U fdiv(U, U);
+        U fsqrt(U);  
 };
 
 inline ull FPU::bit(ull d, ull m, ull l) {
@@ -28,13 +29,6 @@ inline ull FPU::bit(ull d, ull m, ull l) {
     ret <<= (63 - m);
     ret >>= (63 + l - m);
 
-    return ret;
-}
-
-inline U FPU::finv(U x) {
-    // fmul, fsubで計算
-
-    U ret;
     return ret;
 }
 
@@ -292,10 +286,58 @@ inline U FPU::fmul(U x1_u, U x2_u) {
     return ret;
 }
 
-inline U FPU::fdiv(U x, U y) {
-    // finv を用いて計算
+inline U FPU::finv(U x_u) {
+    ull x = x_u.i;
+
+    ull addr; // 9:0
+    addr = bit(x, 22, 13);
+
+    ull a; // 31:0
+    ull b; // 31:0
+    a = (ull)finv_A[addr].i;
+    b = (ull)finv_B[addr].i;
+
+    ull x_2; // 31:0
+    x_2 = (((ull)0b01111111) << 23) + bit(x, 22, 0);
+    x_2 = bit(x_2, 31, 0);
+    
+
+    U a_u, b_u, x_2_u;
+    a_u.i = a;
+    b_u.i = b;
+    x_2_u.i = x_2; 
+
+    U ax;
+    ax = fmul(a_u, x_2_u);
 
     U ret;
+    ret = fsub(b_u, ax);
+
+    return ret;
+}
+
+inline U FPU::fdiv(U x1_u, U x2_u) {
+    ull x1 = (ull)x1_u.i;
+    ull x2 = (ull)x2_u.i;
+
+    ull y_s = bit(x1, 31, 31) ^ bit(x2, 31, 31);
+
+    ull x1_f = ((ull)0b01111111 << 23) + bit(x1, 22, 0);
+    ull x2_f = ((ull)0b01111111 << 23) + bit(x2, 22, 0);
+
+    ull y_e = bit(x1, 30, 23) - bit(x2, 30, 23);
+
+    U x1_f_u, x2_f_u;
+    x1_f_u.i = (unsigned int)x1_f;
+    x2_f_u.i = (unsigned int)x2_f;
+
+    U x3_u = finv(x2_f_u);
+    ull x4 = fmul(x1_f_u, x3_u).i;
+
+    ull y = (y_s << 31) + (bit((y_e + bit(x4, 30, 23)), 7, 0) << 23) + bit(x4, 22, 0);
+
+    U ret;
+    ret.i = (unsigned int)y;
     return ret;
 }
 
