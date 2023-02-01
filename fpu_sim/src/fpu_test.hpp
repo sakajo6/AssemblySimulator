@@ -15,8 +15,10 @@ class FPU_test {
     private:
         FPU fpu;
 
+        long double bin_p_31;
         long double bin_p_127;
         long double bin_m_126;
+        long double bin_m_18;
         long double bin_m_20;
         long double bin_m_22;
         long double bin_m_23;
@@ -37,8 +39,10 @@ class FPU_test {
         FPU_test() {
             std::cout << std::setprecision(25) << std::endl;
 
+            bin_p_31 = pow((long double)2.0, (long double)31);
             bin_p_127 = pow((long double)2.0, (long double)127);
             bin_m_126 = pow((long double)2.0, (long double)(-126));
+            bin_m_18 = pow((long double)2.0, (long double)(-18));
             bin_m_20 = pow((long double)2.0, (long double)(-20));
             bin_m_22 = pow((long double)2.0, (long double)(-22));
             bin_m_23 = pow((long double)2.0, (long double)(-23));
@@ -48,7 +52,7 @@ class FPU_test {
         void fmul_test(int);  
         // void finv_test();    
         void fdiv_test(int);   
-        void fsqrt_test();     
+        void fsqrt_test();    
 };
 
 inline void FPU_test::error1(std::string s, U x, U z, U w) {
@@ -98,9 +102,7 @@ inline U FPU_test::float_gen() {
 inline void FPU_test::spec_fadd(U x_u, U y_u, U z_u) {
     long double x = (long double)x_u.f;
     long double y = (long double)y_u.f;
-
     long double z = (long double)z_u.f;
-
     long double r = x + y;
 
     U w;
@@ -125,9 +127,7 @@ inline void FPU_test::spec_fadd(U x_u, U y_u, U z_u) {
 inline void FPU_test::spec_fsub(U x_u, U y_u, U z_u) {
     long double x = (long double)x_u.f;
     long double y = (long double)y_u.f;
-
     long double z = (long double)z_u.f;
-
     long double r = x - y;
 
     U w;
@@ -151,9 +151,7 @@ inline void FPU_test::spec_fsub(U x_u, U y_u, U z_u) {
 inline void FPU_test::spec_fmul(U x_u, U y_u, U z_u) {
     long double x = (long double)x_u.f;
     long double y = (long double)y_u.f;
-
     long double z = (long double)z_u.f;
-
     long double r = x * y;
 
     U w;
@@ -174,9 +172,7 @@ inline void FPU_test::spec_fmul(U x_u, U y_u, U z_u) {
 
 // inline void FPU_test::spec_finv(U x_u, U z_u) {
 //     long double x = (long double)x_u.f;
-
 //     long double z = (long double)z_u.f;
-
 //     long double r = 1.0 / x;
 
 //     U w;
@@ -197,9 +193,7 @@ inline void FPU_test::spec_fmul(U x_u, U y_u, U z_u) {
 inline void FPU_test::spec_fdiv(U x_u, U y_u, U z_u) {
     long double x = (long double)x_u.f;
     long double y = (long double)y_u.f;
-
     long double z = (long double)z_u.f;
-
     long double r = x / y;
 
     U w;
@@ -220,9 +214,7 @@ inline void FPU_test::spec_fdiv(U x_u, U y_u, U z_u) {
 
 inline void FPU_test::spec_fsqrt(U x_u, U z_u) {
     long double x = (long double)x_u.f;
-
     long double z = (long double)z_u.f;
-
     long double r = sqrt(x);
 
     U w;
@@ -243,9 +235,7 @@ inline void FPU_test::spec_fsqrt(U x_u, U z_u) {
 inline void FPU_test::fadd_test(int N) {
     std::cout << "[log] fadd test started" << std::endl;
 
-    U x, y, z, w;
-    bool flag;
-    std::pair<bool, U> ret;
+    U x, y, z;
 
     // x != 0 && y != 0
     for (int i = 0; i < N; i++) {
@@ -280,9 +270,7 @@ inline void FPU_test::fadd_test(int N) {
 inline void FPU_test::fsub_test(int N) {
     std::cout << "[log] fsub test started" << std::endl;
 
-    U x, y, z, w;
-    bool flag;
-    std::pair<bool, U> ret;
+    U x, y, z;
 
     // x != 0 && y != 0
     for (int i = 0; i < N; i++) {
@@ -317,9 +305,7 @@ inline void FPU_test::fsub_test(int N) {
 inline void FPU_test::fmul_test(int N) {
     std::cout << "[log] fmul test started" << std::endl;
 
-    U x, y, z, w;
-    bool flag;
-    std::pair<bool, U> ret;
+    U x, y, z;
 
     // x != 0 && y != 0
     for (int i = 0; i < N; i++) {
@@ -354,9 +340,7 @@ inline void FPU_test::fmul_test(int N) {
 // inline void FPU_test::finv_test() {
 //     std::cout << "[log] finv test started" << std::endl;
 
-//     U x, z, w;
-//     bool flag;
-//     std::pair<bool, U> ret;
+//     U x, z;
 
 //     // inspect all
 //     // x != 0
@@ -371,15 +355,13 @@ inline void FPU_test::fmul_test(int N) {
 //         }
 //     }
 
-//     std::cout << "[log] finv test passed" << std::endl;
+//     std::cout << "[log] finv test passed!!" << std::endl;
 // }
 
 inline void FPU_test::fdiv_test(int N) {
     std::cout << "[log] fdiv test started" << std::endl;
 
-    U x, y, z, w;
-    bool flag;
-    std::pair<bool, U> ret;
+    U x, y, z;
 
     // x != 0 && y != 0
     for (int i = 0; i < N; i++) {
@@ -399,15 +381,13 @@ inline void FPU_test::fdiv_test(int N) {
         spec_fdiv(x, y, z);
     }
 
-    std::cout << "[log] fdiv test passed" << std::endl;
+    std::cout << "[log] fdiv test passed!!" << std::endl;
 }
 
 inline void FPU_test::fsqrt_test() {
     std::cout << "[log] fsqrt test started" << std::endl;
 
-    U x, z, w;
-    bool flag;
-    std::pair<bool, U> ret;
+    U x, z;
 
     // inspect all
     // x >= 0
@@ -427,5 +407,5 @@ inline void FPU_test::fsqrt_test() {
 
     spec_fsqrt(x, z);
 
-    std::cout << "[log] fsqrt test passed" << std::endl;
+    std::cout << "[log] fsqrt test passed!!" << std::endl;
 }
