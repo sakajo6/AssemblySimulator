@@ -10,12 +10,12 @@ int main() {
     // fpu_test.fsub_test(N);
     // fpu_test.fmul_test(N);
     // fpu_test.finv_test();
-    // fpu_test.fdiv_test(N);
+    fpu_test.fdiv_test(N);
     // fpu_test.fsqrt_test();
 
     FPU_soft_test fpu_soft_test;
 
     // fpu_soft_test.sin_test();
     // fpu_soft_test.cos_test();
-    fpu_soft_test.atan_test();
+    // fpu_soft_test.atan_test();
 }

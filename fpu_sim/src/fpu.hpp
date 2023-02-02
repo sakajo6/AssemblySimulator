@@ -320,11 +320,20 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
     ull x1 = (ull)x1_u.i;
     ull x2 = (ull)x2_u.i;
 
-    ull y_s = bit(x1, 31, 31) ^ bit(x2, 31, 31);
+    ull y_s;
+    y_s = bit(x1, 31, 31) ^ bit(x2, 31, 31);
 
-    ull x1_f = ((ull)0b01111111 << 23) + bit(x1, 22, 0);
+    ull x1_f; // 31:0
+    x1_f = ((ull)0b01111111 << 23) + bit(x1, 22, 0);
 
-    sll y_e = (sll)bit(x1, 30, 23) - (sll)bit(x2, 30, 23);
+    sll y_e_1; // 8:0
+    y_e_1 = (sll)bit(x1, 30, 23) - (sll)bit(x2, 30, 23);
+
+    sll j; // 8:0
+    j = y_e_1 + 126;
+
+    ull y_e_4; // 8:0
+    y_e_4 = (bit(j, 8, 8) << 8) + bit(y_e_1, 7, 0);
 
     U x1_f_u;
     x1_f_u.i = (unsigned int)x1_f;
@@ -332,7 +341,7 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
     U x3_u = finv(x2_u);
     ull x4 = fmul(x1_f_u, x3_u).i;
 
-    ull y = (y_s << 31) + (bit((y_e + (sll)bit(x4, 30, 23)), 7, 0) << 23) + bit(x4, 22, 0);
+    ull y = bit(y_e_4, 8, 8) ? 0 : (y_s << 31) + (bit((y_e_4 + bit(x4, 30, 23)), 7, 0) << 23) + bit(x4, 22, 0);
 
     U ret;
     ret.i = (unsigned int)y;
