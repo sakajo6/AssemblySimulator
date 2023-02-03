@@ -304,6 +304,7 @@ inline void Program::exec() {
     struct timespec start, end;
 
     // initialization
+    std::cout << "\n\033[32m[log]\033[m " << print_int_with_comma(instructions.size()) << " commands (" << print_int_with_comma(instructions.size() * 4) << " bytes)\n" << std::endl;
     Program::init_source();
 
     clock_gettime(CLOCK_REALTIME, &start);
