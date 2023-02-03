@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <cmath>
 #include <math.h>
+#include <time.h>
 #include <string>
 #include <cassert>
 
@@ -39,6 +40,7 @@ class FPU_soft_test {
 
     public: 
         FPU_soft_test() {
+            srand(time(NULL));
             std::cout << std::setprecision(25) << std::endl;
 
             pi = 3.1415926535897932384626433832795028841971;

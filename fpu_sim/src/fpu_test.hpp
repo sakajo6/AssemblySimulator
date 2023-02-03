@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <cmath>
 #include <math.h>
+#include <time.h>
 #include <string>
 #include <cassert>
 
@@ -37,6 +38,7 @@ class FPU_test {
 
     public: 
         FPU_test() {
+            srand(time(NULL));
             std::cout << std::setprecision(25) << std::endl;
 
             bin_p_31 = pow((long double)2.0, (long double)31);
