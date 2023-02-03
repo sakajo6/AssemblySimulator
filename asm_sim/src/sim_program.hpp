@@ -503,7 +503,16 @@ inline void Program::exec() {
                 else {
                     switch(opcode) {
                         case Feq: if (fregs[curinst.reg0] == fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
-                        case Fdiv: fregs[curinst.reg0] = fregs[curinst.reg1] / fregs[curinst.reg2]; pc+=4; break;
+                        case Fdiv: {
+                            #ifdef PROD
+                            U f1, f2;
+                            f1.f = fregs[curinst.reg1];
+                            f2.f = fregs[curinst.reg2];
+                            fregs[curinst.reg0] = fpu.fdiv(f1, f2).f; pc += 4; break;
+                            #else
+                            fregs[curinst.reg0] = fregs[curinst.reg1] / fregs[curinst.reg2]; pc+=4; break;
+                            #endif
+                        }
                     }
                 }
             }
@@ -512,7 +521,15 @@ inline void Program::exec() {
                 // 20 - 21
                 if (opcode < 22) {
                     switch(opcode) {
-                        case Fsqrt: fregs[curinst.reg0] = sqrt(fregs[curinst.reg1]); pc+=4; break;
+                        case Fsqrt: {
+                            #ifdef PROD
+                            U f1;
+                            f1.f = fregs[curinst.reg1];
+                            fregs[curinst.reg0] = fpu.fsqrt(f1).f; pc += 4; break;
+                            #else
+                            fregs[curinst.reg0] = sqrt(fregs[curinst.reg1]); pc+=4; break;
+                            #endif
+                        }
                         case Div: xregs[curinst.reg0] = xregs[curinst.reg1] / xregs[curinst.reg2]; pc+=4; break;
                     }
                 }
