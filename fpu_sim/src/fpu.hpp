@@ -156,8 +156,8 @@ inline U FPU::fadd(U x1_u, U x2_u) {
     se = bit(se, 4, 0);
 
     // #17
-    sll eyf; // 8:0
-    eyf = (sll)bit(eyd, 7, 0) - (sll)bit(se, 4, 0);
+    ull eyf; // 8:0
+    eyf = bit(eyd, 7, 0) - bit(se, 4, 0);
     eyf = bit(eyf, 8, 0);
 
     // #18
@@ -320,11 +320,20 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
     ull x1 = (ull)x1_u.i;
     ull x2 = (ull)x2_u.i;
 
-    ull y_s = bit(x1, 31, 31) ^ bit(x2, 31, 31);
+    ull y_s;
+    y_s = bit(x1, 31, 31) ^ bit(x2, 31, 31);
 
-    ull x1_f = ((ull)0b01111111 << 23) + bit(x1, 22, 0);
+    ull x1_f; // 31:0
+    x1_f = ((ull)0b01111111 << 23) + bit(x1, 22, 0);
 
-    ull y_e = bit(x1, 30, 23) - bit(x2, 30, 23);
+    ull y_e_1; // 8:0
+    y_e_1 = bit(x1, 30, 23) - bit(x2, 30, 23);
+
+    ull j; // 8:0
+    j = y_e_1 + 126;
+
+    ull y_e_4; // 8:0
+    y_e_4 = (bit(j, 8, 8) << 8) + bit(y_e_1, 7, 0);
 
     U x1_f_u;
     x1_f_u.i = (unsigned int)x1_f;
@@ -332,14 +341,53 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
     U x3_u = finv(x2_u);
     ull x4 = fmul(x1_f_u, x3_u).i;
 
-    ull y = (y_s << 31) + (bit((y_e + bit(x4, 30, 23)), 7, 0) << 23) + bit(x4, 22, 0);
+    ull y;
+    y = (bit(x1, 30, 0) == 0) ? 0 :
+        (bit(y_e_4, 8, 8) ? 0 : (y_s << 31) + (bit((y_e_4 + bit(x4, 30, 23)), 7, 0) << 23) + bit(x4, 22, 0));
 
     U ret;
     ret.i = (unsigned int)y;
     return ret;
 }
 
-inline U FPU::fsqrt(U x) {
+inline U FPU::fsqrt(U x_u) {
+    ull x = x_u.i;
+
+    ull addr; // 10:0
+    addr = bit(x, 23, 13);
+
+    ull a; // 31:0
+    ull b; // 31:0
+    a = (ull)fsqrt_A[addr].i;
+    b = (ull)fsqrt_B[addr].i;
+
+    ull x_2; // 31:0
+    x_2 = bit(x, 23, 23) ? (0b01111111 << 23) + bit(x, 22, 0) : (0b10000000 << 23) + bit(x, 22, 0);
+
+    U x_2_u, a_u, b_u;
+    x_2_u.i = x_2;
+    a_u.i = a;
+    b_u.i = b;
+
+    U ax_u = fmul(x_2_u, a_u);
+    U y_f_u = fadd(b_u, ax_u);
+
+    ull ax = ax_u.i;
+    ull y_f = y_f_u.i;
+    
+    ull y_e; // 7:0
+    y_e = ((bit(x, 30, 23) - 1) >> 1) + 64;
+    y_e = bit(y_e, 7, 0);
+
+    ull x_e; // 7:0
+    x_e = bit(x, 30, 23);
+
+    ull y; // 31:0
+    y = x_e ?
+        (bit(y_f, 24, 23) == 0b11 ? (y_e << 23) + bit(y_f, 22, 0) :
+        (bit(y_f, 24, 23) == 0b10 ? ((y_e - 1) << 23) + bit(y_f, 22, 0) : ((y_e + 1) << 23) + bit(y_f, 22, 0))) : 0;
+
     U ret; 
+    ret.i = (unsigned int)y;
     return ret;
 }

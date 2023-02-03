@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func ReadFuncA() {
+func ReadFinvFuncA() {
 	filename := "finv_func_A.txt"
 
 	fp, err := os.Open(filename)
@@ -41,7 +41,7 @@ func ReadFuncA() {
 	fmt.Println()
 }
 
-func ReadFuncB() {
+func ReadFinvFuncB() {
 	filename := "finv_func_B.txt"
 
 	fp, err := os.Open(filename)
@@ -75,6 +75,6 @@ func ReadFuncB() {
 }
 
 func main() {
-	ReadFuncA()
-	ReadFuncB()
+	ReadFinvFuncA()
+	ReadFinvFuncB()
 }
