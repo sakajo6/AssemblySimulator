@@ -156,8 +156,8 @@ inline U FPU::fadd(U x1_u, U x2_u) {
     se = bit(se, 4, 0);
 
     // #17
-    sll eyf; // 8:0
-    eyf = (sll)bit(eyd, 7, 0) - (sll)bit(se, 4, 0);
+    ull eyf; // 8:0
+    eyf = bit(eyd, 7, 0) - bit(se, 4, 0);
     eyf = bit(eyf, 8, 0);
 
     // #18
@@ -326,10 +326,10 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
     ull x1_f; // 31:0
     x1_f = ((ull)0b01111111 << 23) + bit(x1, 22, 0);
 
-    sll y_e_1; // 8:0
-    y_e_1 = (sll)bit(x1, 30, 23) - (sll)bit(x2, 30, 23);
+    ull y_e_1; // 8:0
+    y_e_1 = bit(x1, 30, 23) - bit(x2, 30, 23);
 
-    sll j; // 8:0
+    ull j; // 8:0
     j = y_e_1 + 126;
 
     ull y_e_4; // 8:0
