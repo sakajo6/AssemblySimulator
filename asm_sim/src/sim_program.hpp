@@ -128,7 +128,7 @@ inline void Program::callAssembler() {
     for (int i = 0; i < n; i++) {
         Instruction curinst = instructions[i];
         Assembler tempAsm(curinst, fp, fpdebug);
-        OpeAssert asmRet = tempAsm.assemble(i*4, veriflag);
+        OpeAssert asmRet = tempAsm.assemble(i*4);
         
         // Operand assertion
         if (asmRet != OK && curinst.opcode != Lui && curinst.opcode != Ori) {

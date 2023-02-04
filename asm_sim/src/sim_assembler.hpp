@@ -51,7 +51,7 @@ class Assembler {
             fp = fp_;
             fpdebug = fpdebug_;
         }
-        OpeAssert assemble(int, bool);
+        OpeAssert assemble(int);
 };
 
 inline void Assembler::assemble_debug(std::bitset<32> mcode){
@@ -311,8 +311,7 @@ inline OpeAssert Assembler::set_machine_J(std::bitset<32> *mcode) {
     return OK;
 }
 
-inline OpeAssert Assembler::assemble(int pc, bool veriflag) {
-    if (veriflag) fprintf(fp, "mem[13'd%d] <= 32'b", pc/4);
+inline OpeAssert Assembler::assemble(int pc) {
     
     std::bitset<32> ret_machine;
     OpeAssert ret = OK;
@@ -381,13 +380,8 @@ inline OpeAssert Assembler::assemble(int pc, bool veriflag) {
         return MemoryOutOfRange;
     }
     memory.at(pc).i = (unsigned int)(ret_machine.to_ulong());
-    if (veriflag) {
-        std::string ret_machine_str = ret_machine.to_string();
-        fprintf(fp, "%s;\n", ret_machine_str.c_str());
-    }
-    else {
-        fprintf(fp, "%08x\n", (unsigned int)memory.at(pc).i);
-    }
+
+    fprintf(fp, "%08x\n", (unsigned int)memory.at(pc).i);
 
     return ret;
 }

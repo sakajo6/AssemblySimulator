@@ -433,26 +433,22 @@ inline void Reader::read_inputfiles(int argc, char const *argv[]) {
     char binoption[] = "--bin";
     char brkalloption[] = "--brkall";
     char brknonoption[] = "--brknon";
-    char verioption[] = "--veri";
 
     std::cout << "<<< runtime arguments:" << std::endl;
     std::cout << "\t\033[31m--bin:  \toutput register values in binary\033[m" << std::endl;
     std::cout << "\t\033[31m--brkall:\tassign break-pointer to all instructions\033[m" << std::endl;
     std::cout << "\t\033[31m--brknon:\tignore all break-pointer\033[m" << std::endl;
-    std::cout << "\t\033[31m--veri: \toutput binary in verilog style\033[m\n" << std::endl;
 
     std::cout << "<<< These are runtime arguments.\n" << std::endl;
 
     binflag = false;
     brkallflag = false;
     brknonflag = false;
-    veriflag = false;
 
     for(int i = 1; i < argc; i++) {
         if (strcmp(argv[i], binoption) == 0) binflag = true;
         else if (strcmp(argv[i], brkalloption) == 0) brkallflag = true;
         else if (strcmp(argv[i], brknonoption) == 0) brknonflag = true;
-        else if (strcmp(argv[i], verioption) == 0) veriflag = true;
         else {
             std::cerr << "<<< runtime parameters are invalid" << std::endl;
             exit(1);

@@ -9,7 +9,6 @@
 bool binflag;
 bool brkallflag;
 bool brknonflag;
-bool veriflag;
 
 /*
     memory info:
