@@ -1,6 +1,8 @@
 sim
 fpu
 mydir
+outputs
+diff_check.ppm
 input
 output
 comp

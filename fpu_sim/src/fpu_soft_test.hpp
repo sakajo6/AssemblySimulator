@@ -7,6 +7,8 @@
 #include <string>
 #include <cassert>
 
+#include <unistd.h>
+
 #include "./fpu_soft.hpp"
 
 
@@ -230,7 +232,7 @@ inline void FPU_soft_test::sin_test(int N) {
 
     for (int i = 0; i < N; i++) {
         x = float_gen();
-        while(fabs(x.f) >= 10.0) {
+        while(fabs(x.f) >= 100.0) {
             x = float_gen();
         }
         z = fpu.sin(x);
@@ -261,7 +263,7 @@ inline void FPU_soft_test::cos_test(int N) {
 
     for (int i = 0; i < N; i++) {
         x = float_gen();
-        while(fabs(x.f) >= 10.0) {
+        while(fabs(x.f) >= 100.0) {
             x = float_gen();
         }
         z = fpu.cos(x);

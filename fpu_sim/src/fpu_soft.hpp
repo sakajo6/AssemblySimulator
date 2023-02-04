@@ -57,33 +57,33 @@ inline int FPU_soft::reverse_flag(int x) {
 }
 
 inline float FPU_soft::sin_main(float x) {
-    float x2 = x * x;
-    float x3 = x * x2;
-
-    return  x - 0.16666668 * x3 + 0.008332824 * x2 * x3 - 0.00019587841 * x2 * x2 * x3;
-
     // float x2 = x * x;
+    // float x3 = x * x2;
 
-    // return ((((0.0000027557319 * x2 - 0.000198412698) * x2 + 0.0083333333) * x2 - 0.166666666) * x2 + 1) * x;
+    // return  x - 0.16666668 * x3 + 0.008332824 * x2 * x3 - 0.00019587841 * x2 * x2 * x3;
+
+    float x2 = x * x;
+
+    return ((((0.0000027557319 * x2 - 0.000198412698) * x2 + 0.0083333333) * x2 - 0.166666666) * x2 + 1) * x;
 }
 
 inline float FPU_soft::cos_main(float x) {
-    float x2 = x * x;
-    float x4 = x2 * x2;
-
-    return 1.0 - 0.5 * x2 + 0.04166368 * x4 - 0.0013695068 * x2 * x4;
-
     // float x2 = x * x;
+    // float x4 = x2 * x2;
 
-    // return ((((-0.00000027557319223 * x2 + 0.000024801587301) * x2 + -0.00138888888) * x2 + 0.041666666) * x2 + -0.5) * x2 + 1.0;
+    // return 1.0 - 0.5 * x2 + 0.04166368 * x4 - 0.0013695068 * x2 * x4;
+
+    float x2 = x * x;
+
+    return ((((-0.00000027557319223 * x2 + 0.000024801587301) * x2 + -0.00138888888) * x2 + 0.041666666) * x2 + -0.5) * x2 + 1.0;
 }
 
 inline float FPU_soft::sin(float x) {
     if (x < 0.0)            return -sin(-x);
-    else if (x >= pi2)      return sin(x - pi2);
+    else if (x >= pi2)      return sin(reduction_2pi(x));
     else if (x >= pi)       return -sin(x - pi);
-    else if (x > pihalf)    return sin(pi - x);
-    else if (x >= piquat)   return cos_main(pihalf - x);
+    else if (x >= pihalf)   return sin(pi - x);
+    else if (x > piquat)    return cos_main(pihalf - x);
     else                    return sin_main(x);
 
     // int flag = 0;   // 0: pos, 1: neg
@@ -118,7 +118,10 @@ inline float FPU_soft::sin(float x) {
 
 inline float FPU_soft::cos(float x) {
     if (x < 0.0)            return cos(-x);
-    else if (x > piquat)    return sin(pihalf - x);
+    else if (x >= pi2)      return cos(reduction_2pi(x));
+    else if (x >= pi)       return -cos(x - pi);
+    else if (x >= pihalf)   return -cos(pi - x);
+    else if (x > piquat)    return sin_main(pihalf - x);
     else                    return cos_main(x);
 
     // int flag = 0;   // 0: pos, 1: neg

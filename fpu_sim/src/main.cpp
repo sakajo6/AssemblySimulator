@@ -2,7 +2,7 @@
 #include "./fpu_soft_test.hpp"
 
 int main() {
-    int N = 1000000000;
+    int N = 100000000;
 
     FPU_test fpu_test;
 
@@ -14,9 +14,10 @@ int main() {
 
     FPU_soft_test fpu_soft_test;
 
-    // fabs(x) < 10
-    // fpu_soft_test.sin_test(N);    // fabs(x) < 10 -> x +-2pi, +-4pi
-    // fpu_soft_test.cos_test(N);    // fabs(x) < 10 -> x +-pihalf
+    // fabs(x) < 100
+    // sin, cosともに無限ループに入ることある？？
+    // fpu_soft_test.sin_test(N);    // fabs(x) < 100 -> x +-2pi * n
+    // fpu_soft_test.cos_test(N);    // fabs(x) < 100 -> x +-pihalf * n
 
     // fpu_soft_test.atan_test();   // ok(13次必要)
 
