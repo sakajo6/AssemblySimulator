@@ -44,6 +44,8 @@ func ReadPPMFile(filename string) *[]Color {
 	defer fp.Close()
 
 	scanner := bufio.NewScanner(fp)
+	scanner.Scan()
+	scanner.Scan()
 
 	ret := make([]Color, 0)
 	for scanner.Scan() {
@@ -79,7 +81,7 @@ func CheckDiff(answer, result *[]Color) (int, int) {
 	}
 	defer fp.Close()
 
-	_, err = fp.Write([]byte("P3\n256 256 255\n"))
+	_, err = fp.Write([]byte("P3\n128 128 255\n"))
 	if err != nil {
 		panic("[error] cannot write on diff_check.ppm")
 	}
@@ -115,11 +117,13 @@ func CheckDiff(answer, result *[]Color) (int, int) {
 }
 
 func main() {
-	var input, output string
-	fmt.Scan(&input)
+	var output, ppm string
+	fmt.Printf("correct ppm: ")
+	fmt.Scan(&ppm)
+	fmt.Printf("output ppm: ")
 	fmt.Scan(&output)
 
-	answer := ReadPPMFile(fmt.Sprintf("./ppm/%s.ppm", input))
+	answer := ReadPPMFile(fmt.Sprintf("./ppm/%s.ppm", ppm))
 	result := ReadPPMFile(fmt.Sprintf("./outputs/%s.ppm", output))
 
 	fatalDiff, smallDiff := CheckDiff(answer, result)
