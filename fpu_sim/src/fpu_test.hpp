@@ -3,7 +3,6 @@
 #include <iomanip>
 #include <cmath>
 #include <math.h>
-#include <time.h>
 #include <string>
 #include <cassert>
 
@@ -54,7 +53,7 @@ class FPU_test {
         void fmul_test(int);  
         // void finv_test();    
         void fdiv_test(int);   
-        void fsqrt_test();    
+        void fsqrt_test(int);    
 };
 
 inline void FPU_test::error1(std::string s, U x, U z, U w) {
@@ -386,10 +385,20 @@ inline void FPU_test::fdiv_test(int N) {
     std::cout << "[log] fdiv test passed!!" << std::endl;
 }
 
-inline void FPU_test::fsqrt_test() {
+inline void FPU_test::fsqrt_test(int N) {
     std::cout << "[log] fsqrt test started" << std::endl;
 
     U x, z;
+
+    // for (int i = 0; i < N; i++) {
+    //     x = float_gen();
+    //     while (x.f < 0.0) {
+    //         x = float_gen();
+    //     }
+    //     z = fpu.fsqrt(x);
+
+    //     spec_fsqrt(x, z);
+    // }
 
     // inspect all
     // x >= 0

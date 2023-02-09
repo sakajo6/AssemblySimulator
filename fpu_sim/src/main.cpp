@@ -10,7 +10,7 @@ int main() {
     // fpu_test.fsub_test(N);   // ok
     // fpu_test.fmul_test(N);   // ok
     // fpu_test.fdiv_test(N);   // x1 == 0の判定あり -> ok
-    // fpu_test.fsqrt_test();   // ng(誤差大. 2^(-12)には収まるが2^(-20)に収まる必要)
+    // fpu_test.fsqrt_test(N);   // ng(誤差大. 2^(-12)には収まるが2^(-20)に収まる必要)
 
     FPU_soft_test fpu_soft_test;
 

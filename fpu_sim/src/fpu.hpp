@@ -353,8 +353,8 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
 inline U FPU::fsqrt(U x_u) {
     ull x = x_u.i;
 
-    ull addr; // 10:0
-    addr = bit(x, 23, 13);
+    ull addr; // 9:0
+    addr = bit(x, 23, 14);
 
     ull a; // 31:0
     ull b; // 31:0
@@ -362,7 +362,7 @@ inline U FPU::fsqrt(U x_u) {
     b = (ull)fsqrt_B[addr].i;
 
     ull x_2; // 31:0
-    x_2 = bit(x, 23, 23) ? (0b01111111 << 23) + bit(x, 22, 0) : (0b10000000 << 23) + bit(x, 22, 0);
+    x_2 = bit(x, 23, 23) ? (0b001111111 << 23) + bit(x, 22, 0) : (0b010000000 << 23) + bit(x, 22, 0);
 
     U x_2_u, a_u, b_u;
     x_2_u.i = x_2;
@@ -384,8 +384,9 @@ inline U FPU::fsqrt(U x_u) {
 
     ull y; // 31:0
     y = x_e ?
+        (bit(y_f, 24, 23) == 0b10 ? ((y_e - 1) << 23) + bit(y_f, 22, 0):
         (bit(y_f, 24, 23) == 0b11 ? (y_e << 23) + bit(y_f, 22, 0) :
-        (bit(y_f, 24, 23) == 0b10 ? ((y_e - 1) << 23) + bit(y_f, 22, 0) : ((y_e + 1) << 23) + bit(y_f, 22, 0))) : 0;
+        (bit(y_f, 24, 23) == 0b00 ? ((y_e + 1) << 23) + bit(y_f, 22, 0) : ((y_e + 2) << 23) + bit(y_f, 22, 0)))) : 0;
 
     U ret; 
     ret.i = (unsigned int)y;
