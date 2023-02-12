@@ -74,9 +74,13 @@ class Program {
             input_files = {};
 
             #ifdef HARD
-            instCache = Cache(20, 7, 5, 2);
-            dataCache = Cache(20, 7, 5, 2);
+            // tag, index, offset, way
+            instCache = Cache(16, 10, 6, 2);
+            dataCache = Cache(15, 11, 6, 2);
+
+            // GHR_length, BW
             bp = BranchPrediction(10);
+            // bp = BranchPrediction(4, 10);
             #endif
 
             #ifdef STATS

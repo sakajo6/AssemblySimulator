@@ -25,8 +25,8 @@ class Cache {
         unsigned int storeCnt;
         unsigned int storeHit;
 
-        void updateAccessed(unsigned int idx);
-        unsigned int pseudoLRU(unsigned int idx);
+        void updateAccessed(unsigned int, int);
+        unsigned int pseudoLRU(unsigned int);
 
     public:
         Cache() {};
@@ -48,18 +48,22 @@ class Cache {
         void printStats(FILE *);
 };
 
-inline void Cache::updateAccessed(unsigned int idx) {
-    for(int i = 0; i < waySiz; i++) {
-        if (!cache[idx + i].accessed) return;
-    }
-    for(int i = 0; i < waySiz; i++) {
-        cache[idx + i].accessed = false;
-    }
+inline void Cache::updateAccessed(unsigned int idx, int hit_way) {
+    int another_way = 1 - hit_way;
+    cache[idx + hit_way].accessed = true;
+    cache[idx + another_way].accessed = false;
+
+    // for(int i = 0; i < waySiz; i++) {
+    //     if (!cache[idx + i].accessed) return;
+    // }
+    // for(int i = 0; i < waySiz; i++) {
+    //     cache[idx + i].accessed = false;
+    // }
 }
 
 inline unsigned int Cache::pseudoLRU(unsigned int index) {
     for(int i = 0; i < waySiz; i++) {
-        if (!cache[index + i].accessed) return index + i;
+        if (!cache[index + i].accessed) return i;
     }
 
     if (true) {
@@ -68,6 +72,7 @@ inline unsigned int Cache::pseudoLRU(unsigned int index) {
     return 0;
 }
 
+// flag: true -> load, false -> store
 inline void Cache::cacheAccess(unsigned int pc, bool flag) {
     unsigned int tag, index, offset;
     tag = pc >> (indexSiz + offsetSiz);
@@ -85,19 +90,19 @@ inline void Cache::cacheAccess(unsigned int pc, bool flag) {
             // hit
             if (cacheline.valid && tag == cacheline.tag) {
                 loadHit++;
-                cache[index + i].accessed = true;
 
-                updateAccessed(index);
+                Cache::updateAccessed(index, i);
 
                 return;
             }
         }
 
         // miss
-        unsigned int expIndex = Cache::pseudoLRU(index);
-        cache[expIndex] = CacheLine{true, false, true, tag};
+        unsigned int expway = Cache::pseudoLRU(index);
+        // accessed, dirty, valid, tag
+        cache[index + expway] = CacheLine{true, false, true, tag};
 
-        Cache::updateAccessed(index);
+        Cache::updateAccessed(index, expway);
     }
     // store
     else {
@@ -109,14 +114,16 @@ inline void Cache::cacheAccess(unsigned int pc, bool flag) {
             if (cacheline.valid && tag == cacheline.tag) {
                 storeHit++;
 
+                // accessed, dirty, valid, tag
                 cache[index + i] = CacheLine{false, true, true, tag};
                 return;
             }
         }
 
         // miss
-        unsigned int expIndex = Cache::pseudoLRU(index);
-        cache[expIndex] = CacheLine{false, true, true, tag};
+        unsigned int expway = Cache::pseudoLRU(index);
+        // accessed, dirty, valid, tag
+        cache[index + expway] = CacheLine{false, true, true, tag};
     }
 
     return;
