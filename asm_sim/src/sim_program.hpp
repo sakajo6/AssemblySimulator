@@ -79,8 +79,7 @@ class Program {
             dataCache = Cache(15, 11, 6, 2);
 
             // GHR_length, BW
-            bp = BranchPrediction(10);
-            // bp = BranchPrediction(4, 10);
+            bp = BranchPrediction(12);
             #endif
 
             #ifdef STATS
@@ -594,7 +593,7 @@ inline void Program::exec() {
         #endif 
 
         #ifdef HARD
-        bp.branchUpdate(pc_prev, pc);
+        bp.update(pc_prev, pc);
         #endif
 
         counter++;
