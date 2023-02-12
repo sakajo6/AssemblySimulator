@@ -384,9 +384,8 @@ inline U FPU::fsqrt(U x_u) {
 
     ull y; // 31:0
     y = x_e ?
-        (bit(y_f, 24, 23) == 0b10 ? ((y_e - 1) << 23) + bit(y_f, 22, 0):
         (bit(y_f, 24, 23) == 0b11 ? (y_e << 23) + bit(y_f, 22, 0) :
-        (bit(y_f, 24, 23) == 0b00 ? ((y_e + 1) << 23) + bit(y_f, 22, 0) : ((y_e + 2) << 23) + bit(y_f, 22, 0)))) : 0;
+        (bit(y_f, 24, 23) == 0b10 ? ((y_e - 1) << 23) + bit(y_f, 22, 0) : ((y_e + 1) << 23) + bit(y_f, 22, 0))) : 0;
 
     U ret; 
     ret.i = (unsigned int)y;

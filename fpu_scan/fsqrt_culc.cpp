@@ -56,17 +56,26 @@ int main() {
 
         fsqrt_A[addr] = a_u;
         fsqrt_B[addr] = b_u;
-
-        std::cout << a << " " << b << std::endl;
-        std::cout << x << " " << std::sqrt(x) << " " << x_0 << " " << b + a*x << std::endl;
     }
 
+    // // for .cpp
+    // for (int i = 0; i < 1024; i++) {
+    //     std::cout << "\t\tfsqrt_A[" << i << "].i = 0b" << std::bitset<32>(fsqrt_A[i].i).to_string() << ";" << std::endl;
+    // }
+
+    // for (int i = 0; i < 1024; i++) {
+    //     std::cout << "\t\tfsqrt_B[" << i << "].i = 0b" << std::bitset<32>(fsqrt_B[i].i).to_string() << ";" << std::endl;
+    // }
+
+    // for .sv
     for (int i = 0; i < 1024; i++) {
-        std::cout << "\t\tfsqrt_A[" << i << "].i = 0b" << std::bitset<32>(fsqrt_A[i].i).to_string() << ";" << std::endl;
+        std::cout << "      11'd" << i << ": A = 32'b" << std::bitset<32>(fsqrt_A[i].i).to_string() << ";\t//" << fsqrt_A[i].f << std::endl;
     }
 
+    std::cout << std::endl;
+
     for (int i = 0; i < 1024; i++) {
-        std::cout << "\t\tfsqrt_B[" << i << "].i = 0b" << std::bitset<32>(fsqrt_B[i].i).to_string() << ";" << std::endl;
+        std::cout << "      11'd" << i << ": B = 32'b" << std::bitset<32>(fsqrt_B[i].i).to_string() << ";\t//" << fsqrt_B[i].f << std::endl;
     }
 
     return 0;

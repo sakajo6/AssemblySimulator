@@ -30,11 +30,6 @@ inline ull FPU::bit(ull d, ull m, ull l) {
     return ret;
 }
 
-
-// inline U FPU::finv(U) {
-//     // fmul, fsubで計算
-// }
-
 inline U FPU::fadd(U x1_u, U x2_u) {
     ull x1 = x1_u.i;
     ull x2 = x2_u.i;
@@ -159,8 +154,8 @@ inline U FPU::fadd(U x1_u, U x2_u) {
     se = bit(se, 4, 0);
 
     // #17
-    sll eyf; // 8:0
-    eyf = (sll)bit(eyd, 7, 0) - (sll)bit(se, 4, 0);
+    ull eyf; // 8:0
+    eyf = bit(eyd, 7, 0) - bit(se, 4, 0);
     eyf = bit(eyf, 8, 0);
 
     // #18
@@ -356,8 +351,8 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
 inline U FPU::fsqrt(U x_u) {
     ull x = x_u.i;
 
-    ull addr; // 10:0
-    addr = bit(x, 23, 13);
+    ull addr; // 9:0
+    addr = bit(x, 23, 14);
 
     ull a; // 31:0
     ull b; // 31:0
@@ -365,7 +360,7 @@ inline U FPU::fsqrt(U x_u) {
     b = (ull)fsqrt_B[addr].i;
 
     ull x_2; // 31:0
-    x_2 = bit(x, 23, 23) ? (0b01111111 << 23) + bit(x, 22, 0) : (0b10000000 << 23) + bit(x, 22, 0);
+    x_2 = bit(x, 23, 23) ? (0b001111111 << 23) + bit(x, 22, 0) : (0b010000000 << 23) + bit(x, 22, 0);
 
     U x_2_u, a_u, b_u;
     x_2_u.i = x_2;

@@ -65,3 +65,9 @@ label:
 	EXIT	
 
 ```
+
+### 機械語生成
+- ./asm_sim/output内で以下を実行
+``` sh
+cat bin.txt | awk -F "[\t\n,\]" '{print $1}' | tr -dc [0-9a-f] | xxd -r -p > binary_bin.bin
+```
