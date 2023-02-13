@@ -266,7 +266,7 @@ inline void Reader::read_label() {
         fclose(fp);
     }
 
-    (*labels)["data"] = pc;
+    // (*labels)["data"] = pc;
 
     std::cout << "<<< label reading finished\n" << std::endl;
 }

@@ -20,8 +20,12 @@
 #include "sim_branch_prediction.hpp"
 #endif
 
-#ifdef PROD
+#ifdef FPUEMU
 #include "sim_fpu.hpp"
+#endif
+
+#ifdef PROD
+#include "sim_time_predict.hpp"
 #endif
 
 class Program {
@@ -46,10 +50,10 @@ class Program {
         #ifdef HARD
         Cache instCache;
         Cache dataCache;
-        BranchPrediction bp;
+        BranchPrediction branchPrediction;
         #endif
 
-        #ifdef PROD
+        #ifdef FPUEMU
         FPU fpu;
         #endif
 
@@ -74,12 +78,12 @@ class Program {
             input_files = {};
 
             #ifdef HARD
-            // tag, index, offset, way
-            instCache = Cache(16, 10, 6, 2);
-            dataCache = Cache(15, 11, 6, 2);
+            // tag, index, offset
+            instCache = Cache(16, 10, 6);
+            dataCache = Cache(15, 11, 6);
 
             // GHR_length, BW
-            bp = BranchPrediction(12);
+            branchPrediction = BranchPrediction(6);
             #endif
 
             #ifdef STATS
@@ -194,7 +198,24 @@ inline void Program::print_stats() {
     for(auto i: instr_counter) {
         fprintf(fp, "\t%s: \t%s\n", opcode_to_string[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
+    #endif 
 
+    #ifdef HARD
+    // cache
+    fprintf(fp, "\n<<< cache stats\n");
+    // inst-cache
+    fprintf(fp, "\tinst-cache:\n");
+    instCache.printStats(fp);
+    // data-cache
+    fprintf(fp, "\tdata-cache:\n");
+    dataCache.printStats(fp);
+
+    // branch prediction
+    fprintf(fp, "\n<<< branch prediction stats\n");
+    branchPrediction.printStats(fp);
+    #endif
+
+    #ifdef STATS
     // labels
     std::vector<std::string> labelvector;
     for(auto i: labels) {
@@ -236,21 +257,6 @@ inline void Program::print_stats() {
         fprintf(fp, "\t%s: \t%s\n", labelvector[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
     }
     #endif 
-
-    #ifdef HARD
-    // cache
-    fprintf(fp, "\n<<< cache stats\n");
-    // inst-cache
-    fprintf(fp, "\tinst-cache:\n");
-    instCache.printStats(fp);
-    // data-cache
-    fprintf(fp, "\tdata-cache:\n");
-    dataCache.printStats(fp);
-
-    // branch prediction
-    fprintf(fp, "\n<<< branch prediction stats\n");
-    bp.printStats(fp);
-    #endif
 
     fclose(fp);
     std::cout << "<<< stats printing finished\n" << std::endl;
@@ -435,7 +441,7 @@ inline void Program::exec() {
                         switch(opcode) {
                             case Beq: if (xregs[curinst.reg0] == xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
                             case Fsub: {
-                                #ifdef PROD
+                                #ifdef FPUEMU
                                 U f1, f2;
                                 f1.f = fregs[curinst.reg1];
                                 f2.f = fregs[curinst.reg2];
@@ -453,7 +459,7 @@ inline void Program::exec() {
                     if (opcode < 14) {                  
                         switch(opcode) { 
                             case Fadd: {
-                                #ifdef PROD
+                                #ifdef FPUEMU
                                 U f1, f2;
                                 f1.f = fregs[curinst.reg1];
                                 f2.f = fregs[curinst.reg2];
@@ -478,7 +484,7 @@ inline void Program::exec() {
                         switch(opcode) {
                             case Fle: if (fregs[curinst.reg0] <= fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
                             case Fmul: {
-                                #ifdef PROD
+                                #ifdef FPUEMU
                                 U f1, f2;
                                 f1.f = fregs[curinst.reg1];
                                 f2.f = fregs[curinst.reg2];
@@ -507,7 +513,7 @@ inline void Program::exec() {
                     switch(opcode) {
                         case Feq: if (fregs[curinst.reg0] == fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
                         case Fdiv: {
-                            #ifdef PROD
+                            #ifdef FPUEMU
                             U f1, f2;
                             f1.f = fregs[curinst.reg1];
                             f2.f = fregs[curinst.reg2];
@@ -525,7 +531,7 @@ inline void Program::exec() {
                 if (opcode < 22) {
                     switch(opcode) {
                         case Fsqrt: {
-                            #ifdef PROD
+                            #ifdef FPUEMU
                             U f1;
                             f1.f = fregs[curinst.reg1];
                             fregs[curinst.reg0] = fpu.fsqrt(f1).f; pc += 4; break;
@@ -593,7 +599,12 @@ inline void Program::exec() {
         #endif 
 
         #ifdef HARD
-        bp.update(pc_prev, pc);
+        branchPrediction.update(pc_prev, pc);
+        #endif
+
+        #ifdef PROD
+        if (curop == Sw || curop == Fsw) dataCache.prev_sw = true;
+        else dataCache.prev_sw = false;
         #endif
 
         counter++;
@@ -613,6 +624,20 @@ inline void Program::exec() {
     std::cout << "\tcounter: " << Program::print_int_with_comma(counter) << '\n' << std::endl;
 
     std::cout << "<<< program finished\n" << std::endl;
+
+    #ifdef PROD
+    std::cout << "<<< time prediction" << std::endl;
+    
+    TimePredict time_predict = TimePredict(
+                        (long double)50000000,
+                        (long double)counter,
+                        &instCache,
+                        &dataCache,
+                        &branchPrediction,
+                        &stats);
+
+    std::cout << "\t" << time_predict.predict() << " s\n" << std::endl;
+    #endif
 
     #if defined STATS || defined HARD
     Program::print_stats();

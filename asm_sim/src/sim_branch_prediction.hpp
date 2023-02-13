@@ -6,8 +6,6 @@
 class BranchPrediction {
     private: 
         unsigned int BW;
-        unsigned long long branchCnt;
-        unsigned long long branchHit;
 
         std::vector<unsigned int> BHT;
         std::vector<unsigned int> NAT;
@@ -15,6 +13,9 @@ class BranchPrediction {
         unsigned int bit(unsigned int, unsigned int, unsigned int);
 
     public:
+        unsigned long long branchCnt;
+        unsigned long long branchHit;
+
         BranchPrediction() {};
         BranchPrediction(unsigned int BW_) {
             BW = BW_;
@@ -27,6 +28,8 @@ class BranchPrediction {
         void printStats(FILE *);
         unsigned int predict(unsigned int);
         void update(unsigned int, unsigned int);
+
+        long double get_clock();
 };
 
 inline unsigned int BranchPrediction::bit(unsigned int d, unsigned int m, unsigned int l) {
@@ -83,4 +86,8 @@ inline void BranchPrediction::update(unsigned int pc_E, unsigned int pc_succE) {
     }
 
     if (pc_predE == pc_succE) branchHit++; 
+}
+
+inline long double BranchPrediction::get_clock() {
+    return (long double)(branchCnt - branchHit) * 2.0;
 }
