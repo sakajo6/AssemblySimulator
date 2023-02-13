@@ -481,6 +481,7 @@ inline void Reader::print_debug() {
     std::cout << "<<< debug started..." << std::endl;
 
     FILE *fp = fopen("./output/debug.txt", "w");
+    FILE *fpbase = fopen("./output/base.txt", "w");
     if (fp == NULL) {
         std::cerr << "error: an error occurred opening ./output/debug.txt.\n" << std::endl;
         exit(1);
@@ -504,23 +505,30 @@ inline void Reader::print_debug() {
 
     int cnt = 0;
     for(int i = 0; i < std_cnt; i++) {
-        // if (sld_intfloat[i]) fprintf(fp, "\t%08x\t%f\n", (unsigned int)std_input.at(i).i, std_input.at(i).f);
-        // else fprintf(fp, "\t%08x\t%d\n", (unsigned int)std_input.at(i).i, std_input.at(i).i);
-
-        unsigned int val = std_input.at(i).i;
-        unsigned int upperval = val / (1 << 16);
-        unsigned int lowerval = val % (1 << 16);
-
-        fprintf(fp, "%04x ", upperval);
-        fprintf(fp, "%04x ", lowerval);
-
-        cnt++;
-        if (cnt % 4 == 0) {
-            fprintf(fp, "\n");
+        if (sld_intfloat[i]) {
+            fprintf(fp, "\t%08x\t%f\n", (unsigned int)std_input.at(i).i, std_input.at(i).f);
+            fprintf(fpbase, "%08x\n", (unsigned int)std_input.at(i).i);
         }
+        else {
+            fprintf(fp, "\t%08x\t%d\n", (unsigned int)std_input.at(i).i, std_input.at(i).i);
+            fprintf(fpbase, "%08x\n", (unsigned int)std_input.at(i).i);
+        }
+
+        // unsigned int val = std_input.at(i).i;
+        // unsigned int upperval = val / (1 << 16);
+        // unsigned int lowerval = val % (1 << 16);
+
+        // fprintf(fp, "%04x ", upperval);
+        // fprintf(fp, "%04x ", lowerval);
+
+        // cnt++;
+        // if (cnt % 4 == 0) {
+        //     fprintf(fp, "\n");
+        // }
     }
 
     fclose(fp);
+    fclose(fpbase);
     std::cout << "<<< debug finished\n" << std::endl;
 }
 
