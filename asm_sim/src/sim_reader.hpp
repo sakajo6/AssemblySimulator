@@ -5,7 +5,7 @@
 #include <map>
 #include <experimental/filesystem>
 
-
+#include "sim_global.hpp"
 #include "sim_instruction.hpp"
 
 
@@ -279,9 +279,9 @@ inline void Reader::read_program() {
     entrypoint.imm = (*labels)["min_caml_start"];
     (*instructions).push_back(entrypoint);
 
-    FILE *fpout = fopen("./output/pcToFilepos.txt", "w");
+    FILE *fpout = fopen((path + "/pcToFilepos.txt").c_str(), "w");
     if (fpout == NULL) {
-        std::cerr << "error: an error occurred opening ./output/pcAndInst.txt.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./files/****/pcAndInst.txt.\n" << std::endl;
         exit(1);   
     }
     pc = 4;
@@ -371,7 +371,7 @@ inline void Reader::read_sld() {
     std::cout << "<<< sld reading started" << std::endl;
 
     for(auto fn: *input_files) {
-        if (fn.substr(fn.size() - 2) == ".s") continue;
+        if (fn.substr(fn.size() - 3) != "sld") continue;
 
         FILE *fp = fopen(fn.c_str(), "r");
         if (fp == NULL) {
@@ -456,7 +456,12 @@ inline void Reader::read_inputfiles(int argc, char const *argv[]) {
     }
 
     // input files
-    std::string path = "./input";
+    std::string input_folder;
+    std::cout << "<<< please input input folder name" << std::endl;
+    std::cout << "./files/";
+    std::cin >> input_folder;
+
+    path = "./files/" + input_folder;
     for(const auto &file: std::experimental::filesystem::directory_iterator(path)) {
         (*input_files).push_back(file.path());
     }
@@ -465,8 +470,11 @@ inline void Reader::read_inputfiles(int argc, char const *argv[]) {
 
     bool minrtflag = false;
     for(auto fn: *input_files) {
-        if (fn == "./input/minrt.s") minrtflag = true;
-        std::cout << "\t\033[32m" << fn << "\033[m" << std::endl;
+        if (fn == path + "/minrt.s") minrtflag = true;
+        std::string file_ext = fn.substr(fn.size() - 4, fn.size());
+        if (file_ext.substr(0, 4) == ".sld" || file_ext.substr(2, 4) == ".s") {
+            std::cout << "\t\033[32m" << fn << "\033[m" << std::endl;
+        }
     }
     std::cout << std::endl;
 
@@ -480,10 +488,10 @@ inline void Reader::read_inputfiles(int argc, char const *argv[]) {
 inline void Reader::print_debug() {
     std::cout << "<<< debug started..." << std::endl;
 
-    FILE *fp = fopen("./output/debug.txt", "w");
-    FILE *fpbase = fopen("./output/base.txt", "w");
+    FILE *fp = fopen((path + "/debug.txt").c_str(), "w");
+    FILE *fpbase = fopen((path + "/base.txt").c_str(), "w");
     if (fp == NULL) {
-        std::cerr << "error: an error occurred opening ./output/debug.txt.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./files/****/debug.txt.\n" << std::endl;
         exit(1);
     }    
 

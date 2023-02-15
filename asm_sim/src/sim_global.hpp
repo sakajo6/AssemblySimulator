@@ -17,6 +17,7 @@ bool brknonflag;
         heap
         stack
 */
+std::string path;
 const int memory_size = 400000000; // アドレスなので実際のアドレスの4倍
 int text_data_section = 0;
 union U {

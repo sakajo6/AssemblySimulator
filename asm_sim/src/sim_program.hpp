@@ -119,15 +119,15 @@ inline void Program::callReader(int argc, char const *argv[]) {
 inline void Program::callAssembler() {
     std::cout << "<<< assembler started..." << std::endl;
 
-    FILE *fp = fopen("./output/bin.txt", "w");
+    FILE *fp = fopen((path + "/bin.txt").c_str(), "w");
     if (fp == NULL) {
-        std::cerr << "error: an error occurred opening ./output/bin.txt.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./files/***/bin.txt.\n" << std::endl;
         exit(1);
     }
 
-    FILE *fpdebug = fopen("./output/bin_debug.txt", "w");
+    FILE *fpdebug = fopen((path + "/bin_debug.txt").c_str(), "w");
     if (fpdebug == NULL) {
-        std::cerr << "error: an error occurred opening ./output/bin_debug.txt.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./files/****/bin_debug.txt.\n" << std::endl;
         exit(1);
     }
 
@@ -178,9 +178,9 @@ inline std::string Program::print_int_with_comma(long long int n) {
 inline void Program::print_stats() {
     std::cout << "<<< stats printing started..." << std::endl;
 
-    FILE *fp = fopen("./output/stats.txt", "w");
+    FILE *fp = fopen((path + "/stats.txt").c_str(), "w");
     if (fp == NULL) {
-        std::cerr << "error: an error occurred opening ./output/stats.txt.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./files/****/stats.txt.\n" << std::endl;
         exit(1);
     }    
 
@@ -301,9 +301,9 @@ inline void Program::exec() {
     luiori_counter.assign(counter_size, (long long int)0);
     #endif
 
-    FILE *fp = fopen("./output/output.ppm", "w");
+    FILE *fp = fopen((path + "/output.ppm").c_str(), "w");
     if (fp == NULL) {
-        std::cerr << "error: an error occurred opening ./output/output.ppm.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./****/output.ppm.\n" << std::endl;
         exit(1);
     }
 
@@ -314,6 +314,10 @@ inline void Program::exec() {
     Program::init_source();
 
     clock_gettime(CLOCK_REALTIME, &start);
+
+    long double output_last_cnt = -1.0;
+    long double output_cnt = 0;
+    long double output_diff_sum = 0;
 
     // exec
     while(pc != end_point) {
@@ -389,7 +393,14 @@ inline void Program::exec() {
                             case Sw: 
                                 {
                                     int addr = xregs[curinst.reg1] + curinst.imm;
-                                    if (addr == -1) fprintf(fp, "%d", xregs[curinst.reg0]);
+                                    if (addr == -1) {
+                                        output_cnt++;
+                                        if (output_last_cnt != -1.0) {
+                                            output_diff_sum += ((long double)counter - output_last_cnt) / 4.0;
+                                        }
+                                        output_last_cnt = counter;
+                                        fprintf(fp, "%d", xregs[curinst.reg0]);
+                                    }
                                     else if (addr == -2) fprintf(fp, "%c", (char)xregs[curinst.reg0]);
                                     else {
                                         #ifdef DEBUG
@@ -613,18 +624,19 @@ inline void Program::exec() {
             std::cout << "<<< executed " << print_int_with_comma(counter) << " instructions" << std::endl;
         }
     }
-    
+
     clock_gettime(CLOCK_REALTIME, &end);
 
 
     globalfun::print_regs(binflag);
     
-    std::cout << "\telapsed time: ";
-    std::cout << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << std::endl;
+    std::cout << "\taverage clock between outputs: " << output_diff_sum / output_cnt << "\n\n";
+    std::cout << "\telapsed time: " << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << "\n";
     std::cout << "\tcounter: " << Program::print_int_with_comma(counter) << '\n' << std::endl;
 
     std::cout << "<<< program finished\n" << std::endl;
 
+    
     #ifdef PROD
     std::cout << "<<< time prediction" << std::endl;
     
