@@ -51,6 +51,20 @@ namespace globalfun {
         if (inst.imm != INT_MAX) fprintf(fp, "%d ", inst.imm);
         if (inst.fimm != FLT_MAX) fprintf(fp, "%f", inst.fimm);
     }
+    void print_byte_hex(FILE *fp, unsigned int word) {
+        unsigned int byte0, byte1, byte2, byte3;
+        byte0 = (word >> 24) % (1 << 8);
+        byte1 = (word >> 16) % (1 << 8);
+        byte2 = (word >> 8) % (1 << 8);
+        byte3 = (word >> 0) % (1 << 8);
+
+        fprintf(fp, "%02x\n", byte0);
+        fprintf(fp, "%02x\n", byte1);
+        fprintf(fp, "%02x\n", byte2);
+        fprintf(fp, "%02x\n", byte3);
+
+        return;
+    }
     std::string print_int(int x) {
         std::string retstr = "";
 

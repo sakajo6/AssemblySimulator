@@ -7,6 +7,7 @@
 
 #include "sim_global.hpp"
 #include "sim_instruction.hpp"
+#include "sim_global.hpp"
 
 
 class Reader {
@@ -515,11 +516,13 @@ inline void Reader::print_debug() {
     for(int i = 0; i < std_cnt; i++) {
         if (sld_intfloat[i]) {
             fprintf(fp, "\t%08x\t%f\n", (unsigned int)std_input.at(i).i, std_input.at(i).f);
-            fprintf(fpbase, "%08x\n", (unsigned int)std_input.at(i).i);
+            globalfun::print_byte_hex(fpbase, (unsigned int)std_input.at(i).i);
+            // fprintf(fpbase, "%08x\n", (unsigned int)std_input.at(i).i);
         }
         else {
             fprintf(fp, "\t%08x\t%d\n", (unsigned int)std_input.at(i).i, std_input.at(i).i);
-            fprintf(fpbase, "%08x\n", (unsigned int)std_input.at(i).i);
+            globalfun::print_byte_hex(fpbase, (unsigned int)std_input.at(i).i);
+            // fprintf(fpbase, "%08x\n", (unsigned int)std_input.at(i).i);
         }
 
         // unsigned int val = std_input.at(i).i;
