@@ -9,23 +9,23 @@
 #include <time.h>
 #include <tuple>
 
-#include "sim_instruction.hpp"
-#include "sim_opecode.hpp"
-#include "sim_global.hpp"
-#include "sim_reader.hpp"
-#include "sim_assembler.hpp"
+#include "instruction.hpp"
+#include "opecode.hpp"
+#include "global.hpp"
+#include "reader.hpp"
+#include "assembler.hpp"
 
 #ifdef HARD
-#include "sim_cache.hpp"
-#include "sim_branch_prediction.hpp"
+#include "cache.hpp"
+#include "branch_prediction.hpp"
 #endif
 
 #ifdef FPUEMU
-#include "sim_fpu.hpp"
+#include "fpu.hpp"
 #endif
 
 #ifdef PROD
-#include "sim_time_predict.hpp"
+#include "time_predict.hpp"
 #endif
 
 class Program {

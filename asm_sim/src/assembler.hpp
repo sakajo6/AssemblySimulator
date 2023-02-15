@@ -5,8 +5,8 @@
 #include <assert.h>
 #include <string>
 
-#include "sim_instruction.hpp"
-#include "sim_machinecode.hpp"
+#include "instruction.hpp"
+#include "machine_code.hpp"
 
 enum OpeAssert {
     OK,
