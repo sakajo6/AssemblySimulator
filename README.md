@@ -17,13 +17,16 @@
     - `make prod`:  FPUエミュレータを用いた実行ファイル生成
     
 ### 入出力ファイル
+- `./asm_sim/files/****`を作成
+    - ****は任意に定めることができる
 - 入力ファイル
-    - 以下を `./asm_sim/input`に格納
+    - 以下を `./asm_sim/files/****`に格納
         - `*.sld`:          入力ファイル
         - `minrt.s`:        min_caml_startを含むアセンブリ
         - `libmincaml.s`:   いわゆるソフトウェア実装library
 - 出力ファイル
-    - 以下を`./asm_sim/output`に出力
+    - 以下を`./asm_sim/files/****`に出力
+        - `base.txt`:           16進数の.sld
         - `bin_debug.txt`:      アセンブラデバッグ用
         - `bin.txt`:            16進数の機械語
         - `debug.txt`:          各種デバッグ用. 命令, ラベル, 入力
@@ -34,11 +37,17 @@
             - `make stats`: 命令実行数, ジャンプ先カウント, lui/ori代入カウント
 
 ### 実行方法
-- `./sim`
+- `./asm_sim`で./sim`
+- 実行するアセンブリが入っているディレクトリを指定
+``` s
+# example
+<<< please input folder name
+./files/example
+```
 - 以下, 実行時オプション(併用可能). ただし, `make debug`のときのみ有効
-    - `--bin`: registerの値をbinary表現で出力
-    - `--brkall`: すべての命令でブレークポインタを起動
-    - `--brknon`: すべてのブレークポインタを無視
+    - `./sim --bin`: registerの値をbinary表現で出力
+    - `./sim --brkall`: すべての命令でブレークポインタを起動
+    - `./sim --brknon`: すべてのブレークポインタを無視
 
 ### ブレークポイントについて
 - 実行前に実行したいファイルの命令の先頭に'*'を記入して実行

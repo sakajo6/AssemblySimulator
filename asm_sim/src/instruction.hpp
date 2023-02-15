@@ -10,7 +10,7 @@
 #include <climits>
 #include <assert.h>
 
-#include "sim_opecode.hpp"
+#include "opecode.hpp"
 
 class Instruction {
     public:

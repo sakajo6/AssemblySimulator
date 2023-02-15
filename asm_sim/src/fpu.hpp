@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sim_fpu_init.hpp"
+#include "fpu_init.hpp"
 
 typedef unsigned long long int ull;
 typedef long long int sll;

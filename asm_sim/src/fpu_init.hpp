@@ -1,7 +1,7 @@
 #include <string>
 #include <vector>
 
-#include "sim_global.hpp"
+#include "global.hpp"
 
 std::vector<U> finv_A(1024);
 std::vector<U> finv_B(1024);

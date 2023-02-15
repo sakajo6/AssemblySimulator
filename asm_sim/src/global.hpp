@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <bitset>
 
-#include "sim_instruction.hpp"
+#include "instruction.hpp"
 
 bool binflag;
 bool brkallflag;

@@ -5,9 +5,8 @@
 #include <map>
 #include <experimental/filesystem>
 
-#include "sim_global.hpp"
-#include "sim_instruction.hpp"
-#include "sim_global.hpp"
+#include "global.hpp"
+#include "instruction.hpp"
 
 
 class Reader {
@@ -458,7 +457,7 @@ inline void Reader::read_inputfiles(int argc, char const *argv[]) {
 
     // input files
     std::string input_folder;
-    std::cout << "<<< please input input folder name" << std::endl;
+    std::cout << "<<< please input folder name" << std::endl;
     std::cout << "./files/";
     std::cin >> input_folder;
 

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "sim_opecode.hpp"
+#include "opecode.hpp"
 
 struct CacheLine {
     bool accessed;

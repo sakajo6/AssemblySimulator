@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sim_cache.hpp"
-#include "sim_branch_prediction.hpp"
+#include "cache.hpp"
+#include "branch_prediction.hpp"
 
 class TimePredict {
     private:
