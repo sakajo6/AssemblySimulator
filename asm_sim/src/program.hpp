@@ -28,6 +28,10 @@
 #include "time_prediction.hpp"
 #endif
 
+#ifdef DEBUG
+#include "memory.hpp"
+#endif
+
 class Program {
     private:
         int pc;
@@ -65,7 +69,9 @@ class Program {
         
         #ifdef DEBUG
         void check_load(int, int);
-        void check_store(int, int);    
+        void check_store(int, int); 
+
+        MemoryControl memoryControl;
         #endif
          
         void init_source();
@@ -324,27 +330,24 @@ inline void Program::exec() {
 
     // exec
     while(pc != end_point) {
+        unsigned int pc_prev = pc;
         curinst = instructions[pc/4];
+        Opcode opcode = curinst.opcode;
 
         #ifdef HARD
         // inst-cache
         instCache.cacheAccess(pc, true);
         // data-cache
-        Opcode curop = curinst.opcode;
-        if (curop == Lw || curop == Flw) {
+        if (opcode == Lw || opcode == Flw) {
             unsigned int addr = xregs[curinst.reg1] + curinst.imm;
             dataCache.cacheAccess(addr, true);
         }
-        else if (curop == Sw || curop == Fsw) {
+        else if (opcode == Sw || opcode == Fsw) {
             unsigned int addr = xregs[curinst.reg1] + curinst.imm;
             dataCache.cacheAccess(addr, false);
         }
-
-        // branch prediction
-        int pc_prev = pc;
         #endif
 
-        Opcode opcode = curinst.opcode;
         // 0 - 15
         if (opcode < 16) {
             // 0 - 7
@@ -598,8 +601,14 @@ inline void Program::exec() {
             std::cout << "\t";
             globalfun::print_inst(stdout, curinst);
             std::cout << "\n\n";
+            if (opcode == Lw || opcode == Flw) {
+                unsigned int addr = xregs[curinst.reg1] + curinst.imm;
+                std::cout << "\tlast store: pc = " << memoryControl.get_last_store(addr) << std::endl;
+            }
+            std::cout << "\n";
             globalfun::print_regs(binflag);
             std::cout << "\n\tcurrent pc = " << pc << "(" << std::hex << pc << std::dec << ")" << std::endl;
+
             std::cout << "\n<<< PRESS ENTER" << std::endl;
 
             getchar();
@@ -616,10 +625,19 @@ inline void Program::exec() {
         #ifdef HARD
         branchPrediction.update(pc_prev, pc);
         #endif
-
+        
         #ifdef PROD
-        if (curop == Sw || curop == Fsw) dataCache.prev_sw = true;
+        if (opcode == Sw || opcode == Fsw) dataCache.prev_sw = true;
         else dataCache.prev_sw = false;
+        #endif
+
+        #ifdef DEBUG
+        if (opcode == Sw || opcode == Fsw) {
+            if (xregs[curinst.reg1] + curinst.imm >= 0) {
+                unsigned int addr = xregs[curinst.reg1] + curinst.imm;
+                memoryControl.update_last_store(addr, pc_prev);
+            }
+        }
         #endif
 
         counter++;
