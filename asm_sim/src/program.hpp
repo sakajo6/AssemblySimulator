@@ -162,6 +162,9 @@ inline void Program::callAssembler() {
         }
     }
 
+    // for last
+    fprintf(fp, "0000006f\n");
+
     fclose(fp);
     fclose(fpdebug);
     std::cout << "<<< assembler finished\n" << std::endl;
@@ -580,7 +583,7 @@ inline void Program::exec() {
             globalfun::print_inst(stdout, curinst);
             std::cout << "\n\n";
             globalfun::print_regs(binflag);
-            std::cout << "\n\tcurrent pc = " << pc << std::endl;
+            std::cout << "\n\tcurrent pc = " << pc << "(" << std::hex << pc << std::dec << ")" << std::endl;
             std::cerr << "error: this is data section" << std::endl;
             exit(1);
         }
@@ -589,13 +592,14 @@ inline void Program::exec() {
 
         #ifdef DEBUG
         if ((curinst.breakpoint || brkallflag) && !brknonflag) {
+            std::cout << "\tcounter = " << counter << std::endl;
             if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
             else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
             std::cout << "\t";
             globalfun::print_inst(stdout, curinst);
             std::cout << "\n\n";
             globalfun::print_regs(binflag);
-            std::cout << "\n\tcurrent pc = " << pc << std::endl;
+            std::cout << "\n\tcurrent pc = " << pc << "(" << std::hex << pc << std::dec << ")" << std::endl;
             std::cout << "\n<<< PRESS ENTER" << std::endl;
 
             getchar();
