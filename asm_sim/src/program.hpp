@@ -25,7 +25,7 @@
 #endif
 
 #ifdef PROD
-#include "time_predict.hpp"
+#include "time_prediction.hpp"
 #endif
 
 class Program {

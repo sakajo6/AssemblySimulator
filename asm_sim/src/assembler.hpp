@@ -381,7 +381,8 @@ inline OpeAssert Assembler::assemble(int pc) {
     }
     memory.at(pc).i = (unsigned int)(ret_machine.to_ulong());
 
-    globalfun::print_byte_hex(fp, (unsigned int)memory.at(pc).i);
+    // globalfun::print_byte_hex(fp, (unsigned int)memory.at(pc).i);
+    fprintf(fp, "%08x\n", (unsigned int)memory.at(pc).i);
 
     return ret;
 }
