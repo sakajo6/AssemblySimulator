@@ -125,9 +125,17 @@ inline void Program::callReader(int argc, char const *argv[]) {
 inline void Program::callAssembler() {
     std::cout << "<<< assembler started..." << std::endl;
 
-    FILE *fp = fopen((path + "/bin.txt").c_str(), "w");
+    #ifdef DEBUG
+    binary.open(path + "/binary.bin", std::ios::out|std::ios::binary|std::ios::trunc); 
+    if (!binary) {
+        std::cerr << "error: an error occurred opening ./files/****/binary.bin";
+        exit(1);
+    }   
+    #endif
+
+    FILE *fp = fopen((path + "/binary.txt").c_str(), "w");
     if (fp == NULL) {
-        std::cerr << "error: an error occurred opening ./files/***/bin.txt.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./files/****/binary.txt.\n" << std::endl;
         exit(1);
     }
 
@@ -173,10 +181,15 @@ inline void Program::callAssembler() {
         }
     }
 
-    // for last
+    // for last loop
+    #ifdef DEBUG
+    globalfun::print_binary_bin(111, 4);
+    binary.close();
+    #endif
+    
     fprintf(fp, "0000006f\n");
-
     fclose(fp);
+
     fclose(fpdebug);
     std::cout << "<<< assembler finished\n" << std::endl;
 }
@@ -315,6 +328,14 @@ inline void Program::exec() {
     luiori_counter.assign(counter_size, (long long int)0);
     #endif
 
+    #ifdef DEBUG
+    output.open(path + "/output.bin", std::ios::out|std::ios::binary|std::ios::trunc); 
+    if (!output) {
+        std::cerr << "error: an error occurred opening ./files/****/output.bin";
+        exit(1);
+    }   
+    #endif
+
     FILE *fp = fopen((path + "/output.ppm").c_str(), "w");
     if (fp == NULL) {
         std::cerr << "error: an error occurred opening ./****/output.ppm.\n" << std::endl;
@@ -411,12 +432,18 @@ inline void Program::exec() {
                                         }
                                         output_last_cnt = counter;
                                         #ifdef DEBUG
-                                        fprintf(fp, "%d\n", xregs[curinst.reg0]);
-                                        #else
-                                        fprintf(fp, "%d", xregs[curinst.reg0]);
+                                        // globalfun::print_byte_hex(fp, (unsigned int)xregs[curinst.reg0]);
+                                        globalfun::print_output_bin(xregs[curinst.reg0], 4);
                                         #endif
+                                        fprintf(fp, "%d", xregs[curinst.reg0]);
                                     }
-                                    else if (addr == -2) fprintf(fp, "%c", (char)xregs[curinst.reg0]);
+                                    else if (addr == -2) {
+                                        #ifdef DEBUG
+                                        // fprintf(fp, "%02x\n", (char)xregs[curinst.reg0]);
+                                        globalfun::print_output_bin(xregs[curinst.reg0], 1);
+                                        #endif
+                                        fprintf(fp, "%c", (char)xregs[curinst.reg0]);
+                                    }
                                     else {
                                         #ifdef DEBUG
                                         Program::check_store(addr, pc);
@@ -658,6 +685,10 @@ inline void Program::exec() {
 
     clock_gettime(CLOCK_REALTIME, &end);
 
+    #ifdef DEBUG
+    output.close();
+    #endif
+    fclose(fp);
 
     globalfun::print_regs(binflag);
     

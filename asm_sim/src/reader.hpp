@@ -279,9 +279,9 @@ inline void Reader::read_program() {
     entrypoint.imm = (*labels)["min_caml_start"];
     (*instructions).push_back(entrypoint);
 
-    FILE *fpout = fopen((path + "/pcToFilepos.txt").c_str(), "w");
+    FILE *fpout = fopen((path + "/pc_to_filepos.txt").c_str(), "w");
     if (fpout == NULL) {
-        std::cerr << "error: an error occurred opening ./files/****/pcAndInst.txt.\n" << std::endl;
+        std::cerr << "error: an error occurred opening ./files/****/pc_to_filepos.txt.\n" << std::endl;
         exit(1);   
     }
     pc = 4;
@@ -455,14 +455,6 @@ inline void Reader::read_inputfiles(int argc, char const *argv[]) {
         }
     }
 
-    // input files
-    std::string input_folder;
-    std::cout << "<<< please input folder name" << std::endl;
-    std::cout << "./files/";
-    std::cin >> input_folder;
-    getchar();
-
-    path = "./files/" + input_folder;
     for(const auto &file: std::experimental::filesystem::directory_iterator(path)) {
         (*input_files).push_back(file.path());
     }

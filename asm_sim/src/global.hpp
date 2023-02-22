@@ -3,12 +3,16 @@
 #include <string>
 #include <algorithm>
 #include <bitset>
+#include <fstream>
 
 #include "instruction.hpp"
 
 bool binflag;
 bool brkallflag;
 bool brknonflag;
+
+std::ofstream output;
+std::ofstream binary;
 
 /*
     memory info:
@@ -51,6 +55,7 @@ namespace globalfun {
         if (inst.imm != INT_MAX) fprintf(fp, "%d ", inst.imm);
         if (inst.fimm != FLT_MAX) fprintf(fp, "%f", inst.fimm);
     }
+
     void print_byte_hex(FILE *fp, unsigned int word) {
         unsigned int byte0, byte1, byte2, byte3;
         byte0 = (word >> 24) % (1 << 8);
@@ -65,6 +70,7 @@ namespace globalfun {
 
         return;
     }
+
     std::string print_int(int x) {
         std::string retstr = "";
 
@@ -85,11 +91,13 @@ namespace globalfun {
         std::reverse(retstr.begin(), retstr.end());
         return retstr;
     }
+    
     std::string print_float(float f) {
         union { float f; int i; } tempf;
         tempf.f = f;
         return std::bitset<32>(tempf.i).to_string();
     }
+
     void print_regs(bool binflag) {
         int rownum = 8;
         int colnum = 32/rownum;
@@ -117,5 +125,31 @@ namespace globalfun {
             std::cout << "\n";
         }
         std::cout << "\n";
+    }
+
+    void print_binary_bin(int val, int bytes) {
+        if (bytes == 1) {
+            binary.write((const char*)&val, sizeof(char));
+        }
+        else if (bytes == 4) {
+            std::string bit = std::bitset<32>(val).to_string();
+            for (int i = 0; i < bytes; i++) {
+                int byte = (int)std::bitset<8>(bit.substr(i * 8, 8)).to_ulong();
+                binary.write((const char*)&byte, sizeof(char));    
+            }
+        }
+    }
+
+    void print_output_bin(int val, int bytes) {
+        if (bytes == 1) {
+            output.write((const char*)&val, sizeof(char));
+        }
+        else if (bytes == 4) {
+            std::string bit = std::bitset<32>(val).to_string();
+            for (int i = 0; i < bytes; i++) {
+                int byte = (int)std::bitset<8>(bit.substr(i * 8, 8)).to_ulong();
+                output.write((const char*)&byte, sizeof(char));    
+            }
+        }
     }
 }
