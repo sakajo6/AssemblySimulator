@@ -140,6 +140,11 @@ inline void Program::callAssembler() {
     int n = instructions.size();
     for (int i = 0; i < n; i++) {
         Instruction curinst = instructions[i];
+
+        fprintf(fpdebug, "\npc = %d\n", i*4);
+        globalfun::print_inst(fpdebug, curinst);
+        fprintf(fpdebug, "\n");
+
         Assembler tempAsm(curinst, fp, fpdebug);
         OpeAssert asmRet = tempAsm.assemble(i*4);
         
@@ -405,7 +410,11 @@ inline void Program::exec() {
                                             output_diff_sum += ((long double)counter - output_last_cnt) / 4.0;
                                         }
                                         output_last_cnt = counter;
+                                        #ifdef DEBUG
+                                        fprintf(fp, "%d\n", xregs[curinst.reg0]);
+                                        #else
                                         fprintf(fp, "%d", xregs[curinst.reg0]);
+                                        #endif
                                     }
                                     else if (addr == -2) fprintf(fp, "%c", (char)xregs[curinst.reg0]);
                                     else {

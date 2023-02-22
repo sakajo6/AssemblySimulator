@@ -460,6 +460,7 @@ inline void Reader::read_inputfiles(int argc, char const *argv[]) {
     std::cout << "<<< please input folder name" << std::endl;
     std::cout << "./files/";
     std::cin >> input_folder;
+    getchar();
 
     path = "./files/" + input_folder;
     for(const auto &file: std::experimental::filesystem::directory_iterator(path)) {
@@ -499,6 +500,7 @@ inline void Reader::print_debug() {
     fprintf(fp, "<<< instruction counter: %d\n", inst_num);
     for(int i = 0; i < inst_num; i++) {
         Instruction tmp_inst = (*instructions)[i];
+
         fprintf(fp, "\t%d:  \t", i*4);
         globalfun::print_inst(fp, tmp_inst);
         fprintf(fp, "\n");

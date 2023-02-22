@@ -8,6 +8,10 @@
 #include "instruction.hpp"
 #include "machine_code.hpp"
 
+#ifdef DEBUG
+#include "decoder.hpp"
+#endif
+
 enum OpeAssert {
     OK,
     Reg0Err,
@@ -29,6 +33,8 @@ class Assembler {
         OpeAssert set_machine_U(std::bitset<32> *);
         OpeAssert set_machine_J(std::bitset<32> *);
 
+        Instruction inst;
+
         Opcode opcode;
         int reg0, reg1, reg2, imm;
         float fimm;
@@ -39,14 +45,16 @@ class Assembler {
         void assemble_debug(std::bitset<32>);
 
     public:
-        Assembler(Instruction inst, FILE *fp_, FILE *fpdebug_) {
-            opcode = inst.opcode;
+        Assembler(Instruction inst_, FILE *fp_, FILE *fpdebug_) {
+            inst = inst_;
 
-            reg0 = inst.reg0;
-            reg1 = inst.reg1;
-            reg2 = inst.reg2;
-            imm = inst.imm;
-            fimm = inst.fimm;
+            opcode = inst_.opcode;
+
+            reg0 = inst_.reg0;
+            reg1 = inst_.reg1;
+            reg2 = inst_.reg2;
+            imm = inst_.imm;
+            fimm = inst_.fimm;
 
             fp = fp_;
             fpdebug = fpdebug_;
@@ -76,18 +84,18 @@ inline void Assembler::assemble_debug(std::bitset<32> mcode){
 }
 
 inline OpeAssert Assembler::set_machine_R(std::bitset<32> *mcode){
-    fprintf(fpdebug, "\nR: %s\n", opcode_to_string[opcode].c_str());
+    fprintf(fpdebug, "R: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
-    fprintf(fpdebug, "%d\n", reg2);
+    fprintf(fpdebug, "reg2 -> %d\n", reg2);
     assemble_debug(std::bitset<32>(reg2));
     assemble_debug(std::bitset<32>(reg2) << 20);
 
-    fprintf(fpdebug, "%d\n", reg1);
+    fprintf(fpdebug, "reg1 -> %d\n", reg1);
     assemble_debug(std::bitset<32>(reg1));
     assemble_debug(std::bitset<32>(reg1) << 15);
 
-    fprintf(fpdebug, "%d\n", reg0);
+    fprintf(fpdebug, "reg0 -> %d\n", reg0);
     assemble_debug(std::bitset<32>(reg0));
     assemble_debug(std::bitset<32>(reg0) << 7);
 
@@ -95,6 +103,7 @@ inline OpeAssert Assembler::set_machine_R(std::bitset<32> *mcode){
     *mcode |= std::bitset<32>(reg1) << 15;
     *mcode |= std::bitset<32>(reg0) << 7;
 
+    fprintf(fpdebug, "machine code: \n");
     assemble_debug(*mcode);
 
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
@@ -104,20 +113,21 @@ inline OpeAssert Assembler::set_machine_R(std::bitset<32> *mcode){
 }
 
 inline OpeAssert Assembler::set_machine_sqrt(std::bitset<32> *mcode) {
-    fprintf(fpdebug, "\nsqrt: %s\n", opcode_to_string[opcode].c_str());
+    fprintf(fpdebug, "sqrt: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
-    fprintf(fpdebug, "%d\n", reg1);
+    fprintf(fpdebug, "reg1 -> %d\n", reg1);
     assemble_debug(std::bitset<32>(reg1));
     assemble_debug(std::bitset<32>(reg1) << 15);
 
-    fprintf(fpdebug, "%d\n", reg0);
+    fprintf(fpdebug, "reg0 -> %d\n", reg0);
     assemble_debug(std::bitset<32>(reg0));
     assemble_debug(std::bitset<32>(reg0) << 7);
 
     *mcode |= std::bitset<32>(reg1) << 15;
     *mcode |= std::bitset<32>(reg0) << 7;
 
+    fprintf(fpdebug, "machine code: \n");
     assemble_debug(*mcode);
 
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
@@ -126,18 +136,18 @@ inline OpeAssert Assembler::set_machine_sqrt(std::bitset<32> *mcode) {
 }
 
 inline OpeAssert Assembler::set_machine_I(std::bitset<32> *mcode) { 
-    fprintf(fpdebug, "\nI: %s\n", opcode_to_string[opcode].c_str());
+    fprintf(fpdebug, "I: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug(std::bitset<32>(imm) << 20);
 
-    fprintf(fpdebug, "%d\n", reg1);
+    fprintf(fpdebug, "reg1 -> %d\n", reg1);
     assemble_debug(std::bitset<32>(reg1));
     assemble_debug(std::bitset<32>(reg1) << 15);
 
-    fprintf(fpdebug, "%d\n", reg0);
+    fprintf(fpdebug, "reg0 -> %d\n", reg0);
     assemble_debug(std::bitset<32>(reg0));
     assemble_debug(std::bitset<32>(reg0) << 7);
 
@@ -145,6 +155,7 @@ inline OpeAssert Assembler::set_machine_I(std::bitset<32> *mcode) {
     *mcode |= std::bitset<32>(reg1) << 15;
     *mcode |= std::bitset<32>(reg0) << 7;
 
+    fprintf(fpdebug, "machine code: \n");
     assemble_debug(*mcode);
 
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
@@ -154,28 +165,28 @@ inline OpeAssert Assembler::set_machine_I(std::bitset<32> *mcode) {
 }
 
 inline OpeAssert Assembler::set_machine_addi(std::bitset<32> *mcode) { 
-    fprintf(fpdebug, "\naddi: %s\n", opcode_to_string[opcode].c_str());
+    fprintf(fpdebug, "addi: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug(std::bitset<32>(imm) << 20);
 
-    fprintf(fpdebug, "%d\n", reg1);
+    fprintf(fpdebug, "reg1 -> %d\n", reg1);
     assemble_debug(std::bitset<32>(reg1));
     assemble_debug(std::bitset<32>(reg1) << 15);
 
-    fprintf(fpdebug, "%d\n", reg0);
+    fprintf(fpdebug, "reg0 -> %d\n", reg0);
     assemble_debug(std::bitset<32>(reg0));
     assemble_debug(std::bitset<32>(reg0) << 7);
 
     // imm[16:15] -> [6:5]
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug((std::bitset<32>((imm >> 15) % (1 << 2)) << 5) & std::bitset<32>((1 << 7) - 1));
 
     // imm[14:12] -> [2:0]
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug(std::bitset<32>((imm >> 12) % (1 << 3)) & std::bitset<32>((1 << 3) - 1));
 
@@ -185,6 +196,7 @@ inline OpeAssert Assembler::set_machine_addi(std::bitset<32> *mcode) {
     *mcode |= (std::bitset<32>((imm >> 15) % (1 << 2)) << 5) & std::bitset<32>((1 << 7) - 1);
     *mcode |= std::bitset<32>((imm >> 12) % (1 << 3)) & std::bitset<32>((1 << 3) - 1);
 
+    fprintf(fpdebug, "machine code: \n");
     assemble_debug(*mcode);
 
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
@@ -194,22 +206,22 @@ inline OpeAssert Assembler::set_machine_addi(std::bitset<32> *mcode) {
 }
 
 inline OpeAssert Assembler::set_machine_S(std::bitset<32> *mcode) {
-    fprintf(fpdebug, "\nS: %s\n", opcode_to_string[opcode].c_str());
+    fprintf(fpdebug, "S: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug(std::bitset<32>(imm >> 5) << 25);
 
-    fprintf(fpdebug, "%d\n", reg0);
+    fprintf(fpdebug, "reg0 -> %d\n", reg0);
     assemble_debug(std::bitset<32>(reg0));
     assemble_debug(std::bitset<32>(reg0) << 20);
 
-    fprintf(fpdebug, "%d\n", reg1);
+    fprintf(fpdebug, "reg1 -> %d\n", reg1);
     assemble_debug(std::bitset<32>(reg1));
     assemble_debug(std::bitset<32>(reg1) << 15);
 
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug((std::bitset<32>(imm % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1));
 
@@ -218,6 +230,7 @@ inline OpeAssert Assembler::set_machine_S(std::bitset<32> *mcode) {
     *mcode |= std::bitset<32>(reg1) << 15;
     *mcode |= (std::bitset<32>(imm % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1);
 
+    fprintf(fpdebug, "machine code: \n");
     assemble_debug(*mcode);
 
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
@@ -227,26 +240,26 @@ inline OpeAssert Assembler::set_machine_S(std::bitset<32> *mcode) {
 }
 
 inline OpeAssert Assembler::set_machine_B(std::bitset<32> *mcode) {
-    fprintf(fpdebug, "\nB: %s\n", opcode_to_string[opcode].c_str());
+    fprintf(fpdebug, "B: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug(std::bitset<32>(imm >> 6) << 25);
 
-    fprintf(fpdebug, "%d\n", reg1);
+    fprintf(fpdebug, "reg1 -> %d\n", reg1);
     assemble_debug(std::bitset<32>(reg1));
     assemble_debug(std::bitset<32>(reg1) << 20);
 
-    fprintf(fpdebug, "%d\n", reg0);
+    fprintf(fpdebug, "reg0 -> %d\n", reg0);
     assemble_debug(std::bitset<32>(reg0));
     assemble_debug(std::bitset<32>(reg0) << 15);
 
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug((std::bitset<32>((imm >> 1) % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1));
 
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug((std::bitset<32>(imm) >> 13) & std::bitset<32>((1 << 2) - 1));
 
@@ -256,6 +269,7 @@ inline OpeAssert Assembler::set_machine_B(std::bitset<32> *mcode) {
     *mcode |= (std::bitset<32>((imm >> 1) % (1 << 5)) << 7) & std::bitset<32>((1 << 12) - 1);  
     *mcode |= (std::bitset<32>(imm) >> 13) & std::bitset<32>((1 << 2) - 1);
 
+    fprintf(fpdebug, "machine code: \n");
     assemble_debug(*mcode);
 
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
@@ -266,20 +280,21 @@ inline OpeAssert Assembler::set_machine_B(std::bitset<32> *mcode) {
 }
 
 inline OpeAssert Assembler::set_machine_U(std::bitset<32> *mcode) {
-    fprintf(fpdebug, "\nU: %s\n", opcode_to_string[opcode].c_str());
+    fprintf(fpdebug, "U: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug(std::bitset<32>(imm >> 12) << 12);
 
-    fprintf(fpdebug, "%d\n", reg0);
+    fprintf(fpdebug, "reg0 -> %d\n", reg0);
     assemble_debug(std::bitset<32>(reg0));
     assemble_debug(std::bitset<32>(reg0) << 7);
 
     *mcode |= std::bitset<32>(imm >> 12) << 12;
     *mcode |= std::bitset<32>(reg0) << 7;
 
+    fprintf(fpdebug, "machine code: \n");
     assemble_debug(*mcode);
 
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
@@ -289,20 +304,21 @@ inline OpeAssert Assembler::set_machine_U(std::bitset<32> *mcode) {
 }
 
 inline OpeAssert Assembler::set_machine_J(std::bitset<32> *mcode) {
-    fprintf(fpdebug, "\nJ: %s\n", opcode_to_string[opcode].c_str());
+    fprintf(fpdebug, "J: %s\n", opcode_to_string[opcode].c_str());
     assemble_debug(*mcode);
 
-    fprintf(fpdebug, "%d\n", imm);
+    fprintf(fpdebug, "imm -> %d\n", imm);
     assemble_debug(std::bitset<32>(imm));
     assemble_debug(std::bitset<32>(imm >> 1) << 12);
 
-    fprintf(fpdebug, "%d\n", reg0);
+    fprintf(fpdebug, "reg0 -> %d\n", reg0);
     assemble_debug(std::bitset<32>(reg0));
     assemble_debug(std::bitset<32>(reg0) << 7);
 
     *mcode |= std::bitset<32>(imm >> 1) << 12;
     *mcode |= std::bitset<32>(reg0) << 7;
 
+    fprintf(fpdebug, "machine code: \n");
     assemble_debug(*mcode);
 
     if (reg0 < 0 || reg0 >= 32) return Reg0Err;
@@ -312,7 +328,7 @@ inline OpeAssert Assembler::set_machine_J(std::bitset<32> *mcode) {
 }
 
 inline OpeAssert Assembler::assemble(int pc) {
-    
+
     std::bitset<32> ret_machine;
     OpeAssert ret = OK;
     if (opcode < 50) {
@@ -375,6 +391,12 @@ inline OpeAssert Assembler::assemble(int pc) {
         u.f = fimm;
         ret_machine = std::bitset<32>(u.i);
     }
+
+    #ifdef DEBUG
+    // check assembler
+    Decoder decoder = Decoder(&ret_machine, &inst, fpdebug);
+    decoder.decode();
+    #endif
 
     if (pc < 0 || pc >= memory_size) {
         return MemoryOutOfRange;
