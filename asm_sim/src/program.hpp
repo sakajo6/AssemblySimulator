@@ -67,13 +67,13 @@ class Program {
         void print_stats();
         #endif
         
-        #ifdef DEBUG
         void check_load(int, int);
         void check_store(int, int); 
 
+        #ifdef DEBUG
         MemoryControl memoryControl;
         #endif
-         
+
         void init_source();
 
     public:
@@ -290,7 +290,6 @@ inline void Program::print_stats() {
 }
 #endif
 
-#ifdef DEBUG
 inline void Program::check_load(int addr, int pc) {
     if (addr <= 0 || addr >= memory_size) {
         if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
@@ -317,7 +316,7 @@ inline void Program::check_store(int addr, int pc) {
         exit(1);
     }    
 }
-#endif
+
 inline void Program::exec() {
     std::cout << "<<< program execution started..." << std::endl; 
 
@@ -391,9 +390,7 @@ inline void Program::exec() {
                                         std_cnt++;
                                     }
                                     else {
-                                        #ifdef DEBUG
                                         Program::check_load(addr, pc);
-                                        #endif
                                         xregs[curinst.reg0] = (int)memory.at(addr).i;
                                     }
                                     pc += 4;
@@ -445,9 +442,7 @@ inline void Program::exec() {
                                         fprintf(fp, "%c", (char)xregs[curinst.reg0]);
                                     }
                                     else {
-                                        #ifdef DEBUG
                                         Program::check_store(addr, pc);
-                                        #endif
                                         memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
                                     }
                                     pc+=4;
@@ -460,9 +455,7 @@ inline void Program::exec() {
                                         std_cnt++;
                                     }
                                     else {
-                                        #ifdef DEBUG
                                         Program::check_load(addr, pc);
-                                        #endif
                                         fregs[curinst.reg0] = memory.at(addr).f; 
                                     }
                                     pc+=4;
@@ -524,9 +517,7 @@ inline void Program::exec() {
                             case Fsw: 
                                 {   
                                     int addr = xregs[curinst.reg1] + curinst.imm;
-                                    #ifdef DEBUG
                                     Program::check_store(addr, pc);
-                                    #endif
                                     memory.at(addr).f = fregs[curinst.reg0];
                                     pc+=4;
                                 } break;
@@ -649,9 +640,10 @@ inline void Program::exec() {
 
             getchar();
         }
+        #endif
+
         // check next pc
         check_load(pc, pc);
-        #endif
 
         #ifdef STATS
         stats[curinst.opcode]++;
