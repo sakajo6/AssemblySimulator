@@ -360,6 +360,9 @@ void Decoder::decode() {
     ) {
         asm_error = decode_J();
     }
+    else {
+        asm_error = Asm_Unknown;
+    }
 
     if (asm_error != Asm_OK) {
         fprintf(stdout, "opcode -> %s", opcode_to_string[encoded_inst.opcode].c_str());
@@ -389,12 +392,12 @@ void Decoder::decode() {
         fprintf(stdout, "[error] (invalid fimm) encoded: %f -> encoded: %f\n", encoded_inst.fimm, decoded_inst.fimm);
     }
     else if (asm_error == Asm_EncErr) {
-        fprintf(fpdebug, "[error] (Encoding Error)");
-        fprintf(stdout, "[error] (Encoding Error)");
+        fprintf(fpdebug, "[error] (Encoding Error)\n");
+        fprintf(stdout, "[error] (Encoding Error)\n");
     }
     else if (asm_error == Asm_Unknown) {
-        fprintf(fpdebug, "[error] (Unknown)");
-        fprintf(stdout, "[error] (Unknown)");
+        fprintf(fpdebug, "[error] (Unknown)\n");
+        fprintf(stdout, "[error] (Unknown)\n");
     }
     if (asm_error != Asm_OK) {
         exit(1);
