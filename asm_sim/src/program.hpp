@@ -410,7 +410,7 @@ inline void Program::exec() {
                                 #ifdef STATS
                                 if (curinst.luioriFlag && 0LL <= curinst.imm && curinst.imm < counter_size) luiori_counter[curinst.imm]++;
                                 #endif
-                                xregs[curinst.reg0] = xregs[curinst.reg1] | curinst.imm; pc+=4; break;
+                                xregs[curinst.reg0] = xregs[curinst.reg1] | (int)(std::bitset<12>(curinst.imm).to_ulong()); pc+=4; break;
                         }
                     }
                 }
