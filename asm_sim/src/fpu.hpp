@@ -19,6 +19,8 @@ class FPU {
         U fmul(U, U);
         U fdiv(U, U);
         U fsqrt(U);  
+        bool feq(U, U);
+        bool fle(U, U);
 };
 
 
@@ -388,4 +390,30 @@ inline U FPU::fsqrt(U x_u) {
     U ret; 
     ret.i = (unsigned int)y;
     return ret;
+}
+
+inline bool FPU::feq(U x_u, U y_u) {
+    ull x = (ull)x_u.i;
+    ull y = (ull)y_u.i;
+
+    ull x_30_0 = bit(x, 30, 0);
+    ull y_30_0 = bit(y, 30, 0);
+
+    return (x == y || ((x_30_0 == y_30_0) && (x_30_0 == 0))) ? true : false;
+}
+
+inline bool FPU::fle(U x_u, U y_u) {
+    ull x = (ull)x_u.i;
+    ull y = (ull)y_u.i;
+
+    ull x_31 = bit(x, 31, 31);
+    ull y_31 = bit(y, 31, 31);
+    ull x_30_23 = bit(x, 30, 23);
+    ull y_30_23 = bit(y, 30, 23);
+    ull x_22_0 = bit(x, 22, 0);
+    ull y_22_0 = bit(y, 22, 0);
+
+    return (x_31 > y_31) ? true :
+        (((x_31 == y_31) && (x_31 == 0)) ? ((x_30_23 < y_30_23) ? true : ((x_30_23 == y_30_23) && (x_22_0 <= y_22_0))) :
+        (((x_31 == y_31) && (x_31 == 1)) ? ((x_30_23 > y_30_23) ? true : ((x_30_23 == y_30_23) && (x_22_0 >= y_22_0))) : false));
 }

@@ -526,7 +526,15 @@ inline void Program::exec() {
                     // 14 - 15
                     else {
                         switch(opcode) {
-                            case Fle: if (fregs[curinst.reg0] <= fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+                            case Fle: 
+                                #ifdef FPUEMU
+                                U f0, f1;
+                                f0.f = fregs[curinst.reg0];
+                                f1.f = fregs[curinst.reg1];
+                                if (fpu.fle(f0, f1)) {pc += curinst.imm;} else {pc += 4;} break;
+                                #else
+                                if (fregs[curinst.reg0] <= fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+                                #endif
                             case Fmul: {
                                 #ifdef FPUEMU
                                 U f1, f2;
@@ -555,7 +563,15 @@ inline void Program::exec() {
                 // 18 - 19
                 else {
                     switch(opcode) {
-                        case Feq: if (fregs[curinst.reg0] == fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+                        case Feq: 
+                            #ifdef FPUEMU
+                            U f0, f1;
+                            f0.f = fregs[curinst.reg0];
+                            f1.f = fregs[curinst.reg1];
+                            if (fpu.feq(f0, f1)) {pc += curinst.imm;} else {pc += 4;} break;
+                            #else
+                            if (fregs[curinst.reg0] == fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+                            #endif
                         case Fdiv: {
                             #ifdef FPUEMU
                             U f1, f2;
