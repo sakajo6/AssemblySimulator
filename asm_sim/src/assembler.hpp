@@ -333,6 +333,14 @@ inline OpeAssert Assembler::assemble(int pc) {
     OpeAssert ret = OK;
     if (opcode < 50) {
         switch(opcode) {
+            case Arrlw:
+                ret_machine = arrlw_machine; ret = set_machine_R(&ret_machine); break;
+            case Arrsw:
+                ret_machine = arrsw_machine; ret = set_machine_R(&ret_machine); break;
+            case Arrflw:
+                ret_machine = arrflw_machine; ret = set_machine_R(&ret_machine); break;
+            case Arrfsw:
+                ret_machine = arrfsw_machine; ret = set_machine_R(&ret_machine); break;
             case Add: 
                 ret_machine = add_machine; ret = set_machine_R(&ret_machine); break;
             case Sub:

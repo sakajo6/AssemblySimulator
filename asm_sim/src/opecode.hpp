@@ -34,6 +34,11 @@ enum Opcode {
     Exit = 50,
 
     Word = 60,
+
+    Arrlw = 100,
+    Arrsw,
+    Arrflw,
+    Arrfsw,
 };
 
 std::map<std::string, Opcode> string_to_opcode = {
@@ -69,7 +74,12 @@ std::map<std::string, Opcode> string_to_opcode = {
 
     {"EXIT", Exit},
 
-    {".word", Word}
+    {".word", Word},
+
+    {"arrlw", Arrlw},
+    {"arrsw", Arrsw},
+    {"arrflw", Arrflw},
+    {"arrfsw", Arrfsw},
 };
 
 std::map<Opcode, std::string> opcode_to_string = {
@@ -105,4 +115,9 @@ std::map<Opcode, std::string> opcode_to_string = {
     {Exit, "EXIT"},
 
     {Word, ".word"},
+
+    {Arrlw, "arrlw"},
+    {Arrsw, "arrsw"},
+    {Arrflw, "arrflw"},
+    {Arrfsw, "arrfsw"},
 };

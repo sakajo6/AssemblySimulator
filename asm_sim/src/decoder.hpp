@@ -161,11 +161,19 @@ AsmError Decoder::decode_fsqrt() {
 
 AsmError Decoder::decode_R() {
     // condition:
+    // bin_str.substr(25, 5) == "11111" ||
     // bin_str.substr(25, 7) == "0110011" ||   // add, sub, slt, mul, div
     // bin_str.substr(25, 7) == "1010011"      // fadd, fsub, fmul, fdiv
 
     // decoded inst
-    if (bin_str.substr(25, 7) == "0110011") {
+    if (bin_str.substr(25, 5) == "11111") {
+        if (bin_str.substr(0, 7) == "0000000" && bin_str.substr(17, 3) == "000" && bin_str.substr(30, 2) == "00") decoded_inst.opcode = Arrlw;
+        else if (bin_str.substr(0, 7) == "0000000" && bin_str.substr(17, 3) == "000" && bin_str.substr(30, 2) == "01") decoded_inst.opcode = Arrsw;
+        else if (bin_str.substr(0, 7) == "0000000" && bin_str.substr(17, 3) == "000" && bin_str.substr(30, 2) == "10") decoded_inst.opcode = Arrflw;
+        else if (bin_str.substr(0, 7) == "0000000" && bin_str.substr(17, 3) == "000" && bin_str.substr(30, 2) == "11") decoded_inst.opcode = Arrfsw;
+        else return Asm_EncErr;
+    }
+    else if (bin_str.substr(25, 7) == "0110011") {
         if (bin_str.substr(0, 7) == "0000000" && bin_str.substr(17, 3) == "000") decoded_inst.opcode = Add;
         else if (bin_str.substr(0, 7) == "0100000" && bin_str.substr(17, 3) == "000") decoded_inst.opcode = Sub;
         else if (bin_str.substr(0, 7) == "0000000" && bin_str.substr(17, 3) == "010") decoded_inst.opcode = Slt;
@@ -320,6 +328,7 @@ void Decoder::decode() {
     }
     // R-type
     else if (
+        bin_str.substr(25, 5) == "11111" ||      // arrlw, arrsw, arrflw, arrfsw
         bin_str.substr(25, 7) == "0110011" ||   // add, sub, slt, mul, div
         bin_str.substr(25, 7) == "1010011"      // fadd, fsub, fmul, fdiv
     ) {

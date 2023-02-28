@@ -362,19 +362,59 @@ inline void Program::exec() {
         #ifdef HARD
         // inst-cache
         instCache.cacheAccess(pc, true);
-        // data-cache
-        if (opcode == Lw || opcode == Flw) {
-            unsigned int addr = xregs[curinst.reg1] + curinst.imm;
-            dataCache.cacheAccess(addr, true);
-        }
-        else if (opcode == Sw || opcode == Fsw) {
-            unsigned int addr = xregs[curinst.reg1] + curinst.imm;
-            dataCache.cacheAccess(addr, false);
-        }
         #endif
 
+        if (opcode >= 100) {
+            int addr = xregs[curinst.reg1] + (xregs[curinst.reg2] << 2);
+            if (opcode < 102) {
+                switch(opcode) {
+                    case Arrlw: {
+                        #ifdef HARD
+                        dataCache.cacheAccess(addr, true);
+                        #endif
+                        Program::check_load(addr, pc);
+                        xregs[curinst.reg0] = (int)memory.at(addr).i;
+                        pc += 4;
+                    } break;
+                    case Arrsw: {
+                        #ifdef HARD
+                        dataCache.cacheAccess(addr, false);
+                        #endif
+                        Program::check_store(addr, pc);
+                        memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
+                        pc+=4;
+                    } break;
+                }
+            }
+            else {
+                switch(opcode) {
+                    case Arrflw: {
+                        #ifdef HARD
+                        dataCache.cacheAccess(addr, true);
+                        #endif
+                        if (addr == -1) {
+                            fregs[curinst.reg0] = std_input.at(std_cnt).f;
+                            std_cnt++;
+                        }
+                        else {
+                            Program::check_load(addr, pc);
+                            fregs[curinst.reg0] = memory.at(addr).f; 
+                        }
+                        pc+=4;
+                    } break;
+                    case Arrfsw: {
+                        #ifdef HARD
+                        dataCache.cacheAccess(addr, false);
+                        #endif
+                        Program::check_store(addr, pc);
+                        memory.at(addr).f = fregs[curinst.reg0];
+                        pc+=4;
+                    } break;
+                }
+            }
+        }
         // 0 - 15
-        if (opcode < 16) {
+        else if (opcode < 16) {
             // 0 - 7
             if (opcode < 8) {
                 // 0 - 3
@@ -382,19 +422,21 @@ inline void Program::exec() {
                     // 0 - 1
                     if (opcode < 2) {
                         switch(opcode) {
-                            case Lw: 
-                                { 
-                                    int addr = xregs[curinst.reg1] + curinst.imm;
-                                    if (addr == -1) {
-                                        xregs[curinst.reg0] = std_input.at(std_cnt).i;
-                                        std_cnt++;
-                                    }
-                                    else {
-                                        Program::check_load(addr, pc);
-                                        xregs[curinst.reg0] = (int)memory.at(addr).i;
-                                    }
-                                    pc += 4;
-                                } break;
+                            case Lw: { 
+                                int addr = xregs[curinst.reg1] + curinst.imm;
+                                #ifdef HARD
+                                dataCache.cacheAccess(addr, true);
+                                #endif
+                                if (addr == -1) {
+                                    xregs[curinst.reg0] = std_input.at(std_cnt).i;
+                                    std_cnt++;
+                                }
+                                else {
+                                    Program::check_load(addr, pc);
+                                    xregs[curinst.reg0] = (int)memory.at(addr).i;
+                                }
+                                pc += 4;
+                            } break;
                             case Addi: xregs[curinst.reg0] = xregs[curinst.reg1] + curinst.imm; pc+=4; break;
                         }
                     }
@@ -419,47 +461,51 @@ inline void Program::exec() {
                     // 4 - 5
                     if (opcode < 6) {
                         switch(opcode) {
-                            case Sw: 
-                                {
-                                    int addr = xregs[curinst.reg1] + curinst.imm;
-                                    if (addr == -1) {
-                                        output_cnt++;
-                                        if (output_last_cnt != -1.0) {
-                                            output_diff_sum += ((long double)counter - output_last_cnt) / 4.0;
-                                        }
-                                        output_last_cnt = counter;
-                                        #ifdef DEBUG
-                                        // globalfun::print_byte_hex(fp, (unsigned int)xregs[curinst.reg0]);
-                                        globalfun::print_output_bin(xregs[curinst.reg0], 4);
-                                        #endif
-                                        fprintf(fp, "%d", xregs[curinst.reg0]);
+                            case Sw: {
+                                int addr = xregs[curinst.reg1] + curinst.imm;
+                                if (addr == -1) {
+                                    output_cnt++;
+                                    if (output_last_cnt != -1.0) {
+                                        output_diff_sum += ((long double)counter - output_last_cnt) / 4.0;
                                     }
-                                    else if (addr == -2) {
-                                        #ifdef DEBUG
-                                        // fprintf(fp, "%02x\n", (char)xregs[curinst.reg0]);
-                                        globalfun::print_output_bin(xregs[curinst.reg0], 1);
-                                        #endif
-                                        fprintf(fp, "%c", (char)xregs[curinst.reg0]);
-                                    }
-                                    else {
-                                        Program::check_store(addr, pc);
-                                        memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
-                                    }
-                                    pc+=4;
-                                } break;
-                            case Flw: 
-                                {   
-                                    int addr = xregs[curinst.reg1] + curinst.imm;
-                                    if (addr == -1) {
-                                        fregs[curinst.reg0] = std_input.at(std_cnt).f;
-                                        std_cnt++;
-                                    }
-                                    else {
-                                        Program::check_load(addr, pc);
-                                        fregs[curinst.reg0] = memory.at(addr).f; 
-                                    }
-                                    pc+=4;
-                                } break;
+                                    output_last_cnt = counter;
+                                    #ifdef DEBUG
+                                    // globalfun::print_byte_hex(fp, (unsigned int)xregs[curinst.reg0]);
+                                    globalfun::print_output_bin(xregs[curinst.reg0], 4);
+                                    #endif
+                                    fprintf(fp, "%d", xregs[curinst.reg0]);
+                                }
+                                else if (addr == -2) {
+                                    #ifdef DEBUG
+                                    // fprintf(fp, "%02x\n", (char)xregs[curinst.reg0]);
+                                    globalfun::print_output_bin(xregs[curinst.reg0], 1);
+                                    #endif
+                                    fprintf(fp, "%c", (char)xregs[curinst.reg0]);
+                                }
+                                else {
+                                    #ifdef HARD
+                                    dataCache.cacheAccess(addr, false);
+                                    #endif
+                                    Program::check_store(addr, pc);
+                                    memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
+                                }
+                                pc+=4;
+                            } break;
+                            case Flw: {   
+                                int addr = xregs[curinst.reg1] + curinst.imm;
+                                #ifdef HARD
+                                dataCache.cacheAccess(addr, true);
+                                #endif
+                                if (addr == -1) {
+                                    fregs[curinst.reg0] = std_input.at(std_cnt).f;
+                                    std_cnt++;
+                                }
+                                else {
+                                    Program::check_load(addr, pc);
+                                    fregs[curinst.reg0] = memory.at(addr).f; 
+                                }
+                                pc+=4;
+                            } break;
                         }
                     }
                     // 6 - 7
@@ -514,13 +560,15 @@ inline void Program::exec() {
                                 fregs[curinst.reg0] = fregs[curinst.reg1] + fregs[curinst.reg2]; pc+=4; break;
                                 #endif
                             }
-                            case Fsw: 
-                                {   
-                                    int addr = xregs[curinst.reg1] + curinst.imm;
-                                    Program::check_store(addr, pc);
-                                    memory.at(addr).f = fregs[curinst.reg0];
-                                    pc+=4;
-                                } break;
+                            case Fsw: {   
+                                int addr = xregs[curinst.reg1] + curinst.imm;
+                                #ifdef HARD
+                                dataCache.cacheAccess(addr, false);
+                                #endif
+                                Program::check_store(addr, pc);
+                                memory.at(addr).f = fregs[curinst.reg0];
+                                pc+=4;
+                            } break;
                         }
                     }
                     // 14 - 15
