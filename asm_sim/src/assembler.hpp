@@ -381,14 +381,16 @@ inline OpeAssert Assembler::assemble(int pc) {
         }
     }
     else if (opcode >= 100) {
-        case Arrlw:
-            ret_machine = arrlw_machine; ret = set_machine_R(&ret_machine); break;
-        case Arrsw:
-            ret_machine = arrsw_machine; ret = set_machine_R(&ret_machine); break;
-        case Arrflw:
-            ret_machine = arrflw_machine; ret = set_machine_R(&ret_machine); break;
-        case Arrfsw:
-            ret_machine = arrfsw_machine; ret = set_machine_R(&ret_machine); break;
+        switch(opcode) {
+            case Arrlw:
+                ret_machine = arrlw_machine; ret = set_machine_R(&ret_machine); break;
+            case Arrsw:
+                ret_machine = arrsw_machine; ret = set_machine_R(&ret_machine); break;
+            case Arrflw:
+                ret_machine = arrflw_machine; ret = set_machine_R(&ret_machine); break;
+            case Arrfsw:
+                ret_machine = arrfsw_machine; ret = set_machine_R(&ret_machine); break;
+        }
     }
     else if (opcode < 60) {
         ret_machine = std::bitset<32>(-1);
