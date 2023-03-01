@@ -33,10 +33,10 @@ class Cache {
         unsigned int pseudoLRU(unsigned int);
 
     public:
-        unsigned int loadCnt;
-        unsigned int loadHit;
-        unsigned int storeCnt;
-        unsigned int storeHit;
+        long int loadCnt;
+        long int loadHit;
+        long int storeCnt;
+        long int storeHit;
 
         Cache() {};
         Cache(CacheType cacheType_, unsigned int tag_, unsigned int index_, unsigned int offset_, unsigned int way_){
@@ -191,5 +191,11 @@ inline void Cache::printStats(FILE *fp) {
     // hit rate
     double hit = loadHit + storeHit;
     double total = loadCnt + storeCnt;
+    fprintf(fp, "\t\tLoad access -> %ld\n", loadCnt);
+    fprintf(fp, "\t\t\t- Hit:\t%ld\n", loadHit);
+    fprintf(fp, "\t\t\t- Miss:\t%ld\n", loadCnt - loadHit);
+    fprintf(fp, "\t\tStore access -> %ld\n", storeCnt);
+    fprintf(fp, "\t\t\t- Hit:\t%ld\n", storeHit);
+    fprintf(fp, "\t\t\t- Miss:\t%ld\n", storeCnt - storeHit);
     fprintf(fp, "\t\tHit rate -> %lf\n", hit/total);
 }
