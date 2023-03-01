@@ -374,7 +374,7 @@ void Decoder::decode() {
     }
 
     if (asm_error != Asm_OK) {
-        fprintf(stdout, "opcode -> %s", opcode_to_string[encoded_inst.opcode].c_str());
+        fprintf(stdout, "opcode -> %s\n", opcode_to_string[encoded_inst.opcode].c_str());
     }
     if (asm_error == Asm_OpErr) {
         fprintf(fpdebug, "[error] (inavlid opcode) encoded: %d -> decoded: %d\n", encoded_inst.opcode, decoded_inst.opcode);

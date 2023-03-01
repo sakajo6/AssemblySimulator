@@ -7,10 +7,7 @@
 
 #include "instruction.hpp"
 #include "machine_code.hpp"
-
-#ifdef DEBUG
 #include "decoder.hpp"
-#endif
 
 enum OpeAssert {
     OK,
@@ -333,14 +330,6 @@ inline OpeAssert Assembler::assemble(int pc) {
     OpeAssert ret = OK;
     if (opcode < 50) {
         switch(opcode) {
-            case Arrlw:
-                ret_machine = arrlw_machine; ret = set_machine_R(&ret_machine); break;
-            case Arrsw:
-                ret_machine = arrsw_machine; ret = set_machine_R(&ret_machine); break;
-            case Arrflw:
-                ret_machine = arrflw_machine; ret = set_machine_R(&ret_machine); break;
-            case Arrfsw:
-                ret_machine = arrfsw_machine; ret = set_machine_R(&ret_machine); break;
             case Add: 
                 ret_machine = add_machine; ret = set_machine_R(&ret_machine); break;
             case Sub:
@@ -391,6 +380,16 @@ inline OpeAssert Assembler::assemble(int pc) {
                 ret_machine = lui_machine; ret = set_machine_U(&ret_machine); break;
         }
     }
+    else if (opcode >= 100) {
+        case Arrlw:
+            ret_machine = arrlw_machine; ret = set_machine_R(&ret_machine); break;
+        case Arrsw:
+            ret_machine = arrsw_machine; ret = set_machine_R(&ret_machine); break;
+        case Arrflw:
+            ret_machine = arrflw_machine; ret = set_machine_R(&ret_machine); break;
+        case Arrfsw:
+            ret_machine = arrfsw_machine; ret = set_machine_R(&ret_machine); break;
+    }
     else if (opcode < 60) {
         ret_machine = std::bitset<32>(-1);
     }
@@ -400,11 +399,6 @@ inline OpeAssert Assembler::assemble(int pc) {
         ret_machine = std::bitset<32>(u.i);
     }
 
-    #ifdef DEBUG
-    // check assembler
-    Decoder decoder = Decoder(&ret_machine, &inst, fpdebug);
-    decoder.decode();
-    #endif
 
     if (pc < 0 || pc >= memory_size) {
         return MemoryOutOfRange;
@@ -416,6 +410,10 @@ inline OpeAssert Assembler::assemble(int pc) {
     globalfun::print_binary_bin((int)memory.at(pc).i, 4);
     #endif
     fprintf(fp, "%08x\n", (unsigned int)memory.at(pc).i);
+
+    // check assembler
+    Decoder decoder = Decoder(&ret_machine, &inst, fpdebug);
+    decoder.decode();
 
     return ret;
 }
