@@ -738,7 +738,7 @@ inline void Program::exec() {
                         &branchPrediction,
                         &stats);
 
-    std::cout << "\t" << time_predict.predict() << " s\n" << std::endl;
+    time_predict.predict();
     #endif
 
     #if defined STATS || defined HARD

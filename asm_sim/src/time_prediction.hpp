@@ -5,7 +5,7 @@
 
 class TimePredict {
     private:
-        long double clock;
+        long double clock_cycle;
         long double counter;
 
         Cache instCache;
@@ -23,19 +23,22 @@ class TimePredict {
             Cache *dataCache_,
             BranchPrediction *branchPrediction_,
             std::vector<long long int> *stats_) {
-                clock = clock_;
+                clock_cycle = clock_;
                 counter = counter_;
                 instCache = *instCache_;
                 dataCache = *dataCache_;
                 branchPrediction = *branchPrediction_;
                 stats = *stats_;
         };
-        long double predict();     
+        void predict();     
 };
 
-long double TimePredict::predict() {
+void TimePredict::predict() {
     // 1命令に何clockか確認
-    long double clock_cnt = counter * 5;
+    long double clock_cnt = counter;
+    long double clock_tmp;
+
+    printf("\tbasic time ->\t%Lf s\n", clock_cnt / clock_cycle);
 
     // # server.py 
     // - プログラム読み込み待ち
@@ -50,7 +53,9 @@ long double TimePredict::predict() {
 
     // # 分岐ミス
     // - 2 clock
-    clock_cnt = branchPrediction.get_clock();
+    clock_tmp = clock_cnt;
+    clock_cnt += branchPrediction.get_clock();
+    printf("\tbranch pred ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
 
     // # io out
     // - 65 byte目でstallし始める
@@ -80,15 +85,19 @@ long double TimePredict::predict() {
     //      ### miss:
     //          - 45 clock  (50 MHz)
     //          - 4 clock   (if dirty)
+    clock_tmp = clock_cnt;
     clock_cnt += instCache.get_clock();
     clock_cnt += dataCache.get_clock();
+    printf("\tcache stall ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
 
     // FPU
+    clock_tmp = clock_cnt;
     clock_cnt += stats[Fadd] * fadd_clock;   // fadd: 2 clock
     clock_cnt += stats[Fsub] * fsub_clock;   // fsub: 2 clock
     clock_cnt += stats[Fmul] * fmul_clock;   // fmul: 3 clock
     clock_cnt += stats[Fdiv] * fdiv_clock;   // fdiv: 9 clock
     clock_cnt += stats[Fsqrt] * fsqrt_clock;  // fsqrt: 6 clock
+    printf("\tFPU stall ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
 
-    return clock_cnt / clock;
+    printf("\n\ttotal time ->\t%Lf s\n\n", clock_cnt / clock_cycle);
 }
