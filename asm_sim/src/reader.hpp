@@ -482,7 +482,6 @@ inline void Reader::print_debug() {
     std::cout << "<<< debug started..." << std::endl;
 
     FILE *fp = fopen((path + "/debug.txt").c_str(), "w");
-    FILE *fpbase = fopen((path + "/base.txt").c_str(), "w");
     if (fp == NULL) {
         std::cerr << "error: an error occurred opening ./files/****/debug.txt.\n" << std::endl;
         exit(1);
@@ -509,13 +508,9 @@ inline void Reader::print_debug() {
     for(int i = 0; i < std_cnt; i++) {
         if (sld_intfloat[i]) {
             fprintf(fp, "\t%08x\t%f\n", (unsigned int)std_input.at(i).i, std_input.at(i).f);
-            globalfun::print_byte_hex(fpbase, (unsigned int)std_input.at(i).i);
-            // fprintf(fpbase, "%08x\n", (unsigned int)std_input.at(i).i);
         }
         else {
             fprintf(fp, "\t%08x\t%d\n", (unsigned int)std_input.at(i).i, std_input.at(i).i);
-            globalfun::print_byte_hex(fpbase, (unsigned int)std_input.at(i).i);
-            // fprintf(fpbase, "%08x\n", (unsigned int)std_input.at(i).i);
         }
 
         // unsigned int val = std_input.at(i).i;
@@ -532,7 +527,6 @@ inline void Reader::print_debug() {
     }
 
     fclose(fp);
-    fclose(fpbase);
     std::cout << "<<< debug finished\n" << std::endl;
 }
 

@@ -15,16 +15,10 @@
 #include "reader.hpp"
 #include "assembler.hpp"
 
-#ifdef HARD
+#ifdef PROD
+#include "fpu.hpp"
 #include "cache.hpp"
 #include "branch_prediction.hpp"
-#endif
-
-#ifdef FPUEMU
-#include "fpu.hpp"
-#endif
-
-#ifdef PROD
 #include "time_prediction.hpp"
 #endif
 
@@ -52,18 +46,15 @@ class Program {
         std::vector<long long int> luiori_counter;
         #endif
 
-        #ifdef HARD
+        #ifdef PROD
+        FPU fpu;
         Cache instCache;
         Cache dataCache;
         BranchPrediction branchPrediction;
         #endif
 
-        #if defined STATS || defined HARD
+        #if defined STATS || defined PROD
         void print_stats();
-        #endif
-
-        #ifdef FPUEMU
-        FPU fpu;
         #endif
         
     public:
@@ -73,7 +64,7 @@ class Program {
             instructions = {};
             input_files = {};
 
-            #ifdef HARD
+            #ifdef PROD
             // tag, index, offset
             instCache = Cache(
                 InstCache,
@@ -126,13 +117,11 @@ inline void Program::callReader(int argc, char const *argv[]) {
 inline void Program::callAssembler() {
     std::cout << "<<< assembler started..." << std::endl;
 
-    #ifdef DEBUG
     binary.open(path + "/binary.bin", std::ios::out|std::ios::binary|std::ios::trunc); 
     if (!binary) {
         std::cerr << "error: an error occurred opening ./files/****/binary.bin";
         exit(1);
-    }   
-    #endif
+    }
 
     FILE *fp = fopen((path + "/binary.txt").c_str(), "w");
     if (fp == NULL) {
@@ -183,10 +172,8 @@ inline void Program::callAssembler() {
     }
 
     // for last loop
-    #ifdef DEBUG
     globalfun::print_binary_bin(111, 4);
     binary.close();
-    #endif
     
     fprintf(fp, "0000006f\n");
     fclose(fp);
@@ -202,7 +189,7 @@ inline std::string Program::print_int_with_comma(long long int n) {
 		return result;		
 }
 
-#if defined STATS || defined HARD
+#if defined STATS || defined PROD
 inline void Program::print_stats() {
     std::cout << "<<< stats printing started..." << std::endl;
 
@@ -228,7 +215,7 @@ inline void Program::print_stats() {
     }
     #endif 
 
-    #ifdef HARD
+    #ifdef PROD
     // cache
     fprintf(fp, "\n<<< cache stats\n");
     // inst-cache
@@ -328,13 +315,11 @@ inline void Program::exec() {
     luiori_counter.assign(counter_size, (long long int)0);
     #endif
 
-    #ifdef DEBUG
     output.open(path + "/output.bin", std::ios::out|std::ios::binary|std::ios::trunc); 
     if (!output) {
         std::cerr << "error: an error occurred opening ./files/****/output.bin";
         exit(1);
-    }   
-    #endif
+    }
 
     FILE *fp = fopen((path + "/output.ppm").c_str(), "w");
     if (fp == NULL) {
@@ -356,7 +341,7 @@ inline void Program::exec() {
         curinst = instructions[pc/4];
         Opcode opcode = curinst.opcode;
 
-        #ifdef HARD
+        #ifdef PROD
         // inst-cache
         instCache.cacheAccess(pc, true);
         #endif
@@ -366,7 +351,7 @@ inline void Program::exec() {
             if (opcode < 102) {
                 switch(opcode) {
                     case Arrlw: {
-                        #ifdef HARD
+                        #ifdef PROD
                         dataCache.cacheAccess(addr, true);
                         #endif
                         Program::check_load(addr, pc);
@@ -374,7 +359,7 @@ inline void Program::exec() {
                         pc += 4;
                     } break;
                     case Arrsw: {
-                        #ifdef HARD
+                        #ifdef PROD
                         dataCache.cacheAccess(addr, false);
                         #endif
                         Program::check_store(addr, pc);
@@ -386,7 +371,7 @@ inline void Program::exec() {
             else {
                 switch(opcode) {
                     case Arrflw: {
-                        #ifdef HARD
+                        #ifdef PROD
                         dataCache.cacheAccess(addr, true);
                         #endif
                         if (addr == -1) {
@@ -400,7 +385,7 @@ inline void Program::exec() {
                         pc+=4;
                     } break;
                     case Arrfsw: {
-                        #ifdef HARD
+                        #ifdef PROD
                         dataCache.cacheAccess(addr, false);
                         #endif
                         Program::check_store(addr, pc);
@@ -421,7 +406,7 @@ inline void Program::exec() {
                         switch(opcode) {
                             case Lw: { 
                                 int addr = xregs[curinst.reg1] + curinst.imm;
-                                #ifdef HARD
+                                #ifdef PROD
                                 dataCache.cacheAccess(addr, true);
                                 #endif
                                 if (addr == -1) {
@@ -461,21 +446,15 @@ inline void Program::exec() {
                             case Sw: {
                                 int addr = xregs[curinst.reg1] + curinst.imm;
                                 if (addr == -1) {
-                                    #ifdef DEBUG
-                                    // globalfun::print_byte_hex(fp, (unsigned int)xregs[curinst.reg0]);
                                     globalfun::print_output_bin(xregs[curinst.reg0], 4);
-                                    #endif
                                     fprintf(fp, "%d", xregs[curinst.reg0]);
                                 }
                                 else if (addr == -2) {
-                                    #ifdef DEBUG
-                                    // fprintf(fp, "%02x\n", (char)xregs[curinst.reg0]);
                                     globalfun::print_output_bin(xregs[curinst.reg0], 1);
-                                    #endif
                                     fprintf(fp, "%c", (char)xregs[curinst.reg0]);
                                 }
                                 else {
-                                    #ifdef HARD
+                                    #ifdef PROD
                                     dataCache.cacheAccess(addr, false);
                                     #endif
                                     Program::check_store(addr, pc);
@@ -485,7 +464,7 @@ inline void Program::exec() {
                             } break;
                             case Flw: {   
                                 int addr = xregs[curinst.reg1] + curinst.imm;
-                                #ifdef HARD
+                                #ifdef PROD
                                 dataCache.cacheAccess(addr, true);
                                 #endif
                                 if (addr == -1) {
@@ -525,7 +504,7 @@ inline void Program::exec() {
                         switch(opcode) {
                             case Beq: if (xregs[curinst.reg0] == xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
                             case Fsub: {
-                                #ifdef FPUEMU
+                                #ifdef PROD
                                 U f1, f2;
                                 f1.f = fregs[curinst.reg1];
                                 f2.f = fregs[curinst.reg2];
@@ -543,7 +522,7 @@ inline void Program::exec() {
                     if (opcode < 14) {                  
                         switch(opcode) { 
                             case Fadd: {
-                                #ifdef FPUEMU
+                                #ifdef PROD
                                 U f1, f2;
                                 f1.f = fregs[curinst.reg1];
                                 f2.f = fregs[curinst.reg2];
@@ -554,7 +533,7 @@ inline void Program::exec() {
                             }
                             case Fsw: {   
                                 int addr = xregs[curinst.reg1] + curinst.imm;
-                                #ifdef HARD
+                                #ifdef PROD
                                 dataCache.cacheAccess(addr, false);
                                 #endif
                                 Program::check_store(addr, pc);
@@ -567,7 +546,7 @@ inline void Program::exec() {
                     else {
                         switch(opcode) {
                             case Fle: 
-                                #ifdef FPUEMU
+                                #ifdef PROD
                                 U f0, f1;
                                 f0.f = fregs[curinst.reg0];
                                 f1.f = fregs[curinst.reg1];
@@ -576,7 +555,7 @@ inline void Program::exec() {
                                 if (fregs[curinst.reg0] <= fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
                                 #endif
                             case Fmul: {
-                                #ifdef FPUEMU
+                                #ifdef PROD
                                 U f1, f2;
                                 f1.f = fregs[curinst.reg1];
                                 f2.f = fregs[curinst.reg2];
@@ -604,7 +583,7 @@ inline void Program::exec() {
                 else {
                     switch(opcode) {
                         case Feq: 
-                            #ifdef FPUEMU
+                            #ifdef PROD
                             U f0, f1;
                             f0.f = fregs[curinst.reg0];
                             f1.f = fregs[curinst.reg1];
@@ -613,7 +592,7 @@ inline void Program::exec() {
                             if (fregs[curinst.reg0] == fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
                             #endif
                         case Fdiv: {
-                            #ifdef FPUEMU
+                            #ifdef PROD
                             U f1, f2;
                             f1.f = fregs[curinst.reg1];
                             f2.f = fregs[curinst.reg2];
@@ -631,7 +610,7 @@ inline void Program::exec() {
                 if (opcode < 22) {
                     switch(opcode) {
                         case Fsqrt: {
-                            #ifdef FPUEMU
+                            #ifdef PROD
                             U f1;
                             f1.f = fregs[curinst.reg1];
                             fregs[curinst.reg0] = fpu.fsqrt(f1).f; pc += 4; break;
@@ -701,7 +680,7 @@ inline void Program::exec() {
         jump_counter[pc]++;
         #endif 
 
-        #ifdef HARD
+        #ifdef PROD
         branchPrediction.update(pc_prev, pc);
         #endif
 
@@ -741,7 +720,7 @@ inline void Program::exec() {
     time_predict.predict();
     #endif
 
-    #if defined STATS || defined HARD
+    #if defined STATS || defined PROD
     Program::print_stats();
     #endif
 }

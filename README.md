@@ -10,11 +10,9 @@
 - `cd asm_sim`
 - `make`:
     - `make`:       高速な実行ファイル生成
-    - `make debug`: assertionなどdebugのための実行ファイル生成
-        - ブレークポインタが使用可能
-    - `make hard`:  cache, 分岐予測などhardware用の機能を追加した実行ファイル生成
+    - `make debug`: debugのための実行ファイル生成. ブレークポインタが使用可能
     - `make stats`: stats(命令実行回数、labelアクセス回数)を記録する実行ファイル生成
-    - `make prod`:  FPUエミュレータを用いた実行ファイル生成
+    - `make prod`:  stats機能, FPUエミュレート機能, キャッシュ機能, 分岐予測機能を含む実行ファイル生成
     
 ### 入出力ファイル
 - `./asm_sim/files/****`を作成
@@ -26,15 +24,16 @@
         - `libmincaml.s`:   いわゆるソフトウェア実装library
 - 出力ファイル
     - 以下を`./asm_sim/files/****`に出力
-        - `base.txt`:           16進数の.sld
         - `bin_debug.txt`:      アセンブラデバッグ用
-        - `bin.txt`:            16進数の機械語
+        - `binary.bin`          binary形式の機械語
+        - `binary.txt`:         16進数の機械語
         - `debug.txt`:          各種デバッグ用. 命令, ラベル, 入力
+        - `output.bin`:         binary形式画像ファイル
         - `output.ppm`:         .ppm画像ファイル
         - `pcToFilepos.txt`:    pcから各命令を辞書引き
         - (`stats.txt`): 
-            - `make hard`:  cache stats, branch prediction stats
             - `make stats`: 命令実行数, ジャンプ先カウント, lui/ori代入カウント
+            - `make prod`:  命令実行数, キャッシュ, 分岐予測等の統計情報
 
 ### 実行方法
 - `./asm_sim`で./sim`
