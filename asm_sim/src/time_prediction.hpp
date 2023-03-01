@@ -56,42 +56,39 @@ long double TimePredict::predict() {
     // - 65 byte目でstallし始める
     //      - 10000 clock/bit -> 80 clock/bitまで理論上可能
 
-    // # lw 
-    // - 直前にsw
-    //      - hit -> 6 clock
-    //      - miss -> 直前のstoreにかかったclock
-    // - 直前にlw
-    //      - データが出るまでコアで待つ
-    // ## hit:
-    //  - 6 clock
-    // ## miss:
-    //  - dirty bit -> 9 clock
-    //  - memoryからcacheへの書き込み -> 40 clock(50 MHz) (60 clock(100 MHz))
-    //  - コアへのload -> 4 clock
-    //
-    // # sw
-    // - 直前にsw
-    //      - hit -> 6 clock
-    //      - miss -> 直前のstoreにかかったclock
-    // - 直前にlw
-    //      - データが出るまでコアで待つ
-    // ## hit
-    //  - 0 clock
-    // ## miss
-    //  - dirty bit -> 9 clock
-    //  - memoryからcacheへの書き込み -> 40 clock(50 MHz) (60 clock(100 MHz))
-    //  - cacheへの書き込み -> 6 clock
+    //  # inst cache
+    //  ## load
+    //      ### hit:
+    //          - 2 clock
+    //      ### miss:
+    //          - 45 clock (50 MHz)
+    //  ## store
+    //      ### hit:
+    //          - 7 clock
+    //      ### miss:
+    //          - 50 clock (50 MHz)
+    //  # inst cache
+    //  ## load
+    //      ### hit:
+    //          - 2 clock
+    //      ### miss:
+    //          - 45 clock  (50 MHz)
+    //          - 4 clock   (if dirty)
+    //  ## store
+    //      ### hit:
+    //          - 3 clock
+    //      ### miss:
+    //          - 45 clock  (50 MHz)
+    //          - 4 clock   (if dirty)
     clock_cnt += instCache.get_clock();
     clock_cnt += dataCache.get_clock();
 
     // FPU
-    clock_cnt += stats[Fadd] * 2.0;   // fadd: 2 clock
-    clock_cnt += stats[Fsub] * 2.0;   // fsub: 2 clock
-    clock_cnt += stats[Fmul] * 3.0;   // fmul: 3 clock
-    clock_cnt += stats[Fdiv] * 9.0;   // fdiv: 9 clock
-    clock_cnt += stats[Fsqrt] * 6.0;  // fsqrt: 6 clock
-    clock_cnt += stats[Feq] * 2.0;    // feq: 2 clock
-    clock_cnt += stats[Fle] * 2.0;    // fle: 2 clock
+    clock_cnt += stats[Fadd] * fadd_clock;   // fadd: 2 clock
+    clock_cnt += stats[Fsub] * fsub_clock;   // fsub: 2 clock
+    clock_cnt += stats[Fmul] * fmul_clock;   // fmul: 3 clock
+    clock_cnt += stats[Fdiv] * fdiv_clock;   // fdiv: 9 clock
+    clock_cnt += stats[Fsqrt] * fsqrt_clock;  // fsqrt: 6 clock
 
     return clock_cnt / clock;
 }

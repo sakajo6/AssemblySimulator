@@ -5,10 +5,25 @@
 typedef unsigned long long int ull;
 typedef long long int sll;
 
+enum FPU_opcode {
+    FPU_finv = 0,
+    FPU_fadd = 1,
+    FPU_fsub = 2,
+    FPU_fmul = 3,
+    FPU_fdiv = 4,
+    FPU_fsqrt = 5,
+    FPU_result = 6,
+    FPU_feq = 7,
+    FPU_fle = 8,
+};
+
 class FPU {
     private:
-        U finv(U);
         ull bit(ull, ull, ull);
+        void float_check(ull, FPU_opcode, int);
+
+        U finv(U);
+
     public:
         FPU() {
             initfun::finv_init();
@@ -32,9 +47,40 @@ inline ull FPU::bit(ull d, ull m, ull l) {
     return ret;
 }
 
+inline void FPU::float_check(ull x, FPU_opcode op, int reg) {
+    ull e = bit(x, 30, 23);
+    ull m = bit(x, 22, 0);
+
+    if (e == 255) {
+        if (m == 0) {
+            std::cout << "\033[33m[warning]\033[m FPU: Infinity -> " << op << std::endl;
+        }
+        else {
+            std::cout << "\033[33m[warning]\033[m FPU: NaN -> " << op << std::endl;
+        }
+    }
+    else if (e == 0 && m != 0) {
+        std::cout << "\033[33m[warning]\033[m FPU: Denormalized Number -> " << op << std::endl;
+    }
+
+    if (op == FPU_finv && reg == 0) {
+        if (e == 0 && m == 0) {
+            std::cout << "\033[33m[warning]\033[m FPU: zero division -> " << op << std::endl;
+        }
+    }
+    else if (op == FPU_fdiv && reg == 1) {
+        if (e == 0 && m == 0) {
+            std::cout << "\033[33m[warning]\033[m FPU: zero division -> " << op << std::endl;
+        }
+    }
+}
+
 inline U FPU::fadd(U x1_u, U x2_u) {
     ull x1 = x1_u.i;
     ull x2 = x2_u.i;
+
+    float_check(x1, FPU_fadd, 0);
+    float_check(x2, FPU_fadd, 1);
 
     // #1
     ull s1, s2;
@@ -207,6 +253,8 @@ inline U FPU::fadd(U x1_u, U x2_u) {
                                                         : (sy << 31) + (ey << 23) + my;
     y = bit(y, 31, 0);
 
+    float_check(y, FPU_result, 0);
+
     U ret;
     ret.i = (unsigned int)y;
 
@@ -215,7 +263,11 @@ inline U FPU::fadd(U x1_u, U x2_u) {
 
 inline U FPU::fsub(U x1_u, U x2_u) {
     // yの符号反転. faddで計算
+    ull x1 = x1_u.i;
     ull x2 = x2_u.i;
+
+    float_check(x1, FPU_fsub, 0);
+    float_check(x2, FPU_fsub, 1);
 
     ull minus_x2_31 = ~bit(x2, 31, 31);
     ull minus_x2_30_0 = bit(x2, 30, 0);
@@ -229,6 +281,9 @@ inline U FPU::fsub(U x1_u, U x2_u) {
 inline U FPU::fmul(U x1_u, U x2_u) {
     ull x1 = x1_u.i;
     ull x2 = x2_u.i;
+
+    float_check(x1, FPU_fmul, 0);
+    float_check(x2, FPU_fmul, 1);
 
     ull s1, s2;
     ull e1, e2; // 7:0
@@ -280,6 +335,8 @@ inline U FPU::fmul(U x1_u, U x2_u) {
     y = (e1 == 0 || e2 == 0) ? 0 : (sy << 31) + (ey << 23) + my;
     y = bit(y, 31, 0);
 
+    float_check(y, FPU_result, 0);
+
     U ret;
     ret.i = (unsigned int)y;
 
@@ -288,6 +345,8 @@ inline U FPU::fmul(U x1_u, U x2_u) {
 
 inline U FPU::finv(U x_u) {
     ull x = x_u.i;
+
+    float_check(x, FPU_finv, 0);
 
     ull addr; // 9:0
     addr = bit(x, 22, 13);
@@ -320,6 +379,9 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
     ull x1 = (ull)x1_u.i;
     ull x2 = (ull)x2_u.i;
 
+    float_check(x1, FPU_fdiv, 0);
+    float_check(x2, FPU_fdiv, 1);
+
     ull y_s;
     y_s = bit(x1, 31, 31) ^ bit(x2, 31, 31);
 
@@ -345,6 +407,8 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
     y = (bit(x1, 30, 0) == 0) ? 0 :
         (bit(y_e_4, 8, 8) ? 0 : (y_s << 31) + (bit((y_e_4 + bit(x4, 30, 23)), 7, 0) << 23) + bit(x4, 22, 0));
 
+    float_check(y, FPU_result, 0);
+
     U ret;
     ret.i = (unsigned int)y;
     return ret;
@@ -352,6 +416,8 @@ inline U FPU::fdiv(U x1_u, U x2_u) {
 
 inline U FPU::fsqrt(U x_u) {
     ull x = x_u.i;
+
+    float_check(x, FPU_fsqrt, 0);
 
     ull addr; // 9:0
     addr = bit(x, 23, 14);
@@ -387,6 +453,8 @@ inline U FPU::fsqrt(U x_u) {
         (bit(y_f, 24, 23) == 0b11 ? (y_e << 23) + bit(y_f, 22, 0) :
         (bit(y_f, 24, 23) == 0b10 ? ((y_e - 1) << 23) + bit(y_f, 22, 0) : ((y_e + 1) << 23) + bit(y_f, 22, 0))) : 0;
 
+    float_check(y, FPU_result, 0);
+
     U ret; 
     ret.i = (unsigned int)y;
     return ret;
@@ -395,6 +463,9 @@ inline U FPU::fsqrt(U x_u) {
 inline bool FPU::feq(U x_u, U y_u) {
     ull x = (ull)x_u.i;
     ull y = (ull)y_u.i;
+
+    float_check(x, FPU_feq, 0);
+    float_check(y, FPU_feq, 1);
 
     ull x_30_0 = bit(x, 30, 0);
     ull y_30_0 = bit(y, 30, 0);
@@ -405,6 +476,9 @@ inline bool FPU::feq(U x_u, U y_u) {
 inline bool FPU::fle(U x_u, U y_u) {
     ull x = (ull)x_u.i;
     ull y = (ull)y_u.i;
+
+    float_check(x, FPU_feq, 0);
+    float_check(y, FPU_feq, 1);
 
     ull x_31 = bit(x, 31, 31);
     ull y_31 = bit(y, 31, 31);

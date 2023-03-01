@@ -28,10 +28,6 @@
 #include "time_prediction.hpp"
 #endif
 
-#ifdef DEBUG
-#include "memory.hpp"
-#endif
-
 class Program {
     private:
         int pc;
@@ -45,6 +41,11 @@ class Program {
         std::vector<std::string> input_files;
         std::map<std::string, int> labels;
 
+        std::string print_int_with_comma(long long int);
+        void check_load(int, int);
+        void check_store(int, int); 
+        void init_source();
+
         #ifdef STATS
         std::vector<long long int> stats; 
         std::vector<long long int> jump_counter;
@@ -57,25 +58,14 @@ class Program {
         BranchPrediction branchPrediction;
         #endif
 
-        #ifdef FPUEMU
-        FPU fpu;
-        #endif
-
-        std::string print_int_with_comma(long long int);
-
         #if defined STATS || defined HARD
         void print_stats();
         #endif
-        
-        void check_load(int, int);
-        void check_store(int, int); 
 
-        #ifdef DEBUG
-        MemoryControl memoryControl;
+        #ifdef FPUEMU
+        FPU fpu;
         #endif
-
-        void init_source();
-
+        
     public:
         Program() {
             pc = 0;
@@ -85,19 +75,30 @@ class Program {
 
             #ifdef HARD
             // tag, index, offset
-            instCache = Cache(16, 10, 6);
-            dataCache = Cache(15, 11, 6);
+            instCache = Cache(
+                InstCache,
+                instCache_tagSiz,
+                instCache_indexSiz,
+                instCache_offsetSiz,
+                instCache_waySiz);
+            dataCache = Cache(
+                DataCache,
+                dataCache_tagSiz,
+                dataCache_indexSiz,
+                dataCache_offsetSiz,
+                dataCache_waySiz);
 
             // GHR_length, BW
-            branchPrediction = BranchPrediction(6);
+            branchPrediction = BranchPrediction(BW);
             #endif
 
             #ifdef STATS
-            stats.assign(100, (long long int)0);
+            stats.assign(stats_siz, (long long int)0);
             jump_counter = {};
             luiori_counter = {};
             #endif
         }
+
         void callReader(int, char const *[]);
         void callAssembler();
         void exec();
@@ -214,7 +215,7 @@ inline void Program::print_stats() {
     #ifdef STATS
     // instruction stats
     std::vector<std::pair<long long int, Opcode>> instr_counter;
-    for(int i = 0; i < 100; i++) {
+    for(int i = 0; i < stats_siz; i++) {
         if (opcode_to_string.count((Opcode)i)) {
             instr_counter.push_back({stats[i], (Opcode)i});
         }
@@ -349,10 +350,6 @@ inline void Program::exec() {
 
     clock_gettime(CLOCK_REALTIME, &start);
 
-    long double output_last_cnt = -1.0;
-    long double output_cnt = 0;
-    long double output_diff_sum = 0;
-
     // exec
     while(pc != end_point) {
         unsigned int pc_prev = pc;
@@ -464,11 +461,6 @@ inline void Program::exec() {
                             case Sw: {
                                 int addr = xregs[curinst.reg1] + curinst.imm;
                                 if (addr == -1) {
-                                    output_cnt++;
-                                    if (output_last_cnt != -1.0) {
-                                        output_diff_sum += ((long double)counter - output_last_cnt) / 4.0;
-                                    }
-                                    output_last_cnt = counter;
                                     #ifdef DEBUG
                                     // globalfun::print_byte_hex(fp, (unsigned int)xregs[curinst.reg0]);
                                     globalfun::print_output_bin(xregs[curinst.reg0], 4);
@@ -692,11 +684,6 @@ inline void Program::exec() {
             std::cout << "\t";
             globalfun::print_inst(stdout, curinst);
             std::cout << "\n\n";
-            if (opcode == Lw || opcode == Flw) {
-                unsigned int addr = xregs[curinst.reg1] + curinst.imm;
-                std::cout << "\tlast store: pc = " << memoryControl.get_last_store(addr) << std::endl;
-            }
-            std::cout << "\n";
             globalfun::print_regs(binflag);
             std::cout << "\n\tcurrent pc = " << pc << "(" << std::hex << pc << std::dec << ")" << std::endl;
 
@@ -717,20 +704,6 @@ inline void Program::exec() {
         #ifdef HARD
         branchPrediction.update(pc_prev, pc);
         #endif
-        
-        #ifdef PROD
-        if (opcode == Sw || opcode == Fsw) dataCache.prev_sw = true;
-        else dataCache.prev_sw = false;
-        #endif
-
-        #ifdef DEBUG
-        if (opcode == Sw || opcode == Fsw) {
-            if (xregs[curinst.reg1] + curinst.imm >= 0) {
-                unsigned int addr = xregs[curinst.reg1] + curinst.imm;
-                memoryControl.update_last_store(addr, pc_prev);
-            }
-        }
-        #endif
 
         counter++;
 
@@ -748,7 +721,6 @@ inline void Program::exec() {
 
     globalfun::print_regs(binflag);
     
-    std::cout << "\taverage clock between outputs: " << output_diff_sum / output_cnt << "\n\n";
     std::cout << "\telapsed time: " << (end.tv_sec + end.tv_nsec*1.0e-9) - (start.tv_sec + start.tv_nsec*1.0e-9) << "\n";
     std::cout << "\tcounter: " << Program::print_int_with_comma(counter) << '\n' << std::endl;
 
@@ -759,7 +731,7 @@ inline void Program::exec() {
     std::cout << "<<< time prediction" << std::endl;
     
     TimePredict time_predict = TimePredict(
-                        (long double)50000000,
+                        (long double)clock_cycle,
                         (long double)counter,
                         &instCache,
                         &dataCache,

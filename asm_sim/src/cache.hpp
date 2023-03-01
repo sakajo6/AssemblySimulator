@@ -5,6 +5,11 @@
 
 #include "opecode.hpp"
 
+enum CacheType {
+    InstCache,
+    DataCache,
+};
+
 struct CacheLine {
     bool accessed;
     bool dirty;
@@ -16,6 +21,7 @@ class Cache {
     private:
         long double clock;
 
+        CacheType cacheType;
         unsigned int tagSiz;
         unsigned int indexSiz;
         unsigned int offsetSiz;
@@ -27,29 +33,25 @@ class Cache {
         unsigned int pseudoLRU(unsigned int);
 
     public:
-        bool prev_sw;
-        unsigned int prev_sw_clock;
-
         unsigned int loadCnt;
         unsigned int loadHit;
         unsigned int storeCnt;
         unsigned int storeHit;
 
         Cache() {};
-        Cache(unsigned int tag_, unsigned int index_, unsigned int offset_){
+        Cache(CacheType cacheType_, unsigned int tag_, unsigned int index_, unsigned int offset_, unsigned int way_){
             clock = 0;
+
+            cacheType = cacheType_;
 
             // fix bit-size
             tagSiz = tag_;
             indexSiz = index_;
             offsetSiz = offset_;
-            waySiz = 2;
+            waySiz = way_;
 
             // cache body
             cache.assign((1 << indexSiz) * waySiz, CacheLine{false, false, false, 0});
-
-            prev_sw = false;
-            prev_sw_clock = 0;
 
             loadCnt = 0;
             loadHit = 0;
@@ -74,11 +76,6 @@ inline unsigned int Cache::pseudoLRU(unsigned int idx) {
 
 // flag: true -> load, false -> store
 inline void Cache::cacheAccess(unsigned int pc, bool flag) {
-    // 直前の命令がsw
-    if (prev_sw) {
-        clock += prev_sw_clock;
-    }
-
     long double prev_clock = clock;
 
     unsigned int tag, index, offset;
@@ -102,7 +99,12 @@ inline void Cache::cacheAccess(unsigned int pc, bool flag) {
                 Cache::updateAccessed(index, i);
 
                 // increment clock
-                clock += 6;
+                if (cacheType == InstCache) {
+                    clock += instCache_load_hit;
+                }
+                else if (cacheType == DataCache) {
+                    clock += dataCache_load_hit;
+                }
 
                 return;
             }
@@ -112,14 +114,15 @@ inline void Cache::cacheAccess(unsigned int pc, bool flag) {
         unsigned int expway = Cache::pseudoLRU(index);
 
         // increment clock
-        // expway上dirty_bit立ってたら9 clock
-        if (cache[index + expway].dirty) {
-            clock += 9;
+        if (cacheType == InstCache)  {
+            clock += instCache_load_miss;
         }
-        // memory -> cacheへの書き込み
-        clock += 40;
-        // コアへのload
-        clock += 4;
+        else if (cacheType == DataCache) {
+            clock += dataCache_load_miss;
+            if (cache[index + expway].dirty) {
+                clock += dataCache_load_miss_dirty;
+            }
+        }
 
         // accessed, dirty, valid, tag
         // accessed: 反転, dirty: false
@@ -142,10 +145,12 @@ inline void Cache::cacheAccess(unsigned int pc, bool flag) {
                 cache[index + i] = CacheLine{false, true, true, tag};
 
                 // increment clock
-                clock += 0;
-
-                // 直前にsw: hit -> 6 clock
-                prev_sw_clock = 6;
+                if (cacheType == InstCache) {
+                    clock += instCache_store_hit;
+                }
+                else if (cacheType == DataCache) {
+                    clock += dataCache_store_hit;
+                }
 
                 Cache::updateAccessed(index, i);
                 return;
@@ -156,16 +161,15 @@ inline void Cache::cacheAccess(unsigned int pc, bool flag) {
         unsigned int expway = Cache::pseudoLRU(index);
 
         // increment clock
-        // expway上dirty_bit立ってたら9 clock
-        if (cache[index + expway].dirty) {
-            clock += 9;
+        if (cacheType == InstCache) {
+            clock += instCache_store_miss;
         }
-        // memory -> cacheへの書き込み
-        clock += 40;
-        // コアへのload
-        clock += 6;
-
-        prev_sw_clock = clock - prev_clock;
+        else if (cacheType == DataCache) {
+            clock += dataCache_store_miss;
+            if (cache[index + expway].dirty) {
+                clock += dataCache_store_miss_dirty;
+            }
+        }
 
         // accessed: 反転, dirty: true
         cache[index + expway] = CacheLine{false, true, true, tag};

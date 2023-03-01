@@ -7,38 +7,74 @@
 
 #include "instruction.hpp"
 
-bool binflag;
-bool brkallflag;
-bool brknonflag;
+const long double clock_cycle = 50000000;
 
-std::ofstream output;
-std::ofstream binary;
-
-/*
-    memory info:
-        text section
-        data section
-        heap
-        stack
-*/
-std::string path;
-const int memory_size = (1 << 27); // アドレスなので実際のアドレスの4倍
-int text_data_section = 0;
 union U {
   unsigned int i;
   float f;
 };
+
+// runtime parameter
+bool binflag;
+bool brkallflag;
+bool brknonflag;
+
+// variable for output
+std::string path;
+std::ofstream output;
+std::ofstream binary;
+
+// memory info
+const int memory_size = (1 << 27); // アドレスなので実際のアドレスの4倍
+int text_data_section = 0;
 std::vector<U> memory(memory_size);
 std::vector<U> std_input;
+
+// cache-info
+// instruction cache
+const unsigned int instCache_tagSiz = 16;
+const unsigned int instCache_indexSiz = 10;
+const unsigned int instCache_offsetSiz = 6;
+const unsigned int instCache_waySiz = 2;
+
+const long double instCache_load_hit = 2;
+const long double instCache_load_miss = 45;         // clock: 50 MHz
+const long double instCache_store_hit = 7;
+const long double instCache_store_miss = 50;        // clock: 50 MHz
+
+// data cache
+const unsigned int dataCache_tagSiz = 15;
+const unsigned int dataCache_indexSiz = 11;
+const unsigned int dataCache_offsetSiz = 6;
+const unsigned int dataCache_waySiz = 2;
+
+const long double dataCache_load_hit = 2;
+const long double dataCache_load_miss = 45;         // clock: 50 MHz
+const long double dataCache_load_miss_dirty = 4;    
+const long double dataCache_store_hit = 3;      
+const long double dataCache_store_miss = 45;        // clock: 50 MHz
+const long double dataCache_store_miss_dirty = 4;
+
+// branch prediction
+const unsigned int BW = 10;
+const long double branch_prediction_miss = 2;
+
+// FPU
+const long double fadd_clock = 2;
+const long double fsub_clock = 2;
+const long double fmul_clock = 3;
+const long double fdiv_clock = 9;
+const long double fsqrt_clock = 6;
+
+// others
+const unsigned int stats_siz = 110;
 
 /*
     register info:
         x0: zero register
-        x1: return address?
-
-        x28: the size of program section
-        x29: the number of read data by hardware
-        x30: the number of read data by software
+        x1: return address
+        x2: stack pointer
+        x3: heap pointer
 */
 const int xregs_size = 32;
 int xregs[xregs_size];
@@ -46,6 +82,7 @@ int xregs[xregs_size];
 const int fregs_size = 32;
 float fregs[fregs_size];
 
+// general purpose functions
 namespace globalfun {
     void print_inst(FILE *fp, Instruction inst) {
         fprintf(fp, "%s ", opcode_to_string[inst.opcode].c_str());

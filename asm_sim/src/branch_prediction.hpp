@@ -89,5 +89,5 @@ inline void BranchPrediction::update(unsigned int pc_E, unsigned int pc_succE) {
 }
 
 inline long double BranchPrediction::get_clock() {
-    return (long double)(branchCnt - branchHit) * 2.0;
+    return (long double)(branchCnt - branchHit) * branch_prediction_miss;
 }
