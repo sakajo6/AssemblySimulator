@@ -37,7 +37,7 @@ const unsigned int instCache_indexSiz = 10;
 const unsigned int instCache_offsetSiz = 6;
 const unsigned int instCache_waySiz = 2;
 
-const long double instCache_load_hit = 2;
+const long double instCache_load_hit = 5;
 const long double instCache_load_miss = 45;         // clock: 50 MHz
 const long double instCache_store_hit = 7;
 const long double instCache_store_miss = 50;        // clock: 50 MHz
@@ -48,12 +48,12 @@ const unsigned int dataCache_indexSiz = 11;
 const unsigned int dataCache_offsetSiz = 6;
 const unsigned int dataCache_waySiz = 2;
 
-const long double dataCache_load_hit = 2;
+const long double dataCache_load_hit = 6;
 const long double dataCache_load_miss = 45;         // clock: 50 MHz
-const long double dataCache_load_miss_dirty = 4;    
-const long double dataCache_store_hit = 3;      
+const long double dataCache_load_miss_dirty = 9;    
+const long double dataCache_store_hit = 6;      
 const long double dataCache_store_miss = 45;        // clock: 50 MHz
-const long double dataCache_store_miss_dirty = 4;
+const long double dataCache_store_miss_dirty = 9;
 
 // branch prediction
 const unsigned int BW = 10;
