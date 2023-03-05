@@ -14,6 +14,8 @@ class TimePredict {
 
         std::vector<long long int> stats;
 
+        FILE *fp;
+
     public:
         TimePredict() {};
         TimePredict(
@@ -22,13 +24,15 @@ class TimePredict {
             Cache *instCache_,
             Cache *dataCache_,
             BranchPrediction *branchPrediction_,
-            std::vector<long long int> *stats_) {
+            std::vector<long long int> *stats_,
+            FILE * fp_) {
                 clock_cycle = clock_;
                 counter = counter_;
                 instCache = *instCache_;
                 dataCache = *dataCache_;
                 branchPrediction = *branchPrediction_;
                 stats = *stats_;
+                fp = fp_;
         };
         void predict();     
 };
@@ -38,7 +42,7 @@ void TimePredict::predict() {
     long double clock_cnt = counter;
     long double clock_tmp;
 
-    printf("\tbasic time ->\t%Lf s\n", clock_cnt / clock_cycle);
+    fprintf(fp, "\tbasic time ->\t%Lf s\n", clock_cnt / clock_cycle);
 
     // # server.py 
     // - プログラム読み込み待ち
@@ -55,7 +59,7 @@ void TimePredict::predict() {
     // - 2 clock
     clock_tmp = clock_cnt;
     clock_cnt += branchPrediction.get_clock();
-    printf("\tbranch pred ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
+    fprintf(fp, "\tbranch pred ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
 
     // # io out
     // - 65 byte目でstallし始める
@@ -88,7 +92,7 @@ void TimePredict::predict() {
     clock_tmp = clock_cnt;
     clock_cnt += instCache.get_clock();
     clock_cnt += dataCache.get_clock();
-    printf("\tcache stall ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
+    fprintf(fp, "\tcache stall ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
 
     // FPU
     clock_tmp = clock_cnt;
@@ -97,7 +101,7 @@ void TimePredict::predict() {
     clock_cnt += stats[Fmul] * fmul_clock;   // fmul: 3 clock
     clock_cnt += stats[Fdiv] * fdiv_clock;   // fdiv: 9 clock
     clock_cnt += stats[Fsqrt] * fsqrt_clock;  // fsqrt: 6 clock
-    printf("\tFPU stall ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
+    fprintf(fp, "\tFPU stall ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
 
-    printf("\n\ttotal time ->\t%Lf s\n\n", clock_cnt / clock_cycle);
+    fprintf(fp, "\n\ttotal time ->\t%Lf s\n", clock_cnt / clock_cycle);
 }

@@ -199,6 +199,20 @@ inline void Program::print_stats() {
         exit(1);
     }    
 
+    #ifdef PROD
+    fprintf(fp, "<<< time prediction\n");
+    TimePredict time_predict = TimePredict(
+                        (long double)clock_cycle,
+                        (long double)counter,
+                        &instCache,
+                        &dataCache,
+                        &branchPrediction,
+                        &stats,
+                        fp);
+
+    time_predict.predict();
+    #endif
+
     #ifdef STATS
     // instruction stats
     std::vector<std::pair<long long int, Opcode>> instr_counter;
@@ -208,7 +222,7 @@ inline void Program::print_stats() {
         }
     }
     std::sort(instr_counter.begin(), instr_counter.end(), std::greater<>());
-    fprintf(fp, "<<< instruction stats\n");
+    fprintf(fp, "\n<<< instruction stats\n");
     fprintf(fp, "\ttotal: \t%s\n", Program::print_int_with_comma(counter).c_str());
     for(auto i: instr_counter) {
         fprintf(fp, "\t%s: \t%s\n", opcode_to_string[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
@@ -706,21 +720,6 @@ inline void Program::exec() {
     std::cout << "\tcounter: " << Program::print_int_with_comma(counter) << '\n' << std::endl;
 
     std::cout << "<<< program finished\n" << std::endl;
-
-    
-    #ifdef PROD
-    std::cout << "<<< time prediction" << std::endl;
-    
-    TimePredict time_predict = TimePredict(
-                        (long double)clock_cycle,
-                        (long double)counter,
-                        &instCache,
-                        &dataCache,
-                        &branchPrediction,
-                        &stats);
-
-    time_predict.predict();
-    #endif
 
     #if defined STATS || defined PROD
     Program::print_stats();
