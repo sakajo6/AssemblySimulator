@@ -38,9 +38,11 @@ const unsigned int instCache_offsetSiz = 6;
 const unsigned int instCache_waySiz = 2;
 
 const long double instCache_load_hit = 5;
-const long double instCache_load_miss = 45;         // clock: 50 MHz
-const long double instCache_store_hit = 7;
-const long double instCache_store_miss = 50;        // clock: 50 MHz
+const long double instCache_load_miss = 40;         // clock: 50 MHz
+const long double instCache_load_miss_dirty = 9;
+const long double instCache_store_hit = 5;
+const long double instCache_store_miss = 40;        // clock: 50 MHz
+const long double instCache_store_miss_dirty = 9;
 
 // data cache
 const unsigned int dataCache_tagSiz = 15;
@@ -49,14 +51,14 @@ const unsigned int dataCache_offsetSiz = 6;
 const unsigned int dataCache_waySiz = 2;
 
 const long double dataCache_load_hit = 6;
-const long double dataCache_load_miss = 45;         // clock: 50 MHz
+const long double dataCache_load_miss = 40;         // clock: 50 MHz
 const long double dataCache_load_miss_dirty = 9;    
 const long double dataCache_store_hit = 6;      
-const long double dataCache_store_miss = 45;        // clock: 50 MHz
+const long double dataCache_store_miss = 40;        // clock: 50 MHz
 const long double dataCache_store_miss_dirty = 9;
 
 // branch prediction
-const unsigned int BW = 10;
+const unsigned int BW = 6;
 const long double branch_prediction_miss = 2;
 
 // FPU

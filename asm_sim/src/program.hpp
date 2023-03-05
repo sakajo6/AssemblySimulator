@@ -343,7 +343,9 @@ inline void Program::exec() {
 
         #ifdef PROD
         // inst-cache
-        instCache.cacheAccess(pc, true);
+        instCache.cacheAccess(pc, Load);
+        instCache.clocks_from_last_sw += 1;
+        dataCache.clocks_from_last_sw += 1;
         #endif
 
         if (opcode >= 100) {
@@ -352,7 +354,7 @@ inline void Program::exec() {
                 switch(opcode) {
                     case Arrlw: {
                         #ifdef PROD
-                        dataCache.cacheAccess(addr, true);
+                        dataCache.cacheAccess(addr, Load);
                         #endif
                         Program::check_load(addr, pc);
                         xregs[curinst.reg0] = (int)memory.at(addr).i;
@@ -360,7 +362,7 @@ inline void Program::exec() {
                     } break;
                     case Arrsw: {
                         #ifdef PROD
-                        dataCache.cacheAccess(addr, false);
+                        dataCache.cacheAccess(addr, Store);
                         #endif
                         Program::check_store(addr, pc);
                         memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
@@ -372,7 +374,7 @@ inline void Program::exec() {
                 switch(opcode) {
                     case Arrflw: {
                         #ifdef PROD
-                        dataCache.cacheAccess(addr, true);
+                        dataCache.cacheAccess(addr, Load);
                         #endif
                         if (addr == -1) {
                             fregs[curinst.reg0] = std_input.at(std_cnt).f;
@@ -386,7 +388,7 @@ inline void Program::exec() {
                     } break;
                     case Arrfsw: {
                         #ifdef PROD
-                        dataCache.cacheAccess(addr, false);
+                        dataCache.cacheAccess(addr, Store);
                         #endif
                         Program::check_store(addr, pc);
                         memory.at(addr).f = fregs[curinst.reg0];
@@ -407,7 +409,7 @@ inline void Program::exec() {
                             case Lw: { 
                                 int addr = xregs[curinst.reg1] + curinst.imm;
                                 #ifdef PROD
-                                dataCache.cacheAccess(addr, true);
+                                dataCache.cacheAccess(addr, Load);
                                 #endif
                                 if (addr == -1) {
                                     xregs[curinst.reg0] = std_input.at(std_cnt).i;
@@ -455,7 +457,7 @@ inline void Program::exec() {
                                 }
                                 else {
                                     #ifdef PROD
-                                    dataCache.cacheAccess(addr, false);
+                                    dataCache.cacheAccess(addr, Store);
                                     #endif
                                     Program::check_store(addr, pc);
                                     memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
@@ -465,7 +467,7 @@ inline void Program::exec() {
                             case Flw: {   
                                 int addr = xregs[curinst.reg1] + curinst.imm;
                                 #ifdef PROD
-                                dataCache.cacheAccess(addr, true);
+                                dataCache.cacheAccess(addr, Load);
                                 #endif
                                 if (addr == -1) {
                                     fregs[curinst.reg0] = std_input.at(std_cnt).f;
@@ -534,7 +536,7 @@ inline void Program::exec() {
                             case Fsw: {   
                                 int addr = xregs[curinst.reg1] + curinst.imm;
                                 #ifdef PROD
-                                dataCache.cacheAccess(addr, false);
+                                dataCache.cacheAccess(addr, Store);
                                 #endif
                                 Program::check_store(addr, pc);
                                 memory.at(addr).f = fregs[curinst.reg0];
