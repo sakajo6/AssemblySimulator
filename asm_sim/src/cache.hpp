@@ -10,11 +10,6 @@ enum CacheType {
     DataCache,
 };
 
-enum AccessType {
-    Load,
-    Store,
-};
-
 enum MemAccessResult {
     Hit,
     Miss,
@@ -58,9 +53,10 @@ class Cache {
         unsigned int offsetSiz;
         unsigned int waySiz;
 
-        // cache actual data
+        // actual cache data
         std::vector<CacheLine> cache;
 
+        // cache control handlers
         void controlStoreStall();
         MemIndex splitAddress(unsigned int);
         void writeBack(unsigned int, unsigned int, unsigned int);
@@ -122,6 +118,7 @@ class Cache {
         void printStats(FILE *);
 };
 
+// add clocks for store-store
 inline void Cache::controlStoreStall() {
     long double stall_for_last_sw = std::max((long double)0, clocks_last_sw - clocks_from_last_sw);
     switch(result_last_sw) {
@@ -134,6 +131,7 @@ inline void Cache::controlStoreStall() {
     clocks_last_sw = 0;
 }
 
+// address -> {tag, index, offset}
 inline MemIndex Cache::splitAddress(unsigned int addr) {
     unsigned int tag, index, offset;
     tag = addr >> (indexSiz + offsetSiz);
@@ -143,6 +141,7 @@ inline MemIndex Cache::splitAddress(unsigned int addr) {
     return MemIndex{tag, index, offset};
 }
 
+// transfer data on cache to memory
 inline void Cache::writeBack(unsigned int exp_way, unsigned int tag, unsigned int index) {
     // compute address for write-back
     unsigned int write_back_addr = 0;
@@ -160,6 +159,7 @@ inline U Cache::Load(unsigned int addr) {
     unsigned int index = memIndex.index;
     unsigned int offset = memIndex.offset;
 
+    // check cache hit/miss
     int hit_way = -1;
     MemAccessResult result = Miss;
     for(int w = 0; w < waySiz; w++) {
@@ -248,6 +248,7 @@ inline void Cache::Store(unsigned int addr, U stored_data) {
     unsigned int index = memIndex.index;
     unsigned int offset = memIndex.offset;
 
+    // check cache hit/miss
     int hit_way = -1;
     MemAccessResult result = Miss;
     for(int w = 0; w < waySiz; w++) {
