@@ -20,86 +20,109 @@ enum MemAccessResult {
     Miss,
 };
 
-struct CacheLine {
-    bool accessed;
+struct MemIndex {
+    unsigned int tag;
+    unsigned int index;
+    unsigned int offset;
+};
+
+struct CacheWay {
     bool dirty;
     bool valid;
     unsigned int tag;
+    std::vector<U> data;    // size: (1 << offsetSiz)/4
+};
+
+struct CacheLine {
+    unsigned int accessed;
+    std::vector<CacheWay> ways;
 };
 
 class Cache {
     private:
+        // cache stats
         long double clocks;
         long double clocks_store_hit;
         long double clocks_store_miss;
         long double clocks_load_hit;
         long double clocks_load_miss;
+        long int load_hit_cnt;
+        long int load_miss_cnt;
+        long int store_hit_cnt;
+        long int store_miss_cnt;
 
+        // cache info
         CacheType cacheType;
         unsigned int tagSiz;
         unsigned int indexSiz;
         unsigned int offsetSiz;
         unsigned int waySiz;
 
+        // cache actual data
         std::vector<CacheLine> cache;
 
-        void updateAccessed(unsigned int, int);
-        unsigned int pseudoLRU(unsigned int);
+        void controlStoreStall();
+        MemIndex splitAddress(unsigned int);
+        void writeBack(unsigned int, unsigned int, unsigned int);
 
     public:
-        long int load_hit_cnt;
-        long int load_miss_cnt;
-        long int store_hit_cnt;
-        long int store_miss_cnt;
-        
+        // control store stall
         MemAccessResult result_last_sw;
         long double clocks_from_last_sw;
         long double clocks_last_sw;
 
         Cache() {};
         Cache(CacheType cacheType_, unsigned int tag_, unsigned int index_, unsigned int offset_, unsigned int way_){
+            // cache stats
             clocks = 0;
             clocks_load_hit = 0;
             clocks_load_miss = 0;
             clocks_store_hit = 0;
             clocks_store_miss = 0;
-
-            cacheType = cacheType_;
-
-            // fix bit-size
-            tagSiz = tag_;
-            indexSiz = index_;
-            offsetSiz = offset_;
-            waySiz = way_;
-
-            // cache body
-            cache.assign((1 << indexSiz) * waySiz, CacheLine{false, false, false, 0});
-
             load_hit_cnt = 0;
             load_miss_cnt = 0;
             store_hit_cnt = 0;
             store_miss_cnt = 0;
 
+            // cache info
+            cacheType = cacheType_;
+            tagSiz = tag_;
+            indexSiz = index_;
+            offsetSiz = offset_;
+            waySiz = way_;
+
+            // initialize cache body
+            cache.assign(
+                (1 << indexSiz), 
+                CacheLine {
+                    0,      // accessed
+                    std::vector<CacheWay>(
+                        waySiz,
+                        CacheWay {
+                            false,  // dirty
+                            false,  // valid
+                            0,      // tag
+                            std::vector<U>((1 << offsetSiz)/4)
+                        }
+                    )
+                });
+
+            // control store stall
+            result_last_sw = Miss;
             clocks_from_last_sw = 0;
             clocks_last_sw = 0;
-        };  
-        void cacheAccess(unsigned int, AccessType);
+        };
+
+        // memory access handlers
+        U Load(unsigned int);
+        void Store(unsigned int, U);
+
+        // stats handlers
         long double get_clock();
         void printStats(FILE *);
 };
 
-
-inline void Cache::updateAccessed(unsigned int idx, int hit_way) {
-    if (hit_way == 0) cache[idx].accessed = false;
-    else cache[idx].accessed = true;
-}
-
-inline unsigned int Cache::pseudoLRU(unsigned int idx) {
-    if (cache[idx].accessed) return 0;
-    else return 1;
-}
-
-inline void Cache::cacheAccess(unsigned int pc, AccessType accessType) {
+inline void Cache::controlStoreStall() {
     long double stall_for_last_sw = std::max((long double)0, clocks_last_sw - clocks_from_last_sw);
     switch(result_last_sw) {
         case Hit:   clocks_store_hit += stall_for_last_sw;
@@ -109,135 +132,195 @@ inline void Cache::cacheAccess(unsigned int pc, AccessType accessType) {
 
     clocks_from_last_sw = 0;
     clocks_last_sw = 0;
+}
 
-    long double prev_clock = clocks;
-
+inline MemIndex Cache::splitAddress(unsigned int addr) {
     unsigned int tag, index, offset;
-    tag = pc >> (indexSiz + offsetSiz);
-    index = (pc >> offsetSiz) % (1 << indexSiz);
-    offset = pc % (1 << offsetSiz);
+    tag = addr >> (indexSiz + offsetSiz);
+    index = (addr >> offsetSiz) % (1 << indexSiz);
+    offset = addr % (1 << offsetSiz);
 
-    index *= waySiz;
+    return MemIndex{tag, index, offset};
+}
 
-    // load
-    switch(accessType) {
-        case Load: {
-            int hit_way = -1;
-            MemAccessResult result = Miss;
-            for(int i = 0; i < waySiz; i++) {
-                CacheLine cacheline = cache[index + i];
-                if (cacheline.valid && tag == cacheline.tag) {
-                    hit_way = i;
-                    result = Hit;
-                    break;
-                }
-            }
+inline void Cache::writeBack(unsigned int exp_way, unsigned int tag, unsigned int index) {
+    // compute address for write-back
+    unsigned int write_back_addr = 0;
+    write_back_addr += (tag << (indexSiz + offsetSiz));
+    write_back_addr += (index << offsetSiz);
 
-            if (result == Hit) {
-                load_hit_cnt++;
+    for(int i = 0; i < (1 << offsetSiz)/4; i++) {
+        memory[write_back_addr + 4*i] = cache[index].ways[exp_way].data[i];
+    }
+}
 
-                // accessed: hitしたwayの値
-                Cache::updateAccessed(index, hit_way);
+inline U Cache::Load(unsigned int addr) {
+    MemIndex memIndex = splitAddress(addr);
+    unsigned int tag = memIndex.tag;
+    unsigned int index = memIndex.index;
+    unsigned int offset = memIndex.offset;
 
-                // increment clocks
-                if (cacheType == InstCache) {
-                    clocks += instCache_load_hit;
-                    clocks_load_hit += instCache_load_hit;
-                }
-                else if (cacheType == DataCache) {
-                    clocks += dataCache_load_hit;
-                    clocks_load_hit += dataCache_load_hit;
-                }
-            }
-            else if (result == Miss) {
-                load_miss_cnt++;
-                unsigned int expway = Cache::pseudoLRU(index);
-
-                // increment clocks
-                if (cacheType == InstCache)  {
-                    clocks += instCache_load_miss;
-                    clocks_load_miss += instCache_load_miss;
-                    if (cache[index + expway].dirty) {
-                        clocks += instCache_load_miss_dirty;
-                        clocks_load_miss += instCache_load_miss_dirty;
-                    }
-                }
-                else if (cacheType == DataCache) {
-                    clocks += dataCache_load_miss;
-                    clocks_load_miss += dataCache_load_miss;
-                    if (cache[index + expway].dirty) {
-                        clocks += dataCache_load_miss_dirty;
-                        clocks_load_miss += dataCache_load_miss_dirty;
-                    }
-                }
-
-                // accessed: reversed, dirty: false
-                cache[index + expway] = CacheLine{true, false, true, tag};
-
-                Cache::updateAccessed(index, expway);
-            }
-
+    int hit_way = -1;
+    MemAccessResult result = Miss;
+    for(int w = 0; w < waySiz; w++) {
+        CacheWay cacheWay = cache[index].ways[w];
+        if (cacheWay.valid && tag == cacheWay.tag) {
+            hit_way = w;
+            result = Hit;
             break;
         }
-        case Store: {
-            int hit_way = -1;
-            MemAccessResult result = Miss;
-            for(int i = 0; i < waySiz; i++) {
-                CacheLine cacheline = cache[index + i];
-                if (cacheline.valid && tag == cacheline.tag) {
-                    hit_way = i;
-                    result = Hit;
-                    break;
-                }
+    }
+    
+    U loaded_data;
+    if (result == Hit) {
+        // update stats
+        load_hit_cnt++;
+        if (cacheType == InstCache) {
+            clocks += instCache_load_hit;
+            clocks_load_hit += instCache_load_hit;
+        }
+        else if (cacheType == DataCache) {
+            clocks += dataCache_load_hit;
+            clocks_load_hit += dataCache_load_hit;
+        }
+
+        // update cache contents
+        //      accessed -> <hit way>
+        //          dirty    -> <as it is>
+        //          valid    -> <as it is>
+        //          tag      -> <as it is>
+        //          data     -> <as it is>
+        cache[index].accessed = hit_way;
+        loaded_data = cache[index].ways[hit_way].data[offset/4];
+    }
+    else if (result == Miss) {
+        // decide way to be kicked out
+        unsigned int exp_way = 1 - cache[index].accessed;
+
+        // update stats
+        load_miss_cnt++;
+        if (cacheType == InstCache)  {
+            clocks += instCache_load_miss;
+            clocks_load_miss += instCache_load_miss;
+            if (cache[index].ways[exp_way].dirty) {
+                clocks += instCache_load_miss_dirty;
+                clocks_load_miss += instCache_load_miss_dirty;
             }
-
-            if (result == Hit) {
-                store_hit_cnt++;
-
-                // accessed: hitしたwayの値, dirty: true
-                cache[index + hit_way] = CacheLine{false, true, true, tag};
-
-                // increment clocks
-                if (cacheType == InstCache) {
-                    clocks_last_sw += instCache_store_hit;
-                }
-                else if (cacheType == DataCache) {
-                    clocks_last_sw += dataCache_store_hit;
-                }
-
-                result_last_sw = Hit;
-
-                Cache::updateAccessed(index, hit_way);
+        }
+        else if (cacheType == DataCache) {
+            clocks += dataCache_load_miss;
+            clocks_load_miss += dataCache_load_miss;
+            if (cache[index].ways[exp_way].dirty) {
+                clocks += dataCache_load_miss_dirty;
+                clocks_load_miss += dataCache_load_miss_dirty;
             }
-            else if (result == Miss) {
-                store_miss_cnt++;
-                unsigned int expway = Cache::pseudoLRU(index);
+        }
 
-                // increment clocks
-                if (cacheType == InstCache) {
-                    clocks_last_sw += instCache_store_miss;
-                    if (cache[index + expway].dirty) {
-                        clocks_last_sw += instCache_store_miss_dirty;
-                    }
-                }
-                else if (cacheType == DataCache) {
-                    clocks_last_sw += dataCache_store_miss;
-                    if (cache[index + expway].dirty) {
-                        clocks_last_sw += dataCache_store_miss_dirty;
-                    }
-                }
+        // dirty line -> to be written back to memory
+        if (cache[index].ways[exp_way].dirty) {
+            writeBack(exp_way, cache[index].ways[exp_way].tag, index);
+        }
 
-                result_last_sw = Miss;
+        // update cache contents:
+        //      accessed -> <exp way>
+        //          dirty    -> false
+        //          valid    -> true
+        //          tag      -> <update>
+        //          data     -> <update>
+        cache[index].accessed = exp_way;
+        cache[index].ways[exp_way].dirty = false;
+        cache[index].ways[exp_way].valid = true;
+        cache[index].ways[exp_way].tag = tag;
+        for(int i = 0; i < (1 << offsetSiz)/4; i++) {
+            cache[index].ways[exp_way].data[i] = memory[(addr/(1 << offsetSiz))*(1 << offsetSiz) + 4*i];
+        }
 
-                // accessed: reversed, dirty: true
-                cache[index + expway] = CacheLine{false, true, true, tag};
+        // set return value
+        loaded_data = cache[index].ways[exp_way].data[offset/4];
+    }
+    
+    return loaded_data;
+}
 
-                Cache::updateAccessed(index, expway);
-            }
+inline void Cache::Store(unsigned int addr, U stored_data) {
+    MemIndex memIndex = splitAddress(addr);
+    unsigned int tag = memIndex.tag;
+    unsigned int index = memIndex.index;
+    unsigned int offset = memIndex.offset;
+
+    int hit_way = -1;
+    MemAccessResult result = Miss;
+    for(int w = 0; w < waySiz; w++) {
+        CacheWay cacheWay = cache[index].ways[w];
+        if (cacheWay.valid && tag == cacheWay.tag) {
+            hit_way = w;
+            result = Hit;
+            break;
         }
     }
 
-    return;
+    if (result == Hit) {
+        // update stats
+        store_hit_cnt++;
+        if (cacheType == InstCache) {
+            clocks_last_sw += instCache_store_hit;
+        }
+        else if (cacheType == DataCache) {
+            clocks_last_sw += dataCache_store_hit;
+        }
+        result_last_sw = Hit;
+
+        // update cache contents
+        //      accessed -> <hit way>
+        //          dirty    -> true
+        //          valid    -> true
+        //          tag      -> <as it is>
+        //          data     -> <update>
+        cache[index].accessed = hit_way;
+        cache[index].ways[hit_way].dirty = true;
+        cache[index].ways[hit_way].valid = true;
+        cache[index].ways[hit_way].data[offset/4] = stored_data;
+    }
+    else if (result == Miss) {
+        // decide way to be kicked out
+        unsigned int exp_way = 1 - cache[index].accessed;
+
+        // update stats
+        store_miss_cnt++;
+        if (cacheType == InstCache) {
+            clocks_last_sw += instCache_store_miss;
+            if (cache[index].ways[exp_way].dirty) {
+                clocks_last_sw += instCache_store_miss_dirty;
+            }
+        }
+        else if (cacheType == DataCache) {
+            clocks_last_sw += dataCache_store_miss;
+            if (cache[index].ways[exp_way].dirty) {
+                clocks_last_sw += dataCache_store_miss_dirty;
+            }
+        }
+        result_last_sw = Miss;
+
+        // dirty line -> to be written back to memory
+        if (cache[index].ways[exp_way].dirty) {
+            writeBack(exp_way, cache[index].ways[exp_way].tag, index);
+        }
+
+        // update cache contents:
+        //      accessed -> <exp way>
+        //          dirty    -> true
+        //          valid    -> true
+        //          tag      -> <update>
+        //          data     -> <update>
+        cache[index].accessed = exp_way;
+        cache[index].ways[exp_way].dirty = true;
+        cache[index].ways[exp_way].valid = true;
+        cache[index].ways[exp_way].tag = tag;
+        for(int i = 0; i < (1 << offsetSiz)/4; i++) {
+            cache[index].ways[exp_way].data[i] = memory[(addr/(1 << offsetSiz))*(1 << offsetSiz) + 4*i];
+        }
+        cache[index].ways[exp_way].data[offset/4] = stored_data;
+    }
 }
 
 inline long double Cache::get_clock() {

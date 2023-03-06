@@ -357,7 +357,7 @@ inline void Program::exec() {
 
         #ifdef PROD
         // inst-cache
-        instCache.cacheAccess(pc, Load);
+        instCache.Load(pc);
         instCache.clocks_from_last_sw += 1;
         dataCache.clocks_from_last_sw += 1;
         #endif
@@ -367,19 +367,25 @@ inline void Program::exec() {
             if (opcode < 102) {
                 switch(opcode) {
                     case Arrlw: {
-                        #ifdef PROD
-                        dataCache.cacheAccess(addr, Load);
-                        #endif
                         Program::check_load(addr, pc);
+
+                        #ifdef PROD
+                        xregs[curinst.reg0] = (int)dataCache.Load(addr).i;
+                        #else
                         xregs[curinst.reg0] = (int)memory.at(addr).i;
+                        #endif
                         pc += 4;
                     } break;
                     case Arrsw: {
-                        #ifdef PROD
-                        dataCache.cacheAccess(addr, Store);
-                        #endif
                         Program::check_store(addr, pc);
+
+                        #ifdef PROD
+                        U stored_data;
+                        stored_data.i = (unsigned int)xregs[curinst.reg0];
+                        dataCache.Store(addr, stored_data);
+                        #else
                         memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
+                        #endif
                         pc+=4;
                     } break;
                 }
@@ -387,25 +393,31 @@ inline void Program::exec() {
             else {
                 switch(opcode) {
                     case Arrflw: {
-                        #ifdef PROD
-                        dataCache.cacheAccess(addr, Load);
-                        #endif
                         if (addr == -1) {
                             fregs[curinst.reg0] = std_input.at(std_cnt).f;
                             std_cnt++;
                         }
                         else {
                             Program::check_load(addr, pc);
+
+                            #ifdef PROD
+                            fregs[curinst.reg0] = dataCache.Load(addr).f;
+                            #else
                             fregs[curinst.reg0] = memory.at(addr).f; 
+                            #endif
                         }
                         pc+=4;
                     } break;
                     case Arrfsw: {
-                        #ifdef PROD
-                        dataCache.cacheAccess(addr, Store);
-                        #endif
                         Program::check_store(addr, pc);
+
+                        #ifdef PROD
+                        U stored_data;
+                        stored_data.f = fregs[curinst.reg0];
+                        dataCache.Store(addr, stored_data);
+                        #else
                         memory.at(addr).f = fregs[curinst.reg0];
+                        #endif
                         pc+=4;
                     } break;
                 }
@@ -422,16 +434,18 @@ inline void Program::exec() {
                         switch(opcode) {
                             case Lw: { 
                                 int addr = xregs[curinst.reg1] + curinst.imm;
-                                #ifdef PROD
-                                dataCache.cacheAccess(addr, Load);
-                                #endif
                                 if (addr == -1) {
                                     xregs[curinst.reg0] = std_input.at(std_cnt).i;
                                     std_cnt++;
                                 }
                                 else {
                                     Program::check_load(addr, pc);
+
+                                    #ifdef PROD
+                                    xregs[curinst.reg0] = (int)dataCache.Load(addr).i;
+                                    #else
                                     xregs[curinst.reg0] = (int)memory.at(addr).i;
+                                    #endif
                                 }
                                 pc += 4;
                             } break;
@@ -470,26 +484,32 @@ inline void Program::exec() {
                                     fprintf(fp, "%c", (char)xregs[curinst.reg0]);
                                 }
                                 else {
-                                    #ifdef PROD
-                                    dataCache.cacheAccess(addr, Store);
-                                    #endif
                                     Program::check_store(addr, pc);
+
+                                    #ifdef PROD
+                                    U stored_data;
+                                    stored_data.i = (unsigned int)xregs[curinst.reg0];
+                                    dataCache.Store(addr, stored_data);
+                                    #else
                                     memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
+                                    #endif
                                 }
                                 pc+=4;
                             } break;
                             case Flw: {   
                                 int addr = xregs[curinst.reg1] + curinst.imm;
-                                #ifdef PROD
-                                dataCache.cacheAccess(addr, Load);
-                                #endif
                                 if (addr == -1) {
                                     fregs[curinst.reg0] = std_input.at(std_cnt).f;
                                     std_cnt++;
                                 }
                                 else {
                                     Program::check_load(addr, pc);
+
+                                    #ifdef PROD
+                                    fregs[curinst.reg0] = dataCache.Load(addr).f;
+                                    #else
                                     fregs[curinst.reg0] = memory.at(addr).f; 
+                                    #endif
                                 }
                                 pc+=4;
                             } break;
@@ -549,11 +569,15 @@ inline void Program::exec() {
                             }
                             case Fsw: {   
                                 int addr = xregs[curinst.reg1] + curinst.imm;
-                                #ifdef PROD
-                                dataCache.cacheAccess(addr, Store);
-                                #endif
                                 Program::check_store(addr, pc);
+
+                                #ifdef PROD
+                                U stored_data;
+                                stored_data.f = fregs[curinst.reg0];
+                                dataCache.Store(addr, stored_data);
+                                #else
                                 memory.at(addr).f = fregs[curinst.reg0];
+                                #endif
                                 pc+=4;
                             } break;
                         }

@@ -6,5 +6,5 @@ diff_check.ppm
 input
 output
 comp
-files
+files*
 asm_check
