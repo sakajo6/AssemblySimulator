@@ -19,6 +19,11 @@ enum OpeAssert {
     MemoryOutOfRange,
 };
 
+struct AssembleResp {
+    OpeAssert       opeAssert;
+    unsigned int    encoded_instruction;
+};
+
 class Assembler {
     private:
         OpeAssert set_machine_R(std::bitset<32> *);
@@ -56,7 +61,7 @@ class Assembler {
             fp = fp_;
             fpdebug = fpdebug_;
         }
-        OpeAssert assemble(int);
+        AssembleResp assemble(int);
 };
 
 inline void Assembler::assemble_debug(std::bitset<32> mcode){
@@ -324,8 +329,7 @@ inline OpeAssert Assembler::set_machine_J(std::bitset<32> *mcode) {
     return OK;
 }
 
-inline OpeAssert Assembler::assemble(int pc) {
-
+inline AssembleResp Assembler::assemble(int pc) {
     std::bitset<32> ret_machine;
     OpeAssert ret = OK;
     if (opcode < 50) {
@@ -403,16 +407,23 @@ inline OpeAssert Assembler::assemble(int pc) {
 
 
     if (pc < 0 || pc >= memory_size) {
-        return MemoryOutOfRange;
+        return AssembleResp{
+            MemoryOutOfRange,
+            0
+        };
     }
-    memory.at(pc).i = (unsigned int)(ret_machine.to_ulong());
 
-    globalfun::print_binary_bin((int)memory.at(pc).i, 4);
-    fprintf(fp, "%08x\n", (unsigned int)memory.at(pc).i);
+    unsigned int encoded_instruction = (unsigned int)(ret_machine.to_ulong());
+
+    globalfun::print_binary_bin((int)encoded_instruction, 4);
+    fprintf(fp, "%08x\n", encoded_instruction);
 
     // check assembler
     Decoder decoder = Decoder(&ret_machine, &inst, fpdebug);
     decoder.decode();
 
-    return ret;
+    return AssembleResp {
+        ret,
+        (unsigned int)(ret_machine.to_ulong())
+    };
 }

@@ -122,8 +122,10 @@ class Cache {
 inline void Cache::controlStoreStall() {
     long double stall_for_last_sw = std::max((long double)0, clocks_last_sw - clocks_from_last_sw);
     switch(result_last_sw) {
-        case Hit:   clocks_store_hit += stall_for_last_sw;
-        case Miss:  clocks_store_miss += stall_for_last_sw;
+        case Hit:
+            clocks_store_hit += stall_for_last_sw; break;
+        case Miss:
+            clocks_store_miss += stall_for_last_sw; break;
     }
     clocks += stall_for_last_sw;
 
@@ -154,6 +156,9 @@ inline void Cache::writeBack(unsigned int exp_way, unsigned int tag, unsigned in
 }
 
 inline U Cache::Load(unsigned int addr) {
+    // Add clocks in th last stall
+    controlStoreStall();
+
     MemIndex memIndex = splitAddress(addr);
     unsigned int tag = memIndex.tag;
     unsigned int index = memIndex.index;
@@ -243,6 +248,9 @@ inline U Cache::Load(unsigned int addr) {
 }
 
 inline void Cache::Store(unsigned int addr, U stored_data) {
+    // add clocks in the last store
+    controlStoreStall();
+
     MemIndex memIndex = splitAddress(addr);
     unsigned int tag = memIndex.tag;
     unsigned int index = memIndex.index;
@@ -259,68 +267,108 @@ inline void Cache::Store(unsigned int addr, U stored_data) {
             break;
         }
     }
+    
+    if (cacheType == InstCache) {
+        if (result == Hit) {
+            // write through
+            memory[addr] = stored_data;
 
-    if (result == Hit) {
-        // update stats
-        store_hit_cnt++;
-        if (cacheType == InstCache) {
-            clocks_last_sw += instCache_store_hit;
+            // update cache contents
+            //      accessed -> <hit_way>
+            //          dirty    -> false
+            //          valid    -> true
+            //          tag      -> <as it is>
+            //          data     -> <update>
+            cache[index].accessed = hit_way;
+            cache[index].ways[hit_way].dirty = false;
+            cache[index].ways[hit_way].valid = true;
+            cache[index].ways[hit_way].data[offset/4] = stored_data;
         }
-        else if (cacheType == DataCache) {
-            clocks_last_sw += dataCache_store_hit;
-        }
-        result_last_sw = Hit;
+        else if (result == Miss) {
+            // decide way to be kicked out
+            unsigned int exp_way = 1 - cache[index].accessed;
 
-        // update cache contents
-        //      accessed -> <hit way>
-        //          dirty    -> true
-        //          valid    -> true
-        //          tag      -> <as it is>
-        //          data     -> <update>
-        cache[index].accessed = hit_way;
-        cache[index].ways[hit_way].dirty = true;
-        cache[index].ways[hit_way].valid = true;
-        cache[index].ways[hit_way].data[offset/4] = stored_data;
+            // write through
+            memory[addr] = stored_data;
+
+            // update cache contents
+            //      accessed -> <exp_way>
+            //          dirty    -> false
+            //          valid    -> true
+            //          tag      -> <as it is>
+            //          data     -> <update>
+            cache[index].accessed = exp_way;
+            cache[index].ways[exp_way].dirty = false;
+            cache[index].ways[exp_way].valid = true;
+            cache[index].ways[exp_way].tag = tag;
+            for(int i = 0; i < (1 << offsetSiz)/4; i++) {
+                cache[index].ways[exp_way].data[i] = memory[(addr/(1 << offsetSiz))*(1 << offsetSiz) + 4*i];
+            }
+        }
     }
-    else if (result == Miss) {
-        // decide way to be kicked out
-        unsigned int exp_way = 1 - cache[index].accessed;
-
-        // update stats
-        store_miss_cnt++;
-        if (cacheType == InstCache) {
-            clocks_last_sw += instCache_store_miss;
-            if (cache[index].ways[exp_way].dirty) {
-                clocks_last_sw += instCache_store_miss_dirty;
+    else if (cacheType == DataCache) {
+        if (result == Hit) {
+            // update stats
+            store_hit_cnt++;
+            if (cacheType == InstCache) {
+                clocks_last_sw += instCache_store_hit;
             }
-        }
-        else if (cacheType == DataCache) {
-            clocks_last_sw += dataCache_store_miss;
-            if (cache[index].ways[exp_way].dirty) {
-                clocks_last_sw += dataCache_store_miss_dirty;
+            else if (cacheType == DataCache) {
+                clocks_last_sw += dataCache_store_hit;
             }
-        }
-        result_last_sw = Miss;
+            result_last_sw = Hit;
 
-        // dirty line -> to be written back to memory
-        if (cache[index].ways[exp_way].dirty) {
-            writeBack(exp_way, cache[index].ways[exp_way].tag, index);
+            // update cache contents
+            //      accessed -> <hit way>
+            //          dirty    -> true
+            //          valid    -> true
+            //          tag      -> <as it is>
+            //          data     -> <update>
+            cache[index].accessed = hit_way;
+            cache[index].ways[hit_way].dirty = true;
+            cache[index].ways[hit_way].valid = true;
+            cache[index].ways[hit_way].data[offset/4] = stored_data;
         }
+        else if (result == Miss) {
+            // decide way to be kicked out
+            unsigned int exp_way = 1 - cache[index].accessed;
 
-        // update cache contents:
-        //      accessed -> <exp way>
-        //          dirty    -> true
-        //          valid    -> true
-        //          tag      -> <update>
-        //          data     -> <update>
-        cache[index].accessed = exp_way;
-        cache[index].ways[exp_way].dirty = true;
-        cache[index].ways[exp_way].valid = true;
-        cache[index].ways[exp_way].tag = tag;
-        for(int i = 0; i < (1 << offsetSiz)/4; i++) {
-            cache[index].ways[exp_way].data[i] = memory[(addr/(1 << offsetSiz))*(1 << offsetSiz) + 4*i];
+            // update stats
+            store_miss_cnt++;
+            if (cacheType == InstCache) {
+                clocks_last_sw += instCache_store_miss;
+                if (cache[index].ways[exp_way].dirty) {
+                    clocks_last_sw += instCache_store_miss_dirty;
+                }
+            }
+            else if (cacheType == DataCache) {
+                clocks_last_sw += dataCache_store_miss;
+                if (cache[index].ways[exp_way].dirty) {
+                    clocks_last_sw += dataCache_store_miss_dirty;
+                }
+            }
+            result_last_sw = Miss;
+
+            // dirty line -> to be written back to memory
+            if (cache[index].ways[exp_way].dirty) {
+                writeBack(exp_way, cache[index].ways[exp_way].tag, index);
+            }
+
+            // update cache contents:
+            //      accessed -> <exp way>
+            //          dirty    -> true
+            //          valid    -> true
+            //          tag      -> <update>
+            //          data     -> <update>
+            cache[index].accessed = exp_way;
+            cache[index].ways[exp_way].dirty = true;
+            cache[index].ways[exp_way].valid = true;
+            cache[index].ways[exp_way].tag = tag;
+            for(int i = 0; i < (1 << offsetSiz)/4; i++) {
+                cache[index].ways[exp_way].data[i] = memory[(addr/(1 << offsetSiz))*(1 << offsetSiz) + 4*i];
+            }
+            cache[index].ways[exp_way].data[offset/4] = stored_data;
         }
-        cache[index].ways[exp_way].data[offset/4] = stored_data;
     }
 }
 
@@ -335,11 +383,11 @@ inline void Cache::printStats(FILE *fp) {
     // hit rate
     long double hit = load_hit_cnt + store_hit_cnt;
     long double total = (load_hit_cnt + load_miss_cnt) + (store_hit_cnt + store_miss_cnt);
-    fprintf(fp, "\t\tLoad access -> %ld\n", load_hit_cnt + load_miss_cnt);
-    fprintf(fp, "\t\t\t- Hit:\t%ld(%Lf s)\n", load_hit_cnt, (long double)clocks_load_hit/clock_cycle);
-    fprintf(fp, "\t\t\t- Miss:\t%ld(%Lf s)\n", load_miss_cnt, (long double)clocks_load_miss/clock_cycle);
+    fprintf(fp, "\t\tLoad access -> %ld times\n", load_hit_cnt + load_miss_cnt);
+    fprintf(fp, "\t\t\t- Hit:\t%ld times (%Lf s)\n", load_hit_cnt, (long double)clocks_load_hit/clock_cycle);
+    fprintf(fp, "\t\t\t- Miss:\t%ld times (%Lf s)\n", load_miss_cnt, (long double)clocks_load_miss/clock_cycle);
     fprintf(fp, "\t\tStore access -> %ld\n", store_hit_cnt + store_miss_cnt);
-    fprintf(fp, "\t\t\t- Hit:\t%ld(%Lf s)\n", store_hit_cnt, (long double)clocks_store_hit/clock_cycle);
-    fprintf(fp, "\t\t\t- Miss:\t%ld(%Lf s)\n", store_miss_cnt, (long double)clocks_store_miss/clock_cycle);
+    fprintf(fp, "\t\t\t- Hit:\t%ld times (%Lf s)\n", store_hit_cnt, (long double)clocks_store_hit/clock_cycle);
+    fprintf(fp, "\t\t\t- Miss:\t%ld times (%Lf s)\n", store_miss_cnt, (long double)clocks_store_miss/clock_cycle);
     fprintf(fp, "\t\tHit rate -> %Lf\n", hit/total);
 }

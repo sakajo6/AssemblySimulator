@@ -91,8 +91,11 @@ void TimePredict::predict() {
     //          - 4 clock   (if dirty)
     clock_tmp = clock_cnt;
     clock_cnt += instCache.get_clock();
+    fprintf(fp, "\tinst-cache stall ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
+    
+    clock_tmp = clock_cnt;
     clock_cnt += dataCache.get_clock();
-    fprintf(fp, "\tcache stall ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
+    fprintf(fp, "\tdata-cache stall ->\t%Lf s\n", (clock_cnt - clock_tmp) / clock_cycle);
 
     // FPU
     clock_tmp = clock_cnt;

@@ -144,18 +144,23 @@ inline void Program::callAssembler() {
         fprintf(fpdebug, "\n");
 
         Assembler tempAsm(curinst, fp, fpdebug);
-        OpeAssert asmRet = tempAsm.assemble(i*4);
+        AssembleResp assembleResp = tempAsm.assemble(i*4);
         
+        // store instruction to inst-cache
+        U stored_data;
+        stored_data.i = assembleResp.encoded_instruction;
+        instCache.Store(i*4, stored_data);
+
         // Operand assertion
-        if (asmRet != OK && curinst.opcode != Lui && curinst.opcode != Ori) {
-            if (asmRet == ImmOverflow || asmRet == ImmOmission) {
+        if (assembleResp.opeAssert != OK && curinst.opcode != Lui && curinst.opcode != Ori) {
+            if (assembleResp.opeAssert == ImmOverflow || assembleResp.opeAssert == ImmOmission) {
                 std::cout << "\t\033[33m[warning]\033[m ";
                 if (curinst.filenameIdx == -1) std::cout << "entrypoint, line " << curinst.line << "\t";
                 else std::cout << input_files[curinst.filenameIdx] << ", line " << curinst.line << "\t";
                 globalfun::print_inst(stdout, curinst);
                 std::cout << "\t";
-                if (asmRet == ImmOverflow) std::cout << "Immediate value is out of range" << std::endl;
-                else if (asmRet == ImmOmission) std::cout << "Immediate value is ommitted during assembling" << std::endl;
+                if (assembleResp.opeAssert == ImmOverflow) std::cout << "Immediate value is out of range" << std::endl;
+                else if (assembleResp.opeAssert == ImmOmission) std::cout << "Immediate value is ommitted during assembling" << std::endl;
             }
             else {
                 std::cout << "\t\033[31m[error]\033[m ";
@@ -163,10 +168,10 @@ inline void Program::callAssembler() {
                 else std::cout << input_files[curinst.filenameIdx] << ", line " << curinst.line << "\t";
                 globalfun::print_inst(stdout, curinst);
                 std::cout << "\t";
-                if (asmRet == Reg0Err) std::cout << "Reg0 is not between 0 - 31" << std::endl;
-                else if (asmRet == Reg1Err) std::cout << "Reg1 is not between 0 - 31" << std::endl;
-                else if (asmRet == Reg2Err) std::cout << "Reg2 is not between 0 - 31" << std::endl;
-                else if (asmRet == MemoryOutOfRange) std::cout << "PC is out of memory" << std::endl;
+                if (assembleResp.opeAssert == Reg0Err) std::cout << "Reg0 is not between 0 - 31" << std::endl;
+                else if (assembleResp.opeAssert == Reg1Err) std::cout << "Reg1 is not between 0 - 31" << std::endl;
+                else if (assembleResp.opeAssert == Reg2Err) std::cout << "Reg2 is not between 0 - 31" << std::endl;
+                else if (assembleResp.opeAssert == MemoryOutOfRange) std::cout << "PC is out of memory" << std::endl;
             }
         }
     }
