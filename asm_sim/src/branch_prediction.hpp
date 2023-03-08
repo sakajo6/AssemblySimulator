@@ -27,7 +27,7 @@ class BranchPrediction {
         };
         void printStats(FILE *);
         unsigned int predict(unsigned int);
-        void update(unsigned int, unsigned int);
+        bool update(unsigned int, unsigned int);
 
         long double get_clock();
 };
@@ -59,7 +59,7 @@ inline unsigned int BranchPrediction::predict(unsigned int pc_F) {
     return pc_predF;
 }
 
-inline void BranchPrediction::update(unsigned int pc_E, unsigned int pc_succE) {
+inline bool BranchPrediction::update(unsigned int pc_E, unsigned int pc_succE) {
     branchCnt++;
 
     // set input
@@ -85,7 +85,13 @@ inline void BranchPrediction::update(unsigned int pc_E, unsigned int pc_succE) {
         BHT[pc6E] = (BHT[pc6E] == 0) ? 0 : (BHT[pc6E] - 1);
     }
 
-    if (pc_predE == pc_succE) branchHit++; 
+    if (pc_predE == pc_succE) {
+        branchHit++; 
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 inline long double BranchPrediction::get_clock() {

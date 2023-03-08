@@ -62,11 +62,11 @@ const unsigned int BW = 6;
 const long double branch_prediction_miss = 2;
 
 // FPU
-const long double fadd_clock = 2;
-const long double fsub_clock = 2;
-const long double fmul_clock = 3;
-const long double fdiv_clock = 9;
-const long double fsqrt_clock = 6;
+const long double fadd_clock = 3;
+const long double fsub_clock = 3;
+const long double fmul_clock = 4;
+const long double fdiv_clock = 10;
+const long double fsqrt_clock = 7;
 
 // others
 const unsigned int stats_siz = 110;

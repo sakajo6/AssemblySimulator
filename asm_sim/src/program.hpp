@@ -726,7 +726,7 @@ inline void Program::exec() {
         #endif 
 
         #ifdef PROD
-        branchPrediction.update(pc_prev, pc);
+        if (!branchPrediction.update(pc_prev, pc)) dataCache.clocks_from_last_sw += 2;
         #endif
 
         counter++;
