@@ -149,7 +149,11 @@ inline void Program::callAssembler() {
         // store instruction to inst-cache
         U stored_data;
         stored_data.i = assembleResp.encoded_instruction;
+        #ifdef PROD
         instCache.Store(i*4, stored_data);
+        #else
+        memory.at(i*4) = stored_data;
+        #endif
 
         // Operand assertion
         if (assembleResp.opeAssert != OK && curinst.opcode != Lui && curinst.opcode != Ori) {
