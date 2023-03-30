@@ -1,8 +1,0 @@
-### input file
-- ppmに正規.ppmファイルを配置
-- outputsにシミュ出力.ppmファイルを配置
-
-### execute
-- go run diff.go
-- ./ppm/のファイル名を.ppm抜きで標準入力に入力
-- ./outputs/のファイル名を.ppm抜きで標準入力に出力

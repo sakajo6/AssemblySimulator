@@ -512,18 +512,6 @@ inline void Reader::print_debug() {
         else {
             fprintf(fp, "\t%08x\t%d\n", (unsigned int)std_input.at(i).i, std_input.at(i).i);
         }
-
-        // unsigned int val = std_input.at(i).i;
-        // unsigned int upperval = val / (1 << 16);
-        // unsigned int lowerval = val % (1 << 16);
-
-        // fprintf(fp, "%04x ", upperval);
-        // fprintf(fp, "%04x ", lowerval);
-
-        // cnt++;
-        // if (cnt % 4 == 0) {
-        //     fprintf(fp, "\n");
-        // }
     }
 
     fclose(fp);

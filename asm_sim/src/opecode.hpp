@@ -1,48 +1,46 @@
 #pragma once
 
 enum Opcode {
-    Lw = 0,
-    Addi,
-    Lui,
-    Ori,
-
-    Sw = 4,
-    Flw,
-    Jalr,
     Add,
-
-    Mul = 8,
-    Jal,
-    Beq,
-    Fsub,
-
-    Fadd = 12,
-    Fsw,
-    Fle,
-    Fmul,
-
-    Ble = 16,
     Sub,
-    Feq,
+    Slt,
+    Mul,
+    Div,
+
+    Fadd,
+    Fsub,
+    Fmul,
     Fdiv,
 
-    Fsqrt = 20,
-    Div,
-    Slt,
+    Feq,
+    Fle,
+    Flw,
+    Fsw,
+    Fsqrt,
+
+    Addi,
+    Ori,
+    Jalr,
+    Lw,
+    Sw,
+
+    Beq,
+    Ble,
     Bge,
+    Jal,
+    Lui,
 
-    Exit = 50,
-
-    Word = 60,
-
-    Arrlw = 100,
+    Exit,
+    
+    Word,
+    
+    Arrlw ,
     Arrsw,
     Arrflw,
     Arrfsw,
 };
 
 std::map<std::string, Opcode> string_to_opcode = {
-    // 0
     {"add", Add},
     {"sub", Sub},
     {"slt", Slt},

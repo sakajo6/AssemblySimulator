@@ -28,7 +28,7 @@ class Program {
         Instruction curinst;
 
         long long int counter;
-        int std_cnt;
+        int stdin_cnt;
         int end_point;
 
         std::vector<Instruction> instructions;
@@ -42,8 +42,6 @@ class Program {
 
         #ifdef STATS
         std::vector<long long int> stats; 
-        std::vector<long long int> jump_counter;
-        std::vector<long long int> luiori_counter;
         #endif
 
         #ifdef PROD
@@ -85,8 +83,6 @@ class Program {
 
             #ifdef STATS
             stats.assign(stats_siz, (long long int)0);
-            jump_counter = {};
-            luiori_counter = {};
             #endif
         }
 
@@ -106,7 +102,7 @@ inline void Program::init_source() {
 
     text_data_section = instructions.size()*4;
     pc = 0;
-    std_cnt = 0;
+    stdin_cnt = 0;
 }
 
 inline void Program::callReader(int argc, char const *argv[]) {
@@ -259,41 +255,6 @@ inline void Program::print_stats() {
     for(auto i: labels) {
         labelvector.emplace_back(i.first);
     }
-    // jump stats
-    std::vector<std::pair<long long int, int>> jump_counter_sorted;
-    for(int i = 0; i < labelvector.size(); i++) {
-        jump_counter_sorted.push_back({jump_counter[labels[labelvector[i]]], i});
-    }
-    std::sort(jump_counter_sorted.begin(), jump_counter_sorted.end(), 
-    [](std::pair<long long int, int> a, std::pair<long long int, int> b) {
-        if (a.first > b.first) return true;
-        else if (a.first == b.first) {
-            return a.first < b.first;
-        }
-        return false;
-    });
-    fprintf(fp, "\n<<< jump stats\n");
-    for(auto i: jump_counter_sorted) {
-        fprintf(fp, "\t%s: \t%s\n", labelvector[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
-    }
-
-    // lui/ori stats
-    std::vector<std::pair<long long int, int>> luiori_counter_sorted;
-    for(int i = 0; i < labelvector.size(); i++) {
-        luiori_counter_sorted.push_back({luiori_counter[labels[labelvector[i]]], i});
-    }
-    std::sort(luiori_counter_sorted.begin(), luiori_counter_sorted.end(), 
-    [](std::pair<long long int, int> a, std::pair<long long int, int> b) {
-        if (a.first > b.first) return true;
-        else if (a.first == b.first) {
-            return a.first < b.first;
-        }
-        return false;
-    });
-    fprintf(fp, "\n<<< lui/ori stats\n");
-    for(auto i: luiori_counter_sorted) {
-        fprintf(fp, "\t%s: \t%s\n", labelvector[i.second].c_str(), Program::print_int_with_comma(i.first).c_str());
-    }
     #endif 
 
     fclose(fp);
@@ -334,8 +295,6 @@ inline void Program::exec() {
 
     #ifdef STATS
     long long int counter_size = instructions.size()*4;
-    jump_counter.assign(counter_size, (long long int)0);
-    luiori_counter.assign(counter_size, (long long int)0);
     #endif
 
     output.open(path + "/output.bin", std::ios::out|std::ios::binary|std::ios::trunc); 
@@ -371,335 +330,235 @@ inline void Program::exec() {
         dataCache.clocks_from_last_sw += 1;
         #endif
 
-        if (opcode >= 100) {
-            int addr = xregs[curinst.reg1] + (xregs[curinst.reg2] << 2);
-            if (opcode < 102) {
-                switch(opcode) {
-                    case Arrlw: {
-                        Program::check_load(addr, pc);
 
-                        #ifdef PROD
-                        xregs[curinst.reg0] = (int)dataCache.Load(addr).i;
-                        #else
-                        xregs[curinst.reg0] = (int)memory.at(addr).i;
-                        #endif
-                        pc += 4;
-                    } break;
-                    case Arrsw: {
-                        Program::check_store(addr, pc);
+        switch(opcode) {
+            case Add: xregs[curinst.reg0] = xregs[curinst.reg1] + xregs[curinst.reg2]; pc+=4; break;
+            case Sub: xregs[curinst.reg0] = xregs[curinst.reg1] - xregs[curinst.reg2]; pc+=4; break;
+            case Slt: if (xregs[curinst.reg1] < xregs[curinst.reg2]) {xregs[curinst.reg0] = 1;} else {xregs[curinst.reg0] = 0;}; pc+=4; break;
+            case Mul: xregs[curinst.reg0] = xregs[curinst.reg1] * xregs[curinst.reg2]; pc+=4; break;
+            case Div: xregs[curinst.reg0] = xregs[curinst.reg1] / xregs[curinst.reg2]; pc+=4; break;
 
-                        #ifdef PROD
-                        U stored_data;
-                        stored_data.i = (unsigned int)xregs[curinst.reg0];
-                        dataCache.Store(addr, stored_data);
-                        #else
-                        memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
-                        #endif
-                        pc+=4;
-                    } break;
-                }
+            case Fadd: {
+                #ifdef PROD
+                U f1, f2;
+                f1.f = fregs[curinst.reg1];
+                f2.f = fregs[curinst.reg2];
+                fregs[curinst.reg0] = fpu.fadd(f1, f2).f; pc += 4; break;
+                #else
+                fregs[curinst.reg0] = fregs[curinst.reg1] + fregs[curinst.reg2]; pc+=4; break;
+                #endif
             }
-            else {
-                switch(opcode) {
-                    case Arrflw: {
-                        if (addr == -1) {
-                            fregs[curinst.reg0] = std_input.at(std_cnt).f;
-                            std_cnt++;
-                        }
-                        else {
-                            Program::check_load(addr, pc);
-
-                            #ifdef PROD
-                            fregs[curinst.reg0] = dataCache.Load(addr).f;
-                            #else
-                            fregs[curinst.reg0] = memory.at(addr).f; 
-                            #endif
-                        }
-                        pc+=4;
-                    } break;
-                    case Arrfsw: {
-                        Program::check_store(addr, pc);
-
-                        #ifdef PROD
-                        U stored_data;
-                        stored_data.f = fregs[curinst.reg0];
-                        dataCache.Store(addr, stored_data);
-                        #else
-                        memory.at(addr).f = fregs[curinst.reg0];
-                        #endif
-                        pc+=4;
-                    } break;
-                }
+            case Fsub: {
+                #ifdef PROD
+                U f1, f2;
+                f1.f = fregs[curinst.reg1];
+                f2.f = fregs[curinst.reg2];
+                fregs[curinst.reg0] = fpu.fsub(f1, f2).f; pc += 4; break;
+                #else
+                fregs[curinst.reg0] = fregs[curinst.reg1] - fregs[curinst.reg2]; pc+=4; break;
+                #endif
             }
-        }
-        // 0 - 15
-        else if (opcode < 16) {
-            // 0 - 7
-            if (opcode < 8) {
-                // 0 - 3
-                if (opcode < 4) {
-                    // 0 - 1
-                    if (opcode < 2) {
-                        switch(opcode) {
-                            case Lw: { 
-                                int addr = xregs[curinst.reg1] + curinst.imm;
-                                if (addr == -1) {
-                                    xregs[curinst.reg0] = std_input.at(std_cnt).i;
-                                    std_cnt++;
-                                }
-                                else {
-                                    Program::check_load(addr, pc);
+            case Fmul: {
+                #ifdef PROD
+                U f1, f2;
+                f1.f = fregs[curinst.reg1];
+                f2.f = fregs[curinst.reg2];
+                fregs[curinst.reg0] = fpu.fmul(f1, f2).f; pc += 4; break;
+                #else
+                fregs[curinst.reg0] = fregs[curinst.reg1] * fregs[curinst.reg2]; pc+=4; break;
+                #endif
+            }
+            case Fdiv: {
+                #ifdef PROD
+                U f1, f2;
+                f1.f = fregs[curinst.reg1];
+                f2.f = fregs[curinst.reg2];
+                fregs[curinst.reg0] = fpu.fdiv(f1, f2).f; pc += 4; break;
+                #else
+                fregs[curinst.reg0] = fregs[curinst.reg1] / fregs[curinst.reg2]; pc+=4; break;
+                #endif
+            }
 
-                                    #ifdef PROD
-                                    xregs[curinst.reg0] = (int)dataCache.Load(addr).i;
-                                    #else
-                                    xregs[curinst.reg0] = (int)memory.at(addr).i;
-                                    #endif
-                                }
-                                pc += 4;
-                            } break;
-                            case Addi: xregs[curinst.reg0] = xregs[curinst.reg1] + curinst.imm; pc+=4; break;
-                        }
-                    }
-                    // 2 - 3
-                    else {
-                        switch(opcode) {
-                            case Lui: 
-                                #ifdef STATS
-                                if (curinst.luioriFlag && 0LL <= curinst.imm && curinst.imm < counter_size) luiori_counter[curinst.imm]++;
-                                #endif
-                                xregs[curinst.reg0] = (curinst.imm >> 12) << 12; pc+=4; break;
-                            case Ori: 
-                                #ifdef STATS
-                                if (curinst.luioriFlag && 0LL <= curinst.imm && curinst.imm < counter_size) luiori_counter[curinst.imm]++;
-                                #endif
-                                xregs[curinst.reg0] = xregs[curinst.reg1] | (int)(std::bitset<12>(curinst.imm).to_ulong()); pc+=4; break;
-                        }
-                    }
+            case Feq: {
+                #ifdef PROD
+                U f0, f1;
+                f0.f = fregs[curinst.reg0];
+                f1.f = fregs[curinst.reg1];
+                if (fpu.feq(f0, f1)) {pc += curinst.imm;} else {pc += 4;} break;
+                #else
+                if (fregs[curinst.reg0] == fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+                #endif
+            }
+            case Fle: {
+                #ifdef PROD
+                U f0, f1;
+                f0.f = fregs[curinst.reg0];
+                f1.f = fregs[curinst.reg1];
+                if (fpu.fle(f0, f1)) {pc += curinst.imm;} else {pc += 4;} break;
+                #else
+                if (fregs[curinst.reg0] <= fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+                #endif
+            }
+            case Flw: {
+                int addr = xregs[curinst.reg1] + curinst.imm;
+                if (addr == -1) {
+                    fregs[curinst.reg0] = std_input.at(stdin_cnt).f;
+                    stdin_cnt++;
                 }
-                // 4 - 7
                 else {
-                    // 4 - 5
-                    if (opcode < 6) {
-                        switch(opcode) {
-                            case Sw: {
-                                int addr = xregs[curinst.reg1] + curinst.imm;
-                                if (addr == -1) {
-                                    globalfun::print_output_bin(xregs[curinst.reg0], 4);
-                                    fprintf(fp, "%d", xregs[curinst.reg0]);
-                                }
-                                else if (addr == -2) {
-                                    globalfun::print_output_bin(xregs[curinst.reg0], 1);
-                                    fprintf(fp, "%c", (char)xregs[curinst.reg0]);
-                                }
-                                else {
-                                    Program::check_store(addr, pc);
+                    Program::check_load(addr, pc);
 
-                                    #ifdef PROD
-                                    U stored_data;
-                                    stored_data.i = (unsigned int)xregs[curinst.reg0];
-                                    dataCache.Store(addr, stored_data);
-                                    #else
-                                    memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
-                                    #endif
-                                }
-                                pc+=4;
-                            } break;
-                            case Flw: {   
-                                int addr = xregs[curinst.reg1] + curinst.imm;
-                                if (addr == -1) {
-                                    fregs[curinst.reg0] = std_input.at(std_cnt).f;
-                                    std_cnt++;
-                                }
-                                else {
-                                    Program::check_load(addr, pc);
+                    #ifdef PROD
+                    fregs[curinst.reg0] = dataCache.Load(addr).f;
+                    #else
+                    fregs[curinst.reg0] = memory.at(addr).f; 
+                    #endif
+                }
+                pc+=4; break;
+            }
+            case Fsw: {   
+                int addr = xregs[curinst.reg1] + curinst.imm;
+                Program::check_store(addr, pc);
 
-                                    #ifdef PROD
-                                    fregs[curinst.reg0] = dataCache.Load(addr).f;
-                                    #else
-                                    fregs[curinst.reg0] = memory.at(addr).f; 
-                                    #endif
-                                }
-                                pc+=4;
-                            } break;
-                        }
-                    }
-                    // 6 - 7
-                    else {
-                        switch(opcode) {
-                            case Jalr: xregs[curinst.reg0] = pc+4; pc = xregs[curinst.reg1] + curinst.imm; break;
-                            case Add: xregs[curinst.reg0] = xregs[curinst.reg1] + xregs[curinst.reg2]; pc+=4; break;
-                        }
-                    }
-                }
+                #ifdef PROD
+                U stored_data;
+                stored_data.f = fregs[curinst.reg0];
+                dataCache.Store(addr, stored_data);
+                #else
+                memory.at(addr).f = fregs[curinst.reg0];
+                #endif
+                pc+=4; break;
             }
-            // 8 - 15
-            else {
-                // 8 - 11
-                if (opcode < 12) {
-                    // 8 - 9
-                    if (opcode < 10) {
-                        switch(opcode){
-                            case Mul: xregs[curinst.reg0] = xregs[curinst.reg1] * xregs[curinst.reg2]; pc+=4; break;
-                            case Jal: xregs[curinst.reg0] = pc + 4; pc += curinst.imm; break;
-                        }
-                    }
-                    // 10 - 11
-                    else {
-                        switch(opcode) {
-                            case Beq: if (xregs[curinst.reg0] == xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
-                            case Fsub: {
-                                #ifdef PROD
-                                U f1, f2;
-                                f1.f = fregs[curinst.reg1];
-                                f2.f = fregs[curinst.reg2];
-                                fregs[curinst.reg0] = fpu.fsub(f1, f2).f; pc += 4; break;
-                                #else
-                                fregs[curinst.reg0] = fregs[curinst.reg1] - fregs[curinst.reg2]; pc+=4; break;
-                                #endif
-                            }
-                        }
-                    }
-                }
-                // 12 - 16
-                else {
-                    // 12 - 13
-                    if (opcode < 14) {                  
-                        switch(opcode) { 
-                            case Fadd: {
-                                #ifdef PROD
-                                U f1, f2;
-                                f1.f = fregs[curinst.reg1];
-                                f2.f = fregs[curinst.reg2];
-                                fregs[curinst.reg0] = fpu.fadd(f1, f2).f; pc += 4; break;
-                                #else
-                                fregs[curinst.reg0] = fregs[curinst.reg1] + fregs[curinst.reg2]; pc+=4; break;
-                                #endif
-                            }
-                            case Fsw: {   
-                                int addr = xregs[curinst.reg1] + curinst.imm;
-                                Program::check_store(addr, pc);
+            case Fsqrt: {
+                #ifdef PROD
+                U f1;
+                f1.f = fregs[curinst.reg1];
+                fregs[curinst.reg0] = fpu.fsqrt(f1).f; pc += 4; break;
+                #else
+                fregs[curinst.reg0] = sqrt(fregs[curinst.reg1]); pc+=4; break;
+                #endif
+            }
 
-                                #ifdef PROD
-                                U stored_data;
-                                stored_data.f = fregs[curinst.reg0];
-                                dataCache.Store(addr, stored_data);
-                                #else
-                                memory.at(addr).f = fregs[curinst.reg0];
-                                #endif
-                                pc+=4;
-                            } break;
-                        }
-                    }
-                    // 14 - 15
-                    else {
-                        switch(opcode) {
-                            case Fle: 
-                                #ifdef PROD
-                                U f0, f1;
-                                f0.f = fregs[curinst.reg0];
-                                f1.f = fregs[curinst.reg1];
-                                if (fpu.fle(f0, f1)) {pc += curinst.imm;} else {pc += 4;} break;
-                                #else
-                                if (fregs[curinst.reg0] <= fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
-                                #endif
-                            case Fmul: {
-                                #ifdef PROD
-                                U f1, f2;
-                                f1.f = fregs[curinst.reg1];
-                                f2.f = fregs[curinst.reg2];
-                                fregs[curinst.reg0] = fpu.fmul(f1, f2).f; pc += 4; break;
-                                #else
-                                fregs[curinst.reg0] = fregs[curinst.reg1] * fregs[curinst.reg2]; pc+=4; break;
-                                #endif
-                            }
-                        }
-                    }
+            case Addi: xregs[curinst.reg0] = xregs[curinst.reg1] + curinst.imm; pc+=4; break;
+            case Ori: xregs[curinst.reg0] = xregs[curinst.reg1] | (int)(std::bitset<12>(curinst.imm).to_ulong()); pc+=4; break;
+            case Jalr: xregs[curinst.reg0] = pc+4; pc = xregs[curinst.reg1] + curinst.imm; break;
+            case Lw: {
+                int addr = xregs[curinst.reg1] + curinst.imm;
+                if (addr == -1) {
+                    xregs[curinst.reg0] = std_input.at(stdin_cnt).i;
+                    stdin_cnt++;
                 }
-            }
-        }
-        else if (opcode < 50) {
-            // 16 - 19
-            if (opcode < 20) {
-                // 16 - 17
-                if (opcode < 18) {
-                    switch(opcode) {
-                        case Ble: if (xregs[curinst.reg0] <= xregs[curinst.reg1]) { pc += curinst.imm; } else {pc+=4;} break;
-                        case Sub: xregs[curinst.reg0] = xregs[curinst.reg1] - xregs[curinst.reg2]; pc+=4; break;
-                    }
-                }
-                // 18 - 19
                 else {
-                    switch(opcode) {
-                        case Feq: 
-                            #ifdef PROD
-                            U f0, f1;
-                            f0.f = fregs[curinst.reg0];
-                            f1.f = fregs[curinst.reg1];
-                            if (fpu.feq(f0, f1)) {pc += curinst.imm;} else {pc += 4;} break;
-                            #else
-                            if (fregs[curinst.reg0] == fregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
-                            #endif
-                        case Fdiv: {
-                            #ifdef PROD
-                            U f1, f2;
-                            f1.f = fregs[curinst.reg1];
-                            f2.f = fregs[curinst.reg2];
-                            fregs[curinst.reg0] = fpu.fdiv(f1, f2).f; pc += 4; break;
-                            #else
-                            fregs[curinst.reg0] = fregs[curinst.reg1] / fregs[curinst.reg2]; pc+=4; break;
-                            #endif
-                        }
-                    }
+                    Program::check_load(addr, pc);
+
+                    #ifdef PROD
+                    xregs[curinst.reg0] = (int)dataCache.Load(addr).i;
+                    #else
+                    xregs[curinst.reg0] = (int)memory.at(addr).i;
+                    #endif
                 }
+                pc += 4; break;
             }
-            // 20 - 23
-            else {
-                // 20 - 21
-                if (opcode < 22) {
-                    switch(opcode) {
-                        case Fsqrt: {
-                            #ifdef PROD
-                            U f1;
-                            f1.f = fregs[curinst.reg1];
-                            fregs[curinst.reg0] = fpu.fsqrt(f1).f; pc += 4; break;
-                            #else
-                            fregs[curinst.reg0] = sqrt(fregs[curinst.reg1]); pc+=4; break;
-                            #endif
-                        }
-                        case Div: xregs[curinst.reg0] = xregs[curinst.reg1] / xregs[curinst.reg2]; pc+=4; break;
-                    }
+            case Sw: {
+                int addr = xregs[curinst.reg1] + curinst.imm;
+                if (addr == -1) {
+                    globalfun::print_output_bin(xregs[curinst.reg0], 4);
+                    fprintf(fp, "%d", xregs[curinst.reg0]);
                 }
-                // 22 - 23
+                else if (addr == -2) {
+                    globalfun::print_output_bin(xregs[curinst.reg0], 1);
+                    fprintf(fp, "%c", (char)xregs[curinst.reg0]);
+                }
                 else {
-                    switch(opcode) {
-                        case Slt: if (xregs[curinst.reg1] < xregs[curinst.reg2]) {xregs[curinst.reg0] = 1;} else {xregs[curinst.reg0] = 0;}; pc+=4; break;
-                        case Bge: if (xregs[curinst.reg0] >= xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
-                    }
+                    Program::check_store(addr, pc);
+
+                    #ifdef PROD
+                    U stored_data;
+                    stored_data.i = (unsigned int)xregs[curinst.reg0];
+                    dataCache.Store(addr, stored_data);
+                    #else
+                    memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
+                    #endif
                 }
-            } 
-        }
-        else if (opcode < 60) {
-            if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
-            else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
-            std::cout << "\t";
-            globalfun::print_inst(stdout, curinst);
-            std::cout << "\n\n";
-            globalfun::print_regs(binflag);
-            std::cout << "\n\tcurrent pc = " << pc << std::endl;
-            std::cerr << "error: this is end-point" << std::endl;
-            exit(1);
-        }
-        else {
-            if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
-            else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
-            std::cout << "\t";
-            globalfun::print_inst(stdout, curinst);
-            std::cout << "\n\n";
-            globalfun::print_regs(binflag);
-            std::cout << "\n\tcurrent pc = " << pc << "(" << std::hex << pc << std::dec << ")" << std::endl;
-            std::cerr << "error: this is data section" << std::endl;
-            exit(1);
+                pc+=4; break;
+            }
+
+            case Beq: if (xregs[curinst.reg0] == xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+            case Ble: if (xregs[curinst.reg0] <= xregs[curinst.reg1]) { pc += curinst.imm; } else {pc+=4;} break;
+            case Bge: if (xregs[curinst.reg0] >= xregs[curinst.reg1]) {pc += curinst.imm;} else {pc+=4;} break;
+            case Jal: xregs[curinst.reg0] = pc + 4; pc += curinst.imm; break;
+            case Lui: xregs[curinst.reg0] = (curinst.imm >> 12) << 12; pc+=4; break;
+
+            case Arrlw: {
+                int addr = xregs[curinst.reg1] + curinst.imm;
+
+                Program::check_load(addr, pc);
+
+                #ifdef PROD
+                xregs[curinst.reg0] = (int)dataCache.Load(addr).i;
+                #else
+                xregs[curinst.reg0] = (int)memory.at(addr).i;
+                #endif
+                pc += 4; break;
+            }
+            case Arrsw: {
+                int addr = xregs[curinst.reg1] + curinst.imm;
+
+                Program::check_store(addr, pc);
+
+                #ifdef PROD
+                U stored_data;
+                stored_data.i = (unsigned int)xregs[curinst.reg0];
+                dataCache.Store(addr, stored_data);
+                #else
+                memory.at(addr).i = (unsigned int)xregs[curinst.reg0];
+                #endif
+                pc+=4; break;
+            }
+            case Arrflw: {
+                int addr = xregs[curinst.reg1] + curinst.imm;
+
+                if (addr == -1) {
+                    fregs[curinst.reg0] = std_input.at(stdin_cnt).f;
+                    stdin_cnt++;
+                }
+                else {
+                    Program::check_load(addr, pc);
+
+                    #ifdef PROD
+                    fregs[curinst.reg0] = dataCache.Load(addr).f;
+                    #else
+                    fregs[curinst.reg0] = memory.at(addr).f; 
+                    #endif
+                }
+                pc+=4; break;
+            }
+            case Arrfsw: {
+                int addr = xregs[curinst.reg1] + curinst.imm;
+
+                Program::check_store(addr, pc);
+
+                #ifdef PROD
+                U stored_data;
+                stored_data.f = fregs[curinst.reg0];
+                dataCache.Store(addr, stored_data);
+                #else
+                memory.at(addr).f = fregs[curinst.reg0];
+                #endif
+                pc+=4; break;
+            }
+
+            default: {
+                if (curinst.filenameIdx == -1) std::cout << "\t" << "entrypoint, line " << curinst.line << std::endl;
+                else std::cout << "\t" << input_files[curinst.filenameIdx] << ", line " << curinst.line << std::endl;
+                std::cout << "\t";
+                globalfun::print_inst(stdout, curinst);
+                std::cout << "\n\n";
+                globalfun::print_regs(binflag);
+                std::cout << "\n\tcurrent pc = " << pc << "(" << std::hex << pc << std::dec << ")" << std::endl;
+                std::cerr << "error: this is data section" << std::endl;
+                exit(1);
+            }
         }
 
         xregs[0] = 0;
@@ -726,7 +585,6 @@ inline void Program::exec() {
 
         #ifdef STATS
         stats[curinst.opcode]++;
-        jump_counter[pc]++;
         #endif 
 
         #ifdef PROD

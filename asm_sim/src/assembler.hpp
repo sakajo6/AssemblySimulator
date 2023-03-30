@@ -332,77 +332,76 @@ inline OpeAssert Assembler::set_machine_J(std::bitset<32> *mcode) {
 inline AssembleResp Assembler::assemble(int pc) {
     std::bitset<32> ret_machine;
     OpeAssert ret = OK;
-    if (opcode < 50) {
-        switch(opcode) {
-            case Add: 
-                ret_machine = add_machine; ret = set_machine_R(&ret_machine); break;
-            case Sub:
-                ret_machine = sub_machine; ret = set_machine_R(&ret_machine); break;
-            case Slt: 
-                ret_machine = slt_machine; ret = set_machine_R(&ret_machine); break;
-            case Mul: 
-                ret_machine = mul_machine; ret = set_machine_R(&ret_machine); break;
-            case Div: 
-                ret_machine = div_machine; ret = set_machine_R(&ret_machine); break;
-            case Fadd:
-                ret_machine = fadd_machine; ret = set_machine_R(&ret_machine); break;
-            case Fsub:
-                ret_machine = fsub_machine; ret = set_machine_R(&ret_machine); break;
-            case Fmul:
-                ret_machine = fmul_machine; ret = set_machine_R(&ret_machine); break;
-            case Fdiv:
-                ret_machine = fdiv_machine; ret = set_machine_R(&ret_machine); break;
-            case Feq:
-                ret_machine = feq_machine; ret = set_machine_B(&ret_machine); break;
-            case Fle:
-                ret_machine = fle_machine; ret = set_machine_B(&ret_machine); break;
-            case Flw: 
-                ret_machine = flw_machine; ret = set_machine_I(&ret_machine); break;
-            case Fsw: 
-                ret_machine = fsw_machine; ret = set_machine_S(&ret_machine); break;
-            case Fsqrt: 
-                ret_machine = fsqrt_machine; ret = set_machine_sqrt(&ret_machine); break;
-            case Addi:
-                ret_machine = addi_machine; ret = set_machine_addi(&ret_machine); break;
-            case Ori: 
-                ret_machine = ori_machine; ret = set_machine_I(&ret_machine); break;
-            case Jalr: 
-                ret_machine = jalr_machine; ret = set_machine_I(&ret_machine); break;
-            case Lw:     
-                ret_machine = lw_machine; ret = set_machine_I(&ret_machine); break;
-            case Sw:
-                ret_machine = sw_machine; ret = set_machine_S(&ret_machine); break;
-            case Beq: 
-                ret_machine = beq_machine; ret = set_machine_B(&ret_machine); break;
-            case Ble:
-                ret_machine = ble_machine; ret = set_machine_B(&ret_machine); break;
-            case Bge: 
-                ret_machine = bge_machine; ret = set_machine_B(&ret_machine); break;            
-            case Jal:
-                ret_machine = jal_machine; ret = set_machine_J(&ret_machine); break;
-            case Lui: 
-                ret_machine = lui_machine; ret = set_machine_U(&ret_machine); break;
-        }
-    }
-    else if (opcode >= 100) {
-        switch(opcode) {
-            case Arrlw:
-                ret_machine = arrlw_machine; ret = set_machine_R(&ret_machine); break;
-            case Arrsw:
-                ret_machine = arrsw_machine; ret = set_machine_R(&ret_machine); break;
-            case Arrflw:
-                ret_machine = arrflw_machine; ret = set_machine_R(&ret_machine); break;
-            case Arrfsw:
-                ret_machine = arrfsw_machine; ret = set_machine_R(&ret_machine); break;
-        }
-    }
-    else if (opcode < 60) {
-        ret_machine = std::bitset<32>(-1);
-    }
-    else {
-        U u;
-        u.f = fimm;
-        ret_machine = std::bitset<32>(u.i);
+
+    switch(opcode) {
+        case Add: 
+            ret_machine = add_machine; ret = set_machine_R(&ret_machine); break;
+        case Sub:
+            ret_machine = sub_machine; ret = set_machine_R(&ret_machine); break;
+        case Slt: 
+            ret_machine = slt_machine; ret = set_machine_R(&ret_machine); break;
+        case Mul: 
+            ret_machine = mul_machine; ret = set_machine_R(&ret_machine); break;
+        case Div: 
+            ret_machine = div_machine; ret = set_machine_R(&ret_machine); break;
+
+        case Fadd:
+            ret_machine = fadd_machine; ret = set_machine_R(&ret_machine); break;
+        case Fsub:
+            ret_machine = fsub_machine; ret = set_machine_R(&ret_machine); break;
+        case Fmul:
+            ret_machine = fmul_machine; ret = set_machine_R(&ret_machine); break;
+        case Fdiv:
+            ret_machine = fdiv_machine; ret = set_machine_R(&ret_machine); break;
+
+        case Feq:
+            ret_machine = feq_machine; ret = set_machine_B(&ret_machine); break;
+        case Fle:
+            ret_machine = fle_machine; ret = set_machine_B(&ret_machine); break;
+        case Flw: 
+            ret_machine = flw_machine; ret = set_machine_I(&ret_machine); break;
+        case Fsw: 
+            ret_machine = fsw_machine; ret = set_machine_S(&ret_machine); break;
+        case Fsqrt: 
+            ret_machine = fsqrt_machine; ret = set_machine_sqrt(&ret_machine); break;
+
+        case Addi:
+            ret_machine = addi_machine; ret = set_machine_addi(&ret_machine); break;
+        case Ori: 
+            ret_machine = ori_machine; ret = set_machine_I(&ret_machine); break;
+        case Jalr: 
+            ret_machine = jalr_machine; ret = set_machine_I(&ret_machine); break;
+        case Lw:     
+            ret_machine = lw_machine; ret = set_machine_I(&ret_machine); break;
+        case Sw:
+            ret_machine = sw_machine; ret = set_machine_S(&ret_machine); break;
+
+        case Beq: 
+            ret_machine = beq_machine; ret = set_machine_B(&ret_machine); break;
+        case Ble:
+            ret_machine = ble_machine; ret = set_machine_B(&ret_machine); break;
+        case Bge: 
+            ret_machine = bge_machine; ret = set_machine_B(&ret_machine); break;            
+        case Jal:
+            ret_machine = jal_machine; ret = set_machine_J(&ret_machine); break;
+        case Lui: 
+            ret_machine = lui_machine; ret = set_machine_U(&ret_machine); break;
+
+        case Exit:
+            ret_machine = std::bitset<32>(-1); break;
+
+        case Word:
+            U u; u.f = fimm;
+            ret_machine = std::bitset<32>(u.i); break;
+
+        case Arrlw:
+            ret_machine = arrlw_machine; ret = set_machine_R(&ret_machine); break;
+        case Arrsw:
+            ret_machine = arrsw_machine; ret = set_machine_R(&ret_machine); break;
+        case Arrflw:
+            ret_machine = arrflw_machine; ret = set_machine_R(&ret_machine); break;
+        case Arrfsw:
+            ret_machine = arrfsw_machine; ret = set_machine_R(&ret_machine); break;
     }
 
 
