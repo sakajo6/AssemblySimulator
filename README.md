@@ -1,4 +1,4 @@
-# CPU-group5-simu
+# AssemblySimulator
 
 ### 各ディレクトリ説明
 - asm_sim:      assemblyのシミュレータ
